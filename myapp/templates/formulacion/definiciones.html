@@ -1,0 +1,23 @@
+
+
+
+
+<a href="{{p.objetivo.estadoObj}}"></a>
+
+{% block content %}
+	<h2> Seleccione la definición que desea editar </h2>
+	Estado actual = {{p.state.title}}
+	<table style="width:50%">
+  		<tr>
+    		<td><a href="/definicionobjetivos/{{p.id}}"><button type="button">Definir Objetivos</button></a> {{p.objetivo.estadoObj}}</td>
+    	<td><a href="/definicioncontenidos/{{p.id}}"><button type="button">Definir Contenidos</button></a> {{p.contenido.estadoCont }}</td> 
+    	<td><a href="/definicioncapacidades/{{p.id}}"><button type="button">Definir Capacidades</button></a>{{p.capacidad.estadoCapac }}</td>
+  		</tr>
+  	</table>
+	{%if p.objetivo.estadoObj == 'Finalizado' and p.contenido.estadoCont == 'Finalizado' and p.capacidad.estadoCapac == 'Finalizado' %}
+		<td><a href="/definicionclaseclase/{{p.id}}"><button type="button">Definir Clase a Clase</button></a></td>
+	{%endif%}	
+
+{% endblock%}
+
+

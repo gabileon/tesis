@@ -1,0 +1,20 @@
+
+    {# Display a fo<form action="." method = "POST">
+        {% csrf_token %}
+        {{form.as_p}}
+        <input type= "submit" value= "Grabar">
+        <input type= "reset" value = "Limpiar">
+    </form>rm #}
+
+    <form action="/programas/crear/" method="POST">
+        {% csrf_token %}
+        {{form.as_p}}
+       <input type="submit" value="Si" name="Si"> 
+  
+    </form>
+
+
+
+
+
+

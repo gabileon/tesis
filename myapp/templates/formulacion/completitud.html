@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% load bootstrap3 %}
+
+
+{% block content %}
+<h2> Definicion Completitud </h2>
+Estado actual = {{p.state.title}} 
+	<form action="/definicioncoherenciacompletitud/{{p.id}}/" method = "POST">
+		{% csrf_token %}
+		{{form.as_p}}
+ 	<button type="submit" name="">  Guardar </button>
+	</form>
+{% endblock %}

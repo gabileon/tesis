@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+
+    {# Display a form #}
+
+{% block content %}
+<h2> Definicion Capacidades </h2>
+Estado actual = {{p.state.title}}
+	<form action="/definicioncapacidades/{{p.id}}/" method = "POST">
+		{% csrf_token %}
+		{{form.as_p}}
+ 	<button type="submit" name="">  Siguiente  </button>
+	</form>
+{% endblock %}

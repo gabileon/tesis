@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h3>Programas de Asignatura </h>
+<br>Asignatura: {{programa.asignatura}}</br>
+<br>Semestres: {{programa.semestre}}</br>
+<br>Año:  {{programa.ano}} </br>
+<br>Estado actual:  {{programa.state.title}}</br>
+<a href="/programas/"> Regresar a los programas</a>
+
+{% endblock %}
