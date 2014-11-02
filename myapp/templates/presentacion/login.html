@@ -1,4 +1,4 @@
-
+{% load bootstrap_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,21 +17,14 @@
 
 <body>
 
+
   <div class="container">
     <div class="row">
       <div class="col-md-4 col-md-offset-4">
-      <form class="form-signin" role="form">
+      <form action="." method="POST" class="text-justify">
+        {% csrf_token %}
         <h2 class="form-signin-heading">Inicio Sesión</h2>
-        <div class="form-group">
-          <div class="input-group">
-            <div class="input-group-addon">@</div>
-            <input class="form-control" type="email" placeholder="Email">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="sr-only" for="exampleInputPassword2">Password</label>
-          <input type="password" class="form-control" id="exampleInputPassword2" placeholder="Password">
-        </div>
+        {{ form|as_bootstrap }}
         <label class="checkbox">
           <input type="checkbox" value="remember-me"> Recordar usuario
         </label>
@@ -40,8 +33,8 @@
       </div>
     </div>
   </div> <!-- /container -->
-
-
+ 
+  
   <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
   <script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>
 </body>

@@ -29,6 +29,18 @@ class definirCompletitudForm(forms.Form):
 class decisionEvaluacionForm(forms.Form):
 	decision = forms.ChoiceField(widget=forms.RadioSelect, choices=SINO)
 
+	
+class LineasForm(forms.Form):
+	nombreLinea  = forms.CharField(widget=forms.TextInput(),label="Nombre de Linea de Asignatura")
+	# coordinador  = forms.CharField(widget=forms.Textarea)
+	# profesor  = forms.CharField(widget=forms.Textarea)
+ #    # TODO: Define form fields here
+class CoordinadorForm(forms.Form):
+
+	coordinador  = forms.CharField(widget=forms.TextInput(), label='Ingrese Email del Coordinador')
+
+    # TODO: Define form fields here
+    
 	# asignatura = forms.CharField(widget = forms.TextInput())
 	# semestre = forms.ChoiceField(widget=forms.RadioSelect, choices=SEMESTRES)
 	# ano = forms.ChoiceField(widget=forms.RadioSelect, choices=ANOS)

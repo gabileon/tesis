@@ -2,7 +2,10 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.files.storage import get_storage_class
 from django_xworkflows import models as xwf_models
+from myapp.modulos.coordLinea.models import Coordinador
+from myapp.modulos.profLinea.models import Profesor
 import xworkflows
+
 
 
 class MyWorkflow(xwf_models.Workflow):
@@ -70,10 +73,9 @@ class Programa(xwf_models.WorkflowEnabled, models.Model):
     semestre =  models.CharField(max_length=2, choices=semestre_opciones)
     semestre =  models.CharField(max_length=10)
     ano =  models.CharField(max_length=10)
-    
+    fechaUltimaModificacion = models.DateTimeField()
     # fechaCreacion = models.DateTimeField(auto_now_add=True)
-    # fechaUltimaModificacion = models.DateTimeField()
-
+    
 class Capacidad(models.Model):
     programa = models.OneToOneField(Programa)
     estadoCapac  = models.CharField(max_length=10, default="Sin iniciar")
@@ -104,5 +106,16 @@ class Completitud(models.Model):
     ultimaModificacionComp = models.DateTimeField(auto_now=True)
     completitudPrograma = models.TextField()
 
+class Linea(models.Model):
+    coordinador = models.OneToOneField(Coordinador, null=True)
+    nombreLinea = models.CharField(max_length=20)
+
+class Asignatura(models.Model):
+    nombreAsig = models.CharField(max_length=20)
+    plan = models.CharField(max_length=5)
+    carrera = models.CharField(max_length=20)
+    profesorAsignado = models.OneToOneField(Profesor)
+    
+    
 
     

@@ -108,6 +108,9 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'myapp.urls'
 
+                      #####Perfil de Usuarios #########
+AUTH_PROFILE_MODULE = 'presentacion.UserProfile'
+
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
@@ -126,6 +129,9 @@ INSTALLED_APPS = (
     'django.contrib.admindocs',
     'myapp.modulos.presentacion',
     'myapp.modulos.formulacion',
+    'myapp.modulos.jefeCarrera',
+    'myapp.modulos.coordLinea',
+    'myapp.modulos.profLinea',
     'djangotoolbox',
     'autoload',
     'dbindexer',
@@ -133,15 +139,9 @@ INSTALLED_APPS = (
     'django_xworkflows',
     'django_forms_bootstrap',
     'djangoappengine',
-    
-
 )
 
-# A sample logging configuration. The only tangible logging
-# performed by this configuration is to send an email to
-# the site admins on every HTTP 500 error when DEBUG=False.
-# See http://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -166,3 +166,7 @@ LOGGING = {
     }
 }
 
+LANGUAGES = ('es', 'Spanish')
+DATE_INPUT_FORMATS = ('%d-%m-%Y')
+
+DATETIME_INPUT_FORMATS  = ('%d-%m-%Y %H:%M:%S')

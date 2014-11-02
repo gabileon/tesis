@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.contrib.auth.models import User
+from datetime import datetime
 from myapp.modulos.formulacion.models import Programa, MyWorkflow, Objetivo, Capacidad, Contenido, ClaseClase, Completitud
 from myapp.modulos.formulacion.forms import decisionEvaluacionForm, crearProgramaForm, definirObjetivosForm, definirCompletitudForm, definirCapacidadesForm, definirContenidosForm, definirClaseClaseForm
 
@@ -17,7 +18,8 @@ def crearPrograma(request):
 			### se crea programa
 			p.asignatura = asignatura
 			p.semestre = semestre
-			p.ano = ano	
+			p.ano = ano
+			p.fechaUltimaModificacion = datetime.now()
 			p.to_formulacion()
 	    	p.to_defGeneral()  	
 	    	  ## guardamos el programa
@@ -168,7 +170,6 @@ def definicionClaseClaseR_view(request, id_programa):
 			programa.siEvaluacion_toVerif()
 			programa.save()
 			return render(request,'formulacion/completitud.html', ctx)
-			# return HttpResponse("HOLAAAAAAAAAAA")
 		if 'noExisten' in request.POST:
 			programa.noEvaluacion_toForm()
 			programa.to_defGeneral()

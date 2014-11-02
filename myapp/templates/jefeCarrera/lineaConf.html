@@ -1,0 +1,102 @@
+{% load bootstrap_tags %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Formulapp - Principal Jefe Carrera</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="icon" href="../../favicon.ico">
+        <script type="text/javascript" src="/media/js/jquery.js"></script>
+        <script type="text/javascript" src="/media/js/bootstrap.js"></script>
+        <link rel="stylesheet/less" href="/media/less/style.less">
+        <script type="text/javascript" src="/media/js/less-1.4.1.min.js"></script>
+    </head>
+    <body>
+        <nav class="navbar navbar-default navbar-static-top" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              <a class="navbar-brand" href="#">Project name</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+              <ul class="nav navbar-nav">
+                <li><a href="/principal_jc/">Programas</a></li>
+                <li><a href="#about">Mensajeria</a></li>
+                <li><a href="#contact">Indicadores</a></li>
+                <li  class="active" class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuracion<span class="caret"></span></a>
+                  <ul class="dropdown-menu" role="menu">
+                    <li><a href="/miperfil/">Mi Perfil</a></li>
+                    <li class="active"><a href="/lineas/">Líneas de Asignatura</a></li>
+                    <li><a href="/recursos/">Recursos de Aprendizaje</a></li>
+                  </ul>
+                </li>
+              </ul>     
+              <ul>
+                <p class="bienvenido">Bienvenido <strong>{{user.username}}</strong>
+                <a href="#"><span class="glyphicon glyphicon-envelope"></span><span class="badge">4</span></a>
+                </p>
+                <p class="logout"><a href="/logout/">Cerrar Sesión</a></p>
+              </ul>
+            </div><!--/.nav-collapse -->
+          </div>
+        </nav>
+
+    <div class="row">
+        
+        <div class="panel panel-primary">        
+            <div class="panel-heading">
+                <h3 class="panel-title">Líneas de Asignatura</h3>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-4">
+                         {%for l in linea%}
+                         <a href="/perfilLinea/{{l.id}}"><li class="perfil">{{l.nombreLinea}}</a>
+                        </li>
+                        {%endfor%}
+                                       <!-- Button trigger modal -->
+                        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#myModal">
+                        Agregar Nueva Línea
+                        </button>
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                          <div class="modal-dialog">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Cerrar</span></button>
+                                <h4 class="modal-title" id="myModalLabel">Agregar Línea</h4>
+                              </div>
+                              <div class="modal-body">
+                                    <form action="/lineas/" method="POST">
+                                        {%csrf_token%}
+                                        {{ form|as_bootstrap}}
+                                         <button type="submit" class="btn btn-success"><strong>Guardar</strong></button>
+                                    </form> 
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                               
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                    </div>
+                </div>  
+            </div>
+        </div>
+    </div>
+    </body>    
+</html>
+
+            
