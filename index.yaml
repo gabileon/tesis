@@ -38,3 +38,9 @@ indexes:
   - name: domain
   - name: __key__
     direction: desc
+
+- kind: formulacion_programa
+  properties:
+  - name: profesorEncargado_id
+  - name: fechaUltimaModificacion
+    direction: desc

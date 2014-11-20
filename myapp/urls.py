@@ -17,6 +17,9 @@ urlpatterns = patterns('',
     url(r'^', include('myapp.modulos.presentacion.urls')),
     url(r'^', include('myapp.modulos.formulacion.urls')),
     url(r'^', include('myapp.modulos.jefeCarrera.urls')),
+    url(r'^', include('myapp.modulos.profLinea.urls')),
+    url(r'^', include('myapp.modulos.indicadores.urls')),
+    url(r'^files/',include('gaeblob_storage.urls')),
     url(r'^media/(?P<path>.*)$', 'django.views.static.serve', {'document_root':settings.MEDIA_ROOT}),
 
 )

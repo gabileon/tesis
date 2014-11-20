@@ -2,10 +2,9 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.files.storage import get_storage_class
 from django_xworkflows import models as xwf_models
-from myapp.modulos.coordLinea.models import Coordinador
-from myapp.modulos.profLinea.models import Profesor
 import xworkflows
-
+from myapp import settings
+from time import time
 
 
 class MyWorkflow(xwf_models.Workflow):
@@ -15,13 +14,17 @@ class MyWorkflow(xwf_models.Workflow):
     states = (
         ('inicio', (u"Inicio")),
         ('formulacionPrograma', (u"Formulacion Programa por Linea")),
+        ('definicionDatosAsignatura', (u"Definicion Datos Asignatura")),
         ('definicionGeneral', (u"Definiciones Generales")),
-        ('definicionCapacidades', (u"Definiciones Capacidades")),
-        ('definicionContenidos', (u"Definiciones Contenidos")),
-        ('definicionObjetivos', (u"Definiciones Objetivos")),
-        ('definicionClaseClase', (u"Definiciones de Clase a Clase")),
+        ('definicionConstribucion', (u"Definicion de Constribucion al Perfil de Egreso ")),
+        ('definicionRdA', (u"Definicion Resultados de Aprendizaje")),
+        ('definicionEstrategias', (u"Estrategias de Ensenanza y de Aprendizaje")),
+        ('definicionClaseClase', (u"Definicion de Clase a Clase")),
         ('analisisEvaluacionesAsociadas', (u"Analisis de evaluaciones asociadas")),
         ('verificacionCoherenciaCompletitud', (u"Verificacion Coherencia y Completitud")),
+        ('programacionActividades', (u"Programacion de Actividades")),
+        ('definicionAspecAdmin', (u"Definicion de Aspectos Administrativos")),
+        ('definicionRecursos', (u"Definicion de Recursos de Aprendizaje")),
         ('aprobacionLinea', (u"Aprobacion Linea")),
         ('fastTrack', (u"Fast Track")),
         ('analisisProgramaJC', (u"Analisis Programa por JC")),
@@ -33,18 +36,22 @@ class MyWorkflow(xwf_models.Workflow):
     ##################### DECLARACION DE TRANSICIONES ##########################
     transitions = (
         ('to_formulacion', 'inicio', 'formulacionPrograma'),
-        ('to_defGeneralObj', 'definicionObjetivos', 'definicionGeneral'),
-        ('to_defGeneralCap', 'definicionCapacidades', 'definicionGeneral'),
-        ('to_defGeneralCont', 'definicionContenidos', 'definicionGeneral'),
-        ('to_defGeneral', 'formulacionPrograma', 'definicionGeneral'),
-        ('to_defObj', 'definicionGeneral', 'definicionObjetivos'),
-        ('to_defCap', 'definicionGeneral', 'definicionCapacidades'),
-        ('to_defCont', 'definicionGeneral', 'definicionContenidos'),
-        ('to_defClase', ('definicionObjetivos', 'definicionContenidos', 'definicionCapacidades'), 'definicionClaseClase'),
+        ('to_datosAsig', 'formulacionPrograma', 'definicionDatosAsignatura' ),
+        ('to_defGeneralCons', 'definicionConstribucion', 'definicionGeneral'),
+        ('to_defGeneralRdA', 'definicionRdA', 'definicionGeneral'),
+        ('to_defGeneralEstra', 'definicionEstrategias', 'definicionGeneral'),
+        ('to_defGeneral', 'definicionDatosAsignatura', 'definicionGeneral'),
+        ('to_defCons', 'definicionGeneral', 'definicionConstribucion'),
+        ('to_defRdA', 'definicionGeneral', 'definicionRdA'),
+        ('to_defEstrategias', 'definicionGeneral', 'definicionEstrategias'),
+        ('to_defClase', ('definicionEstrategias', 'definicionConstribucion', 'definicionRdA'), 'definicionClaseClase'),
         ('to_analisisEval', 'definicionClaseClase', 'analisisEvaluacionesAsociadas'),
         ('noEvaluacion_toForm', 'analisisEvaluacionesAsociadas', 'formulacionPrograma'),
         ('siEvaluacion_toVerif', 'analisisEvaluacionesAsociadas', 'verificacionCoherenciaCompletitud'),
-        ('to_aprobPrograma', 'verificacionCoherenciaCompletitud', 'aprobacionLinea'),
+        ('to_programacion', 'analisisEvaluacionesAsociadas', 'programacionActividades'),
+        ('to_defAspectos', 'programacionActividades', 'definicionAspecAdmin'),
+        ('to_defRecursos', 'programacionActividades', 'definicionRecursos'),
+        ('to_aprobPrograma', ('definicionRecursos','definicionAspecAdmin'), 'aprobacionLinea'),
         ('noAprob_toForm', 'aprobacionLinea', 'formulacionPrograma'),
         ('siAprob_toFT', 'aprobacionLinea', 'fastTrack'),
         ('siFT_toAprobJC', 'fastTrack', 'aprobacionProgramaJC'),
@@ -64,17 +71,13 @@ class MyWorkflow(xwf_models.Workflow):
 class Programa(xwf_models.WorkflowEnabled, models.Model):
 # SE DEFINE SU ESTADO QUE ESTA DADO POR EL WORKFLOW DEFINIDO ###
     state = xwf_models.StateField(MyWorkflow)
-    I = 'I'
-    II = 'II'
-    semestre_opciones = (
-        (I, 'I Semestre'),
-        (II, 'II Semestre'))
     asignatura =  models.CharField(max_length=100)
-    semestre =  models.CharField(max_length=2, choices=semestre_opciones)
     semestre =  models.CharField(max_length=10)
     ano =  models.CharField(max_length=10)
     fechaUltimaModificacion = models.DateTimeField()
-    # fechaCreacion = models.DateTimeField(auto_now_add=True)
+    url = models.URLField(blank=False, null=True)
+    profesorEncargado = models.OneToOneField(User, null=True)
+
     
 class Capacidad(models.Model):
     programa = models.OneToOneField(Programa)
@@ -107,15 +110,27 @@ class Completitud(models.Model):
     completitudPrograma = models.TextField()
 
 class Linea(models.Model):
-    coordinador = models.OneToOneField(Coordinador, null=True)
+    coordinador = models.OneToOneField(User, null=True)
     nombreLinea = models.CharField(max_length=20)
 
 class Asignatura(models.Model):
     nombreAsig = models.CharField(max_length=20)
     plan = models.CharField(max_length=5)
-    carrera = models.CharField(max_length=20)
-    profesorAsignado = models.OneToOneField(Profesor)
-    
-    
+    profesorAsignado = models.OneToOneField(User, null=True)
+    linea = models.ForeignKey(Linea)
+
+class Recurso(models.Model):
+    def url(self, filename):
+        url = "MultimediaData/Recursos/%s"%(filename)
+        return url
+        
+    titulo_recurso =  models.CharField(max_length=100)
+    descripcion_recurso = models.TextField()
+    estado = models.CharField(max_length=20, default="Generales")
+    fechaUltimaModificacion = models.DateTimeField()
+    recurso = models.FileField(upload_to=url)
+
+
+ 
 
     

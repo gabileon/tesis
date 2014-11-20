@@ -27,9 +27,10 @@
             </div>
             <div id="navbar" class="navbar-collapse collapse">
               <ul class="nav navbar-nav">
-                <li><a href="/principal_jc/">Programas</a></li>
+             <li ><a href="/principal_jc/">Programas</a></li>
                 <li><a href="#about">Mensajeria</a></li>
-                <li><a href="#contact">Indicadores</a></li>
+                <li><a href="/prueba/">Indicadores</a></li>
+                <li><a href="/crearFechas/">Eventos</a></li>
                 <li  class="active" class="dropdown">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuracion<span class="caret"></span></a>
                   <ul class="dropdown-menu" role="menu">
@@ -65,14 +66,13 @@
                         <li class="perfil"><strong>Rol: </strong>{{perfil.rol}}</li>
                         <li class="perfil"><strong>Línea: </strong>{{perfil.linea}}</li>
                         <li class="perfil"><strong>Email: </strong>{{user.email}}</li>
-                        <li class="perfil"><strong>Teléfono: </strong></li>
                         <button type="button" class="btn btn-info">Cambiar Contraseña</button>
                     </div>
                     <div class="col-md-2"></div>
                     <div class="col-md-4">
                         <li><strong>Foto actual: </strong></li>
-                        <img src="/media/img/user.png" class="img-circle"><br></br>
-                        <form action="/upload_pic/" method="post" enctype="multipart/form-data">{% csrf_token %}
+                        <img src="/files/serve/{{perfil.foto}}" class="img-circle"><br></br>
+                        <form action="/miperfil/" method="post" enctype="multipart/form-data">{% csrf_token %}
                             <p><input id="id_image" type="file" class="" name="image"></p>
                             <input type="submit" value="Guardar Foto" class="btn btn-success"/>
                         </form>

@@ -1,17 +1,34 @@
 from django.db import models
 from django.contrib.auth.models import User
+from oauth2client.django_orm import CredentialsField
+from myapp.modulos.formulacion.models import Linea
 
 class UserProfile(models.Model):
 	def url(self, filename):
 		ruta = "MultimediaData/Users/%s/%s"%(self.user.username, filename)
 		return ruta
 	
-	username = models.OneToOneField(User, related_name='user_profile')
+	user = models.OneToOneField(User)
 	rol = models.CharField(max_length=250, blank=True)
-	foto = models.ImageField("Profile Pic", upload_to="images/", default= 'media/img/user-default.png')
+	foto = models.ImageField("Foto de Perfil", upload_to=url, default= 'media/img/user-default.png')
 	# telefono = models.PositiveIntegerField()
-	linea = models.CharField(max_length=250, blank=True)
+	cordLinea = models.ForeignKey(Linea, null=True, related_name='coordinador_linea')
+	# models.ForeignKey(Linea, null=True, related_name='cordinador_linea')
+	carpeta = models.CharField(max_length=250, blank=True)
+	profLinea = models.ForeignKey(Linea, null=True, related_name='profesor_linea')
 
 	def create_user_profile(sender, instance, created, **kwargs):  
 		if created:  
 			profile, created = UserProfile.objects.get_or_create(user=instance)
+
+
+class CredentialsModel(models.Model):
+	id_user = models.ForeignKey(User, unique=True)
+	credential = CredentialsField()
+
+# class Mensajes(models.Model):
+	
+
+
+
+

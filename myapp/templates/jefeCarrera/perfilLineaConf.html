@@ -28,9 +28,10 @@
             </div>
             <div id="navbar" class="navbar-collapse collapse">
               <ul class="nav navbar-nav">
-                <li><a href="/principal_jc/">Programas</a></li>
+               <li ><a href="/principal_jc/">Programas</a></li>
                 <li><a href="#about">Mensajeria</a></li>
-                <li><a href="#contact">Indicadores</a></li>
+                <li><a href="/prueba/">Indicadores</a></li>
+                <li><a href="/crearFechas/">Eventos</a></li>
                 <li  class="active" class="dropdown">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuracion<span class="caret"></span></a>
                   <ul class="dropdown-menu" role="menu">
@@ -60,12 +61,12 @@
                 <div class="row">
                     <div class="col-md-1"></div>
                     <div class="col-md-6">
-                         <li class="perfil"><strong>Nombre: </strong>{{linea.nombreLinea}}
+                         <li class="perfil"><strong>Nombre: </strong>{{linea.nombreLinea}}{{linea.cordinador.id}}
                         </li>
                         {% if linea.coordinador %}
-                        <li class="perfil"><strong>Coordinador: </strong>{{linea.coordinador.profile.username.first_name}} {{linea.coordinador.profile.username.last_name}} [{{linea.coordinador.profile.username.email}}]
+                        <li class="perfil"><strong>Coordinador: </strong><a href="/otroPerfil/{{linea.coordinador.id}}">{{linea.coordinador.username.first_name}} {{linea.coordinador.username.last_name}} [{{linea.coordinador.email}}]</a>
                         <a class="borrar" href="/removeCordinador/{{linea.id}}"><span class="glyphicon glyphicon-remove"></a></li>
-                        {%else%}>
+                        {%else%}
                                        <!-- Button trigger modal -->
                           <button type="button" class="btn btn-info" data-toggle="modal" data-target="#myModal">
                           Agregar Coordinador
@@ -77,7 +78,7 @@
                             <div class="modal-content">
                               <div class="modal-header">
                                 <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Cerrar</span></button>
-                                <h4 class="modal-title" id="myModalLabel">Agregar Línea</h4>
+                                <h4 class="modal-title" id="myModalLabel">Agregar Coordinador</h4>
                               </div>
                               <div class="modal-body">
                                     <form action="/perfilLinea/{{linea.id}}/" method="POST">
@@ -94,6 +95,15 @@
                           </div>
                         </div>
                         {%endif%}
+
+                        {# que acá empieze la otra columna #}
+                        <h4>Asignaturas de la línea</h4>
+                        {%for a in asignaturas%}
+                        <li>{{a.nombreAsig}}</li>
+                        {%endfor%}
+                        <a href="/addAsignatura/{{linea.id}}/"><button type="button" class="btn btn-primary">
+                          Agregar Asignatura
+                          </button></a>
                     </div>
                 </div>  
             </div>

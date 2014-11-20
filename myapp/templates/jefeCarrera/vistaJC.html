@@ -12,6 +12,7 @@
         <script type="text/javascript" src="/media/js/bootstrap.js"></script>
         <link rel="stylesheet/less" href="/media/less/style.less">
         <script type="text/javascript" src="/media/js/less-1.4.1.min.js"></script>
+          <script type="text/javascript" src="/media/js/highcharts.js"></script>
     </head>
     <body>
         <nav class="navbar navbar-default navbar-static-top" role="navigation">
@@ -29,7 +30,8 @@
               <ul class="nav navbar-nav">
                 <li class="active"><a href="/principal_jc/">Programas</a></li>
                 <li><a href="#about">Mensajeria</a></li>
-                <li><a href="#contact">Indicadores</a></li>
+                <li><a href="/prueba/">Indicadores</a></li>
+                <li><a href="/crearFechas/">Eventos</a></li>
                 <li class="dropdown">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuracion<span class="caret"></span></a>
                   <ul class="dropdown-menu" role="menu">
@@ -56,9 +58,9 @@
                 <h3 class="panel-title">Programas</h3>
             </div>
             <div class="panel-body">
-                <li role="presentation"><a class="programas"href="#">Programas Aprobados </a><span class="badge aprobados">{{aprobados}}</span></li>
-                <li role="presentation"><a class="programas"href="#">Programas por Aprobar </a><span class="badge por-aprobar">{{aprobar}}</span></li>
-                <li role="presentation"><a class="programas"href="#">Programas por Analizar </a><span class="badge por-analizar">{{analizar}}</span></li> 
+                <li role="presentation"><a class="programas"href="/programasAprobados/">Programas Aprobados </a><span class="badge aprobados">{{aprobados}}</span></li>
+                <li role="presentation"><a class="programas"href="/programasPorAprobar/">Programas por Aprobar </a><span class="badge por-aprobar">{{aprobar}}</span></li>
+                <li role="presentation"><a class="programas"href="/programasPorAnalizar/">Programas por Analizar </a><span class="badge por-analizar">{{analizar}}</span></li> 
             </div>
         </div>
         <div class="panel panel-default">
@@ -86,6 +88,7 @@
                 </table>
             </div>
         </div>    
+        
     </body>    
 </html>
 
