@@ -65,16 +65,6 @@ class UploadFileForm(forms.Form):
 	
 class LineasForm(forms.Form):
 	nombreLinea  = forms.CharField(widget=forms.TextInput(),label="Nombre de Linea de Asignatura")
-	# coordinador  = forms.CharField(widget=forms.Textarea)
-	# profesor  = forms.CharField(widget=forms.Textarea)
- #    # TODO: Define form fields here
-
-
-    # TODO: Define form fields here
-    
-	# asignatura = forms.CharField(widget = forms.TextInput())
-	# semestre = forms.ChoiceField(widget=forms.RadioSelect, choices=SEMESTRES)
-	# ano = forms.ChoiceField(widget=forms.RadioSelect, choices=ANOS)
 
 class analizarForm(forms.Form):
 	decision = forms.CheckboxInput()

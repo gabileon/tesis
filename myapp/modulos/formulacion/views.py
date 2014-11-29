@@ -49,7 +49,6 @@ def defGenerales(request, id_programa):
  	ctx = {'url': url, 'p': programa, 'form':form, 'recursos': recursos}
  	return render(request, 'formulacion/definicionesGenerales.html', ctx)
 
-
 def definicionesGeneralesAdmin(request, id_programa):
 	programa = Programa.objects.get(id=id_programa)
 	username=request.user.username

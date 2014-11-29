@@ -5,7 +5,11 @@ from django_xworkflows import models as xwf_models
 import xworkflows
 from myapp import settings
 from time import time
+from djangotoolbox.fields import ListField
 
+class ListaField(ListField):
+    def formfield(self, **kwargs):
+        return models.Field.formfield(self, StringListField, **kwargs)
 
 class MyWorkflow(xwf_models.Workflow):
     log_model = '' # Disable logging to database
@@ -77,7 +81,6 @@ class Programa(xwf_models.WorkflowEnabled, models.Model):
     fechaUltimaModificacion = models.DateTimeField()
     url = models.URLField(blank=False, null=True)
     profesorEncargado = models.OneToOneField(User, null=True)
-
     
 class Capacidad(models.Model):
     programa = models.OneToOneField(Programa)
@@ -119,6 +122,7 @@ class Asignatura(models.Model):
     profesorAsignado = models.OneToOneField(User, null=True)
     linea = models.ForeignKey(Linea)
 
+
 class Recurso(models.Model):
     def url(self, filename):
         url = "MultimediaData/Recursos/%s"%(filename)
@@ -129,6 +133,10 @@ class Recurso(models.Model):
     estado = models.CharField(max_length=20, default="Generales")
     fechaUltimaModificacion = models.DateTimeField()
     recurso = models.FileField(upload_to=url)
+
+class Profesor (models.Model):
+    user =  models.OneToOneField(User, null=True)
+    linea = models.ForeignKey(Linea)
 
 
  

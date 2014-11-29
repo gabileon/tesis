@@ -175,13 +175,12 @@ DATE_INPUT_FORMATS = ('%d-%m-%Y')
 
 DATETIME_INPUT_FORMATS  = ('%d-%m-%Y %H:%M:%S')
 
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_HOST_USER = 'programasdiinf@gmail.com'
-EMAIL_HOST_PASSWORD =  'programasdiinf2014'
-EMAIL_USE_TLS = True
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-
+EMAIL_BACKEND = 'djangoappengine.mail.EmailBackend'
+# EMAIL_USE_TLS = True
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_HOST_USER = 'programasdiinf'
+# EMAIL_HOST_PASSWORD =  'programasdiinf2014'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 REDIRECT_URI = 'http://localhost:8000/oauth2callback/'
-
 DEFAULT_FILE_STORAGE = 'gaeblob_storage.backends.BlobPropertyStorage'

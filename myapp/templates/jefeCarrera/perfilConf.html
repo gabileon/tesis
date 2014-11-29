@@ -28,7 +28,6 @@
             <div id="navbar" class="navbar-collapse collapse">
               <ul class="nav navbar-nav">
              <li ><a href="/principal_jc/">Programas</a></li>
-                <li><a href="#about">Mensajeria</a></li>
                 <li><a href="/prueba/">Indicadores</a></li>
                 <li><a href="/crearFechas/">Eventos</a></li>
                 <li  class="active" class="dropdown">
@@ -41,9 +40,7 @@
                 </li>
               </ul>     
               <ul>
-                <p class="bienvenido">Bienvenido <strong>{{user.username}}</strong>
-                <a href="#"><span class="glyphicon glyphicon-envelope"></span><span class="badge">4</span></a>
-                </p>
+                <p class="bienvenido">Bienvenido <strong>{{user.username}}</strong></p>
                 <p class="logout"><a href="/logout/">Cerrar Sesión</a></p>
               </ul>
             </div><!--/.nav-collapse -->
@@ -63,10 +60,10 @@
                         <li class="perfil"><strong>Nombre: </strong>{{user.first_name}} {{user.last_name}}
                         </li>
                         <li class="perfil"><strong>Username: </strong>{{user.username}}</li>
-                        <li class="perfil"><strong>Rol: </strong>{{perfil.rol}}</li>
-                        <li class="perfil"><strong>Línea: </strong>{{perfil.linea}}</li>
+                        <li class="perfil"><strong>Rol: </strong>{{perfil.rol_PL}} {{perfil.rol_JC}} {{perfil.rol_CL}}</li>
+                        <li class="perfil"><strong>Línea: </strong>{{linea.nombreLinea}}  {{profe.linea.nombreLinea}}</li>
                         <li class="perfil"><strong>Email: </strong>{{user.email}}</li>
-                        <button type="button" class="btn btn-info">Cambiar Contraseña</button>
+                        <a href="/cambiarPassword/{{user.id}}"><button type="button" class="btn btn-info">Cambiar Contraseña</button></a>
                     </div>
                     <div class="col-md-2"></div>
                     <div class="col-md-4">

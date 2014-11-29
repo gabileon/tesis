@@ -29,7 +29,6 @@
             <div id="navbar" class="navbar-collapse collapse">
               <ul class="nav navbar-nav">
                <li ><a href="/principal_jc/">Programas</a></li>
-                <li><a href="#about">Mensajeria</a></li>
                 <li><a href="/prueba/">Indicadores</a></li>
                 <li><a href="/crearFechas/">Eventos</a></li>
                 <li  class="active" class="dropdown">
@@ -43,7 +42,6 @@
               </ul>     
               <ul>
                 <p class="bienvenido">Bienvenido <strong>{{user.username}}</strong>
-                <a href="#"><span class="glyphicon glyphicon-envelope"></span><span class="badge">4</span></a>
                 </p>
                 <p class="logout"><a href="/logout/">Cerrar Sesión</a></p>
               </ul>
@@ -55,15 +53,13 @@
         
         <div class="panel panel-primary">        
             <div class="panel-heading">
-                <h3 class="panel-title">Línea de Asignatura</h3>
+                <h3 class="panel-title">{{linea.nombreLinea}}</h3>
             </div>
             <div class="panel-body">
                 <div class="row">
                     <div class="col-md-1"></div>
                     <div class="col-md-6">
-                         <li class="perfil"><strong>Nombre: </strong>{{linea.nombreLinea}}{{linea.cordinador.id}}
-                        </li>
-                        {% if linea.coordinador %}
+                                                 {% if linea.coordinador %}
                         <li class="perfil"><strong>Coordinador: </strong><a href="/otroPerfil/{{linea.coordinador.id}}">{{linea.coordinador.username.first_name}} {{linea.coordinador.username.last_name}} [{{linea.coordinador.email}}]</a>
                         <a class="borrar" href="/removeCordinador/{{linea.id}}"><span class="glyphicon glyphicon-remove"></a></li>
                         {%else%}
@@ -94,16 +90,32 @@
                             </div>
                           </div>
                         </div>
-                        {%endif%}
-
-                        {# que acá empieze la otra columna #}
-                        <h4>Asignaturas de la línea</h4>
+                        <br>
+                         {%endif%}
+                         
+                        <li><h5 class="asignaturas"><strong>Asignaturas de la línea</h5></strong></li>
                         {%for a in asignaturas%}
-                        <li>{{a.nombreAsig}}</li>
+                        <p>- {{a.nombreAsig}}</p>
                         {%endfor%}
-                        <a href="/addAsignatura/{{linea.id}}/"><button type="button" class="btn btn-primary">
+                        
+                        <p><a class="asignatura" href="/addAsignatura/{{linea.id}}/"><button type="button" class="btn btn-primary">
                           Agregar Asignatura
+                          </button></a></p>
+                      </div>
+                      <li><strong>Profesores</strong></li>
+                        
+                      
+                         {%for p in profesores%}
+                         <a href="/otroPerfil/{{p.user.id}}"><p>- {{p.user.email}}</p></a>
+                         {%endfor%}
+
+                         <a href="/agregarProf/{{linea.id}}/"><button type="button" class="btn btn-primary">
+                          Agregar Profesores
                           </button></a>
+                           <a href="{{p.userId}}"></a>
+                        
+                                   
+                          
                     </div>
                 </div>  
             </div>
