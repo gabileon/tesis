@@ -9,10 +9,10 @@ class StringListField(forms.CharField):
     def prepare_value(self, value):
         return ', '.join(str(value))
  
-    def to_python(self, value):
-        if not value:
-            return []
-        return [item.strip() for item in value.split(',')]
+    # def to_python(self, value):
+    #     if not value:
+    #         return []
+    #     return [item.strip() for item in value.split(',')]
 
 class AgregarEventoForm(forms.ModelForm):
 
@@ -39,8 +39,7 @@ class agregarAsignaturaForm(forms.Form):
         ('2012', '2012'),
     )
     plan = forms.ChoiceField(widget=forms.RadioSelect, choices=MY_CHOICES)
-
-    
+   
 
 class agregarProfesoresForm(forms.Form):
     email = forms.EmailField(label="Correo Electronico", widget=forms.TextInput())

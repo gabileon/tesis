@@ -19,7 +19,7 @@ class UserProfile(models.Model):
 	cordLinea = models.ForeignKey(Linea, null=True, related_name='coordinador_linea')
 	# models.ForeignKey(Linea, null=True, related_name='cordinador_linea')
 	carpeta = models.CharField(max_length=250, blank=True)
-
+	carpetaReportes = models.CharField(max_length=250, null=True)
 	def create_user_profile(sender, instance, created, **kwargs):  
 		if created:  
 			profile, created = UserProfile.objects.get_or_create(user=instance)

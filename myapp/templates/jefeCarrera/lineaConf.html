@@ -29,9 +29,9 @@
             <div id="navbar" class="navbar-collapse collapse">
               <ul class="nav navbar-nav">
           <li ><a href="/principal_jc/">Programas</a></li>
-                <li><a href="#about">Mensajeria</a></li>
                 <li><a href="/prueba/">Indicadores</a></li>
                 <li><a href="/crearFechas/">Eventos</a></li>
+                <li><a href="/reportesIndicacion/">Reportes de Indicación</a></li>
                 <li  class="active" class="dropdown">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuracion<span class="caret"></span></a>
                   <ul class="dropdown-menu" role="menu">
@@ -66,10 +66,15 @@
                         </li>
                         {%endfor%}
                                        <!-- Button trigger modal -->
-                        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#myModal">
+                        
+                        <button type="button" class="disabled" >
                         Agregar Nueva Línea
                         </button>
 
+                       <!--  <button type="button" class="disabled" data-toggle="modal" data-target="#myModal">
+                        Agregar Nueva Línea
+                        </button>
+ -->
                         <!-- Modal -->
                         <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                           <div class="modal-dialog">

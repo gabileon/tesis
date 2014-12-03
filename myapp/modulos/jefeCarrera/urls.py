@@ -21,8 +21,12 @@ urlpatterns = patterns('myapp.modulos.jefeCarrera.views',
 	url(r'^roles/(?P<id_user>.*)/$', 'RolView'),
 	url(r'^cambiarRol/(?P<id_user>.*)/(?P<rol>.*)/$', 'cambiarRolView'),
 	url(r'^cambiarPassword/(?P<id_user>.*)/$', 'changePasswordView'),
-
-
+	url(r'^aprobacionPrograma/(?P<id_programa>.*)/(?P<decision>.*)/$', 'aprobacionProgramaView'),
+	url(r'^analisisPrograma/(?P<id_programa>.*)/(?P<decision>.*)/$', 'analisisProgramaView'),
+	url(r'^reportesIndicacion/$', 'reportesIndicacionView'),
+	url(r'^editFechas/(?P<id_evento>.*)/$', 'editEventosView'),
+	url(r'^editRecursos/(?P<id_recurso>.*)/$', 'editRecursosView'),
+	
 	
 
 )

@@ -11,6 +11,19 @@ class ListaField(ListField):
     def formfield(self, **kwargs):
         return models.Field.formfield(self, StringListField, **kwargs)
 
+
+class Linea(models.Model):
+    coordinador = models.OneToOneField(User, null=True)
+    nombreLinea = models.CharField(max_length=20)
+    carpetaReportes = models.CharField(max_length=40)
+
+class Asignatura(models.Model):
+    nombreAsig = models.CharField(max_length=20)
+    plan = models.CharField(max_length=5)
+    profesorAsignado = models.OneToOneField(User, null=True)
+    linea = models.ForeignKey(Linea)
+
+
 class MyWorkflow(xwf_models.Workflow):
     log_model = '' # Disable logging to database
 
@@ -60,9 +73,8 @@ class MyWorkflow(xwf_models.Workflow):
         ('siAprob_toFT', 'aprobacionLinea', 'fastTrack'),
         ('siFT_toAprobJC', 'fastTrack', 'aprobacionProgramaJC'),
         ('noFT_toAnalisisJC', 'fastTrack', 'analisisProgramaJC'),
-        ('to_indicModif', 'analisisProgramaJC', 'indicacionModificacion'),
-        ('noIndic_toAprobJC', 'indicacionModificacion', 'aprobacionProgramaJC'),
-        ('siIndic_toForm', 'indicacionModificacion', 'formulacionPrograma'),
+        ('noIndic_toAprobJC', 'analisisProgramaJC', 'aprobacionProgramaJC'),
+        ('siIndic_toForm', 'analisisProgramaJC', 'formulacionPrograma'),
         ('siAprob_toFin', 'aprobacionProgramaJC', 'fin'),
         ('noAprobJC_toForm', 'aprobacionProgramaJC', 'formulacionPrograma'),
         #  ('to_def', 'definicionGeneral', ('definicionObjetivos', 'definicionCapacidades', 'definicionContenidos')),    
@@ -112,15 +124,7 @@ class Completitud(models.Model):
     ultimaModificacionComp = models.DateTimeField(auto_now=True)
     completitudPrograma = models.TextField()
 
-class Linea(models.Model):
-    coordinador = models.OneToOneField(User, null=True)
-    nombreLinea = models.CharField(max_length=20)
 
-class Asignatura(models.Model):
-    nombreAsig = models.CharField(max_length=20)
-    plan = models.CharField(max_length=5)
-    profesorAsignado = models.OneToOneField(User, null=True)
-    linea = models.ForeignKey(Linea)
 
 
 class Recurso(models.Model):

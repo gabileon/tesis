@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 import datetime, random, sha
 from myapp.modulos.formulacion.forms import decisionEvaluacionForm, crearProgramaForm, definirObjetivosForm, definirCompletitudForm, definirCapacidadesForm, definirContenidosForm, definirClaseClaseForm
-from myapp.modulos.formulacion.models import Programa, MyWorkflow, Objetivo, Capacidad, Contenido, ClaseClase, Completitud
+from myapp.modulos.formulacion.models import Asignatura, Programa, MyWorkflow, Objetivo, Capacidad, Contenido, ClaseClase, Completitud
 from myapp.modulos.formulacion.forms import decisionEvaluacionForm, crearProgramaForm, definirObjetivosForm, definirCompletitudForm, definirCapacidadesForm, definirContenidosForm, definirClaseClaseForm
 from myapp.modulos.indicadores.models import ProgramasPorEstado
 from django.http import HttpResponse
@@ -20,10 +20,6 @@ import httplib2
 import os
 
 
-# Create your views here.
-
-
-
 CLIENT_SECRETS = os.path.join(os.path.dirname(__file__), 'client_secrets.json')
 FLOW = flow_from_clientsecrets(
     CLIENT_SECRETS,
@@ -31,7 +27,9 @@ FLOW = flow_from_clientsecrets(
     redirect_uri='http://localhost:8000/oauth2callback/')
 
 def principalPLView(request):
+	asignaturas = Asignatura.objects.all()
 	form = crearProgramaForm()
+	form.fields['asignatura'].choices = asignaturas
 	username = request.user.username
 	programas = Programa.objects.filter(profesorEncargado=request.user.id).order_by('-fechaUltimaModificacion')
 	try:

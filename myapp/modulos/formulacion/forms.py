@@ -1,5 +1,7 @@
 
 from django import forms
+from myapp.modulos.formulacion.models import Asignatura
+from django.contrib.auth.models import Group
 
 SEMESTRES = (('I','I'), ('II', 'II'))
 SINO = ('Si', ' No')
@@ -8,7 +10,10 @@ ANOS = (('2014','2014'), ('2015', '2015'))
 
 
 class crearProgramaForm(forms.Form):
-	asignatura = forms.CharField(widget = forms.TextInput())
+
+	asignaturas = [(c.id, c.nombreAsig) for c in Asignatura.objects.all()]
+
+	asignatura = forms.ChoiceField(required=True, label='Asignatura', choices=asignaturas)
 	semestre = forms.CharField(widget=forms.TextInput())
 	ano = forms.CharField(widget=forms.TextInput())
 	# semestre = forms.ChoiceField(choices=SEMESTRES)
@@ -58,10 +63,10 @@ class UploadFileForm(forms.Form):
 	 	('Definicion de Aspectos Administrativos', (u"Definicion de Aspectos Administrativos")),
 	 	('Definicion de Recursos de Aprendizaje', (u"Definicion de Recursos de Aprendizaje")),
 	 	)
-	title = forms.CharField(max_length=50)
+	title = forms.CharField(max_length=50, label="Titulo del Recurso")
 	recurso = forms.FileField(label="Seleccione el archivo")
-	descripcion = forms.CharField(widget=forms.Textarea)
-	estado = forms.ChoiceField(choices=ESTADOS)
+	descripcion = forms.CharField(widget=forms.Textarea, label="Descripcion del Recurso")
+	estado = forms.ChoiceField(choices=ESTADOS, label= "Seleccione el estado")
 	
 class LineasForm(forms.Form):
 	nombreLinea  = forms.CharField(widget=forms.TextInput(),label="Nombre de Linea de Asignatura")

@@ -8,7 +8,7 @@ from django.http import HttpResponseRedirect, HttpResponseForbidden
 from myapp.modulos.presentacion.models import UserProfile
 from myapp.modulos.formulacion.models import Profesor, Programa, MyWorkflow, Objetivo, Capacidad, Contenido, ClaseClase, Linea, Asignatura, Recurso
 from myapp.modulos.presentacion.forms import ImageUploadForm
-from myapp.modulos.jefeCarrera.models import Evento
+from myapp.modulos.jefeCarrera.models import Evento, ReporteIndic
 from myapp.modulos.coordLinea.forms import CoordinadorForm
 from myapp.modulos.formulacion.forms import LineasForm, UploadFileForm, analizarForm
 from myapp.modulos.jefeCarrera.forms import changePasswordForm, AgregarEventoForm,  agregarAsignaturaForm, agregarProfesoresForm
@@ -27,6 +27,7 @@ from myapp import settings
 import httplib2
 from myapp.modulos.jefeCarrera.rfc3339 import rfc3339
 from google.appengine.api import mail
+from myapp.modulos.indicadores.models import ProgramasPorEstado
 
 # Create your views here.
 
@@ -134,7 +135,9 @@ def perfilLineaView(request, id_linea):
                 #crear un usuario nuevo, con su perfil y con rol CL
                 #llamar a la funcion que crea nombres de usuario
                 username = coordinador.split("@", 1)
-                newUser = User.objects.create(email=coordinador, username=username[0], password=username[0])
+                newUser = User.objects.create(email=coordinador, username=username[0])
+                newUser.set_password(username[0])
+                newUser.save()
                 userProfile = UserProfile.objects.create(rol_CL='CL', user=newUser, cordLinea= linea)
                 linea.coordinador= newUser
                 linea.save()
@@ -245,9 +248,6 @@ def crearFechas(request):
             temp = Evento()
             if tipoEvento == 'general' :
                 todos = User.objects.all()
-                for usuario in todos:
-                    nuevoEvent.attendees.append(usuario.email + ', "email":')
-                    temp.attendees.append(usuario.email)
                 event = {
                     'summary': '%s'%(summary),
  
@@ -259,20 +259,132 @@ def crearFechas(request):
                         'dateTime': '%s'%(end),
                         # 'timeZone': 'America/Santiago'
                       }
-                                    }  
-                # event.update({'location': '%s'%(location)})
-                dictionary = dict(zip(("email:"),temp.attendees))
-                event['attendees'] = dictionary
-                print event
+                                    }               
+                
+                emails  = []
+                for email in todos:
+                    x = {}
+                    x.update({'email': email.email})
+                    emails.append(x)
+
+                event.update({'attendees': emails})
+                created_event = service.events().insert(calendarId='primary', body=event).execute()
                 nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, 
-                descripcion=descripcion, attendees=temp.attendees)
+                descripcion=descripcion, id_calendar=created_event['id'], tipoEvento=tipoEvento)
+                nuevoEvento.save()
+
+            if tipoEvento == 'coordinadores':
+                linea = Linea.objects.get(nombreLinea = 'Proyectos')
+                coordinador = linea.coordinador.email
+                event = {
+                    'summary': '%s'%(summary),
+ 
+                    'start': {
+                        'dateTime': '%s'%(start),
+                        # 'timeZone': 'America/Santiago'
+                      },
+                    'end': {
+                        'dateTime': '%s'%(end),
+                        # 'timeZone': 'America/Santiago'
+                      }}
+                event['attendees'] =  [{'email': coordinador}]
+                nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, 
+                descripcion=descripcion, attendees=coordinador,  id_calendar=created_event['id'], tipoEvento=tipoEvento)
                 created_event = service.events().insert(calendarId='primary', body=event).execute()       
-            
                 nuevoEvento.save()
     else:
         form = AgregarEventoForm()
     ctx = {'form':form, 'eventos': eventos, 'username': request.user.username}
     return render (request, 'jefeCarrera/Eventos.html', ctx)
+
+def editEventosView (request, id_evento):
+    try:
+        storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
+        credential = storage.get()
+        http= httplib2.Http()
+        http= credential.authorize(http)
+        service = build('calendar', 'v3', http=http)
+    except:
+        return redirect('/logout/')
+    evento = Evento.objects.get(id=id_evento)
+    if request.method == 'GET':
+        form = AgregarEventoForm(initial={
+                'summary' : evento.summary,
+                'location' : evento.location,
+                'descripcion' : evento.descripcion,
+                'tipoEvento' : evento.tipoEvento,
+                'start': evento.start,
+                'end': evento.end })
+    if request.method == 'POST':
+        form = AgregarEventoForm(request.POST)
+        if form.is_valid():
+            summary = form.cleaned_data['summary']
+            location = form.cleaned_data['location']
+            descripcion = form.cleaned_data['descripcion']
+            tipoEvento = form.cleaned_data['tipoEvento']
+            start = form.cleaned_data['start']
+            start = rfc3339(start)
+            end = form.cleaned_data['end']
+            end = rfc3339(end)
+            if tipoEvento == 'general' :
+                todos = User.objects.all()
+                idCal = evento.id_calendar
+                eventt = service.events().get(calendarId='primary', eventId=idCal).execute()
+                event = {
+                    'summary': '%s'%(summary),
+ 
+                    'start': {
+                        'dateTime': '%s'%(start),
+                        # 'timeZone': 'America/Santiago'
+                      },
+                    'end': {
+                        'dateTime': '%s'%(end),
+                        # 'timeZone': 'America/Santiago'
+                      }
+                                    }                                 
+                event['attendees']= [{'email': 'gabriela.leon@usach.cl'}]
+                event['attendees']= [{'email': 'gabi.leon.f@usach.cl'}]
+                idCal = evento.id_calendar
+                updated_event = service.events().update(calendarId='primary', eventId=idCal, body=event).execute()
+                
+                evento.summary= summary 
+                evento.location = location
+                evento.start =start
+                evento.end=end
+                evento.descripcion=descripcion 
+                # evento.attendees=emails
+                evento.tipoEvento = tipoEvento
+                evento.save()
+            if tipoEvento == 'coordinadores':
+                idCal = evento.id_calendar
+                eventt = service.events().get(calendarId='primary', eventId=idCal).execute()
+                linea = Linea.objects.get(nombreLinea = 'Proyectos')
+                coordinador = linea.coordinador.email
+                event = {
+                    'summary': '%s'%(summary),
+ 
+                    'start': {
+                        'dateTime': '%s'%(start),
+                        # 'timeZone': 'America/Santiago'
+                      },
+                    'end': {
+                        'dateTime': '%s'%(end),
+                        # 'timeZone': 'America/Santiago'
+                      }}
+                event['attendees'] =  [{'email': coordinador}]
+                idCal = evento.id_calendar
+                event = service.events().get(calendarId='primary', eventId=idCal).execute()
+                updated_event = service.events().update(calendarId='primary', eventId=eventt['id'], body=event).execute()
+                evento.summary= summary 
+                evento.location = location
+                evento.start =start
+                evento.end=end
+                evento.descripcion=descripcion 
+                evento.attendees=emails
+                evento.tipoEvento = tipoEvento
+                evento.save()
+        return redirect('/crearFechas/')
+    return render(request, 'jefeCarrera/editEvents.html', {'form':form, 'evento': evento})
 
 def deleteFechasView (request, id_evento):
     try:
@@ -298,7 +410,6 @@ def otroPerfilView(request, id_user):
 
 def recursosView(request):
     Recursos = Recurso.objects.all()
-    # Recursos = Recurso.objects.all().order_by('-fechaUltimaModificacion')
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
@@ -323,21 +434,40 @@ def deleteRecursoView(request, id_recurso):
     return HttpResponseRedirect('/recursos/')
 
 def editRecursosView(request, id_recurso):
+    # recurs = Recurso.objects.get(id=id_recurso)
+    # if request.method == 'GET':
+    #     form = UploadFileForm(initial={
+    #             'recurso' : recurs.recurso,
+    #             'title' : recurs.titulo_recurso,
+    #             'descripcion' : recurs.descripcion_recurso,
+    #             'estado' : recurs.estado})
+
     Recursos = Recurso.objects.get(id=id_recurso)
-    if request.method == "POST":
-        form = UploadFileForm(request.POST, instance=post)
+    if request.method == 'GET':
+        form = UploadFileForm(initial={
+            'recurso' : Recursos.recurso,
+            'title' : Recursos.titulo_recurso,
+            'descripcion' : Recursos.descripcion_recurso,
+            'estado' : Recursos.estado})
+    if request.method == 'POST':
+        form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
-            Recursos = form.save(commit=False)
+            # Recursos = Recurso.objects.get(id=id_recurso)
+            # Recursos.delete()
             recurso = form.cleaned_data['recurso']            
             titulo_recurso = form.cleaned_data['title']
             descripcion = form.cleaned_data['descripcion']
             estado = form.cleaned_data['estado']
             fechaUltimaModificacion = datetime.now()
+
+            Recursos.recurso = recurso            
+            Recursos.titulo_recurso = titulo_recurso
+            Recursos.descripcion = descripcion
+            Recursos.estado = estado
+            Recursos.fechaUltimaModificacion = fechaUltimaModificacion
             Recursos.save()
-            return redirect('blog.views.post_detail', pk=post.pk)
-    else:
-        form = PostForm(instance=post)
-    return render(request, 'blog/post_edit.html', {'form': form})    
+        return redirect('/recursos/')
+    return render(request, 'jefeCarrera/editRecursos.html', {'form': form})    
 
 def aprobadosViews(request):
     programas = Programa.objects.filter(state="fin")
@@ -348,25 +478,198 @@ def aprobadosViews(request):
 def porAnalizarViews(request):
     programas = Programa.objects.filter(state="analisisProgramaJC")
     username = request.user.username
-    form = analizarForm()
-    # if request.method == 'POST':
-    #     form = analizarForm(request.POST)
-    #     if form.is_valid():
-    #         decision = form.cleaned_data['decision']
-    #         if decision == 'Si':
-    #             Programa
-
-         
     ctx = {'username': username, 'programas': programas}
     return render (request, 'formulacion/programasAnalizar.html', ctx)
+
+def reportesIndicacionView(request):
+    reportes = ReporteIndic.objects.all()
+    return render(request, 'jefeCarrera/reportesIndicaciones.html', {'reportes':reportes})
+
+def analisisProgramaView(request, id_programa, decision):
+    programa = Programa.objects.get(id=id_programa)
+    id_p = programa.id
+    ## Si hay indicaciones
+    if decision == 'yes':
+        # Revisa el indicador, 
+        try:
+            m = ProgramasPorEstado.objects.get(estado=programa.state.title)
+        except ProgramasPorEstado.DoesNotExist:
+            m = None
+            # Si no existe
+        if m is None:
+            #crea un nuevo indicador
+            newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+            newIndicador.save()
+            #si existe
+        else:
+            m.cantidad = m.cantidad - 1
+            m.save()
+            #programa pasa a formulacion
+            programa.siIndic_toForm()
+            programa.to_datosAsig()
+            programa.save()
+            # se ve si existe el indicador para el estado del siguiente estado
+            try:
+                n = ProgramasPorEstado.objects.get(estado=programa.state.title)
+            except ProgramasPorEstado.DoesNotExist:
+                n = None
+            if n is None:
+                newIndicador2 = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                newIndicador2.save()
+            else:
+                n.cantidad = n.cantidad + 1
+                n.save()
+        ## se crea la carpeta
+        perfil = UserProfile.objects.get(user=request.user)
+        try:
+            carpeta = perfil.carpetaReportes
+        except:
+            carpeta = None
+        if carpeta is None:
+            carpeta = 'Reporte de Indicaciones'
+            reporte = ReporteIndic()
+            reporte.programa = programa
+            try:
+                storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
+                credential = storage.get()
+                http= httplib2.Http()
+                http= credential.authorize(http)
+                drive_service = build('drive', 'v2', http=http, developerKey="hbP6_4UJIKe-m74yLd8tQDfT")
+            except:
+                return redirect('/logout/')
+            body2 = {
+                       'title': '%s'%carpeta,
+                       'mimeType': "application/vnd.google-apps.folder"
+                   }
+                   ### se crea carpeta ###
+            folder = drive_service.files().insert(body = body2).execute()
+            id_folder = folder.get('id')
+            titulo = "Reporte de Indicaciones programa" + programa.asignatura + " " + programa.semestre + " " + programa.ano
+            body = {
+                'title':'%s'%(titulo),
+                'mimeType': "application/vnd.google-apps.document",
+                'parents' : [{'id' : id_folder}]
+            }                       
+            try:
+                file = drive_service.files().insert(body=body).execute()
+                url = file.get('alternateLink')
+                reporte.url = url
+                reporte.fechaModificacion=datetime.now()
+                reporte.carpeta = id_folder
+                perfil.carpetaReportes = id_folder
+                perfil.save()
+                reporte.save()
+            except:
+                return render(request, 'comunicacion/error.html')
+        else:
+            reporte = ReporteIndic()
+            reporte.programa = programa
+            reporte.carpeta = carpeta
+            try:
+                storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
+                credential = storage.get()
+                http= httplib2.Http()
+                http= credential.authorize(http)
+                drive_service = build('drive', 'v2', http=http, developerKey="hbP6_4UJIKe-m74yLd8tQDfT")
+            except:
+                return redirect('/logout/')
+            titulo = "Reporte de Indicaciones Programa " + programa.asignatura + " " + programa.semestre + " " + programa.ano
+            body = {
+                'title':'%s'%(titulo),
+                'mimeType': "application/vnd.google-apps.document",
+                'parents' : [{'id' : reporte.carpeta}]
+            }                       
+            try:
+                file = drive_service.files().insert(body=body).execute()
+                url = file.get('alternateLink')
+                reporte.url = url
+                reporte.fechaModificacion=datetime.now()
+                reporte.save()
+            except:
+                return render(request, 'comunicacion/error.html')
+        return HttpResponseRedirect('/reportesIndicacion/')
+             
+    if decision == 'no':
+        try:
+            m = ProgramasPorEstado.objects.get(estado=programa.state.title)
+        except ProgramasPorEstado.DoesNotExist:
+            m = None
+        if m is None:
+            newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+            newIndicador.save()
+        else:
+            m.cantidad = m.cantidad - 1
+            m.save()
+            programa.noIndic_toAprobJC()
+            programa.save()
+            try:
+                n = ProgramasPorEstado.objects.get(estado=programa.state.title)
+            except ProgramasPorEstado.DoesNotExist:
+                n = None
+            if n is None:
+                newIndicador2 = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                newIndicador2.save()
+            else:
+                n.cantidad = n.cantidad + 1
+                n.save()
+        return HttpResponseRedirect('/programasPorAnalizar/')
 
 def porAprobarView(request):
     programas = Programa.objects.filter(state="aprobacionProgramaJC")
     username = request.user.username
-
     ctx = {'username': username, 'programas': programas}
     return render (request, 'formulacion/programasPorAprobar.html', ctx)
 
+def aprobacionProgramaView(request, id_programa, decision):
+    programa = Programa.objects.get(id=id_programa)
+    if decision == 'yes':        
+        try:
+            x = ProgramasPorEstado.objects.get(estado=programa.state.title)
+        except ProgramasPorEstado.DoesNotExist:
+            x = None
+        if x is None:
+            newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+            newIndicador.save()
+        else:
+            x.cantidad = x.cantidad - 1
+            x.save()
+            programa.siAprob_toFin()
+            programa.save()
+            try:
+                y = ProgramasPorEstado.objects.get(estado=programa.state.title)
+            except ProgramasPorEstado.DoesNotExist:
+                y = None
+            if y is None:
+                newIndicador2 = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                newIndicador2.save()
+            else:
+                y.cantidad = y.cantidad + 1
+                y.save()
+    if decision == 'no':
+        try:
+            m = ProgramasPorEstado.objects.get(estado=programa.state.title)
+        except ProgramasPorEstado.DoesNotExist:
+            m = None
+        if m is None:
+            newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+            newIndicador.save()
+        else:
+            m.cantidad = m.cantidad - 1
+            m.save()
+            programa.noAprobJC_toForm()
+            programa.save()
+            try:
+                n = ProgramasPorEstado.objects.get(estado=programa.state.title)
+            except ProgramasPorEstado.DoesNotExist:
+                n = None
+            if n is None:
+                newIndicador2 = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                newIndicador2.save()
+            else:
+                n.cantidad = y.cantidad + 1
+                n.save()
+    return HttpResponseRedirect('/programasPorAprobar/')
+        
 def addProfesoresView(request, id_linea):
     linea = Linea.objects.get(id=id_linea)
     form = agregarProfesoresForm()
@@ -383,7 +686,9 @@ def addProfesoresView(request, id_linea):
                 #crear un usuario nuevo, con su perfil y con rol pl
                 #llamar a la funcion que crea nombres de usuario
                 username = email.split("@", 1)
-                newUser = User.objects.create(email=email, username=username[0], password=username[0])
+                newUser = User.objects.create(email=email, username=username[0])
+                newUser.set_password(username[0])
+                newUser.save()
                 userProfile = UserProfile.objects.create(user=newUser)
                 userProfile.rol_PL = "PL"
                 userProfile.save()
