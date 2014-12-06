@@ -14,6 +14,23 @@ class StringListField(forms.CharField):
     #         return []
     #     return [item.strip() for item in value.split(',')]
 
+class AgregarEventoCordForm(forms.ModelForm):
+
+    TIPOS2 = (
+        ('profesor', 'Profesores de la Linea'),
+        ('jefe', 'Solo Jefe Carrera'),
+        )
+    
+    class Meta:
+        model = Evento
+        fields = ['summary', 'location', 'descripcion', 'start', 'end']
+
+    summary = forms.CharField(widget = forms.TextInput(), label="Titulo del Evento:")
+    location = forms.CharField(widget = forms.TextInput(), label="Ubicacion del Evento:")
+    descripcion = forms.CharField(widget=forms.Textarea, label= "Descripcion: ")
+    start = forms.DateTimeField(widget=DateTimeWidget(usel10n=True, bootstrap_version=3), label="Fecha y hora de inicio:")
+    end = forms.DateTimeField(widget=DateTimeWidget(usel10n=True, bootstrap_version=3), label="Fecha y hora de termino:")
+    tipoEvento = forms.ChoiceField(widget=forms.RadioSelect, choices=TIPOS2)
 class AgregarEventoForm(forms.ModelForm):
 
     TIPOS = (

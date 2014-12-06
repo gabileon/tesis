@@ -2,6 +2,7 @@ from django.db import models
 from django import forms 
 from djangotoolbox.fields import ListField
 from myapp.modulos.formulacion.models import Programa
+from django.contrib.auth.models import User
 
 
 
@@ -13,6 +14,8 @@ class Evento(models.Model):
 	descripcion = models.TextField()
 	tipoEvento = models.CharField(max_length=100)
 	id_calendar = models.CharField(max_length=100)
+	anfitrion = models.OneToOneField(User, null=True)
+	invitados = ListField()
 
 class ReporteIndic(models.Model):
 	programa = models.OneToOneField(Programa)

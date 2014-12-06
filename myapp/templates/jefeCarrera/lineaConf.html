@@ -38,14 +38,12 @@
                     <li><a href="/miperfil/">Mi Perfil</a></li>
                     <li class="active"><a href="/lineas/">Líneas de Asignatura</a></li>
                     <li><a href="/recursos/">Recursos de Aprendizaje</a></li>
+                     <li><a href="/roles/{{user.id}}">Cambiar de Rol</a></li>
                   </ul>
                 </li>
               </ul>     
               <ul>
-                <p class="bienvenido">Bienvenido <strong>{{user.username}}</strong>
-                <a href="#"><span class="glyphicon glyphicon-envelope"></span><span class="badge">4</span></a>
-                </p>
-                <p class="logout"><a href="/logout/">Cerrar Sesión</a></p>
+                <p class="bienvenido">Bienvenido <strong>{{username}}</strong> <a href="/logout/"><span class="glyphicon glyphicon-log-out"></span></a></p>
               </ul>
             </div><!--/.nav-collapse -->
           </div>
@@ -67,11 +65,11 @@
                         {%endfor%}
                                        <!-- Button trigger modal -->
                         
-                        <button type="button" class="disabled" >
+                     <!--    <button type="button" class="disabled" >
                         Agregar Nueva Línea
                         </button>
-
-                       <!--  <button type="button" class="disabled" data-toggle="modal" data-target="#myModal">
+ -->
+                        <button type="button" class="disabled" data-toggle="modal" data-target="#myModal">
                         Agregar Nueva Línea
                         </button>
  -->

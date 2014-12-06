@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 import datetime, random, sha
 from myapp.modulos.formulacion.forms import decisionEvaluacionForm, crearProgramaForm, definirObjetivosForm, definirCompletitudForm, definirCapacidadesForm, definirContenidosForm, definirClaseClaseForm
-from myapp.modulos.formulacion.models import Asignatura, Programa, MyWorkflow, Objetivo, Capacidad, Contenido, ClaseClase, Completitud
+from myapp.modulos.formulacion.models import Log, Asignatura, Programa, MyWorkflow, Objetivo, Capacidad, Contenido, ClaseClase, Completitud
 from myapp.modulos.formulacion.forms import decisionEvaluacionForm, crearProgramaForm, definirObjetivosForm, definirCompletitudForm, definirCapacidadesForm, definirContenidosForm, definirClaseClaseForm
 from myapp.modulos.indicadores.models import ProgramasPorEstado
 from django.http import HttpResponse
@@ -29,7 +29,7 @@ FLOW = flow_from_clientsecrets(
 def principalPLView(request):
 	asignaturas = Asignatura.objects.all()
 	form = crearProgramaForm()
-	form.fields['asignatura'].choices = asignaturas
+	# form.fields['asignatura'].choices = asignaturas
 	username = request.user.username
 	programas = Programa.objects.filter(profesorEncargado=request.user.id).order_by('-fechaUltimaModificacion')
 	try:
@@ -67,7 +67,9 @@ def principalPLView(request):
 				url = file.get('alternateLink')
 		 		p.url = url
 		 		p.to_formulacion()
+		 		logEstado(p, p.state.title)
 		 		p.to_datosAsig()
+		 		logEstado(p, p.state.title)
 		 		p.save()
 				try:
 		 			x = ProgramasPorEstado.objects.get(estado=p.state.title)
@@ -193,3 +195,10 @@ def principalPLView(request):
 	# 	#GEt
 	# 	ctx = {'username' : username, 'form': form, 'programas': programas}
 	# 	return render(request, 'profLinea/principalPL.html', ctx)
+
+def logEstado (programa, state):
+	l= Log()
+	l.programa = programa
+	l.state = state
+	l.fecha = datetime.now()
+	l.save()	

@@ -1,12 +1,13 @@
 from django.shortcuts import render, redirect
 import datetime, random, sha
+from datetime import timedelta
 from django.shortcuts import render_to_response, get_object_or_404
 from django.core.mail import send_mail
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from myapp.modulos.presentacion.models import UserProfile
-from myapp.modulos.formulacion.models import Profesor, Programa, MyWorkflow, Objetivo, Capacidad, Contenido, ClaseClase, Linea, Asignatura, Recurso
+from myapp.modulos.formulacion.models import Log, Profesor, Programa, MyWorkflow, Objetivo, Capacidad, Contenido, ClaseClase, Linea, Asignatura, Recurso
 from myapp.modulos.presentacion.forms import ImageUploadForm
 from myapp.modulos.jefeCarrera.models import Evento, ReporteIndic
 from myapp.modulos.coordLinea.forms import CoordinadorForm
@@ -25,9 +26,13 @@ import httplib2
 import os
 from myapp import settings
 import httplib2
-from myapp.modulos.jefeCarrera.rfc3339 import rfc3339
+from myapp.modulos.jefeCarrera.hora import build_rfc3339_phrase
 from google.appengine.api import mail
 from myapp.modulos.indicadores.models import ProgramasPorEstado
+from apiclient.discovery import build
+from apiclient.http import MediaFileUpload
+
+FILENAME = 'hola.txt'
 
 # Create your views here.
 
@@ -54,7 +59,7 @@ def cambiarRolView(request, id_user, rol):
         return HttpResponseRedirect('/principal_jc/')
     if rol == 'CL':
         perfil.rol_actual = 'CL'
-        pass
+        return HttpResponseRedirect('/principal_cl/')
 
 def principalView(request):
     programa = Programa.objects.all().order_by('-fechaUltimaModificacion')
@@ -84,15 +89,7 @@ def changePasswordView(request, id_user):
 def miperfilView(request):
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
-    try:
-        linea = Linea.objects.get(coordinador=userTemp.id)
-    except Linea.DoesNotExist:
-        linea = None
-    try:
-        profe = Profesor.objects.get(user=userTemp.id)
-    except Linea.DoesNotExist:
-        profe = None
-    ctx = {'user': userTemp, 'perfil': perfilTemp, 'linea':linea, 'profe': profe}
+    ctx = {'user': userTemp, 'perfil': perfilTemp}
     if request.method == 'POST':
         form = ImageUploadForm(request.POST, request.FILES)
         if form.is_valid():
@@ -110,6 +107,24 @@ def lineasView(request):
         if form.is_valid():
             nombreLinea = form.cleaned_data['nombreLinea']
             linea = Linea.objects.create(nombreLinea= nombreLinea)
+            carpeta = "Linea de " + nombreLinea
+            ### Crear Carpeta #####drive
+            try:
+                storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
+                credential = storage.get()
+                http= httplib2.Http()
+                http= credential.authorize(http)
+                drive_service = build('drive', 'v2', http=http, developerKey="hbP6_4UJIKe-m74yLd8tQDfT")
+            except:
+                return redirect('/logout/')
+            body2 = {
+                       'title': '%s'%carpeta,
+                       'mimeType': "application/vnd.google-apps.folder"
+                   }
+                   ### se crea carpeta ###
+            folder = drive_service.files().insert(body = body2).execute()
+            id_folder = folder.get('id')
+            linea.carpeta = id_folder
             linea.save()
             return HttpResponseRedirect("/lineas/")
     ctx = {'form':form, 'linea':linea}
@@ -120,7 +135,6 @@ def perfilLineaView(request, id_linea):
     asignaturas = Asignatura.objects.filter(linea=linea)
     profesores = Profesor.objects.filter(linea=linea)
     estado = 0
-
     # profesores = Profesor.objects.filter(linea__id=id_linea)
     form = CoordinadorForm()
     if request.method == "POST":
@@ -142,40 +156,42 @@ def perfilLineaView(request, id_linea):
                 linea.coordinador= newUser
                 linea.save()
                 userProfile.save()
-                # to_admin = coordinador
-                # html_content = "fsd"
-                # msg = EmailMultiAlternatives('Coordinador de Linea', html_content,'from@server.com', [to_admin] )
-                # msg.attach_alternative(html_content,'text/html')
-                # msg.send()
+                ## se envia email al nuevo coordinador ##
+                # message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",
+                #     subject="Notificacion")
+
+                # message.to = coordinador
+                # message.html = """
+                # <html><head></head><body>
+                # holi funciono :)!
+                # </body></html>
+                # """
+                # message.send()
+
             # Comprobar si existe el coordinador en el sistema
             else:
                 temp = User.objects.get(email=coordinador)
+                temp.rol_CL = 'CL'
                 profile = UserProfile.objects.get(user=temp.id)
                 profile.cordLinea = linea
                 profile.save()
                 linea.coordinador = temp
                 linea.save()
-                # subject, from_email, to = 'hello', 'programasdiinf@gmail.com', 'gabriela.leon@usach.cl'
-                # text_content = 'This is an important message.'
-                # html_content = '<p>This is an <strong>important</strong> message.</p>'
-                # msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
-                # msg.attach_alternative(html_content, "text/html")
-                # msg.send()
-                # # to_admin = coordinador
-                # html_content = " Estimado:<br><br><br> ha sido designado como Coordinador de la linea" +linea.nombreLinea + ". Para la realizacion de esta funcion se necesitara que usted acceda a http://programas-diinf.appspot.com/login con los siguientes datos:<br><br> username= <br>password= . Al ingresar debera actualizar sus datos. Saludos" 
-                # msg = EmailMultiAlternatives('Coordinador de Linea', html_content,'from@server.com', [to_admin] )
-                # msg.attach_alternative(html_content,'text/html')
-                # msg.send()
-            # message = mail.EmailMessage(sender="Admin <gabi.leon.f@gmail.com",
-            #         subject="Notificacion")
+                message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",
+                    subject="Notificacion")
 
-            # message.to = coordinador
-            # message.html = """
-            #     <html><head></head><body>
-            #     Jo jo jo jo
-            #     </body></html>
-            #     """
-            # message.send()
+                message.to = coordinador
+                message.html = """
+                <html><head></head><body>
+                holi!
+                </body></html>
+                """
+                # message.send()
+                # html_content = " Estimado:<br><br><br> ha sido designado como Coordinador de la linea" 
+                #+linea.nombreLinea + ". Para la realizacion de esta funcion se necesitara que usted 
+                #acceda a http://programas-diinf.appspot.com/login con los siguientes datos:<br><br> 
+                #username= <br>password= . Al ingresar debera actualizar sus datos. Saludos" 
+
         return HttpResponseRedirect('/perfilLinea/'+id_linea)   
     else:
         form = CoordinadorForm()
@@ -221,7 +237,8 @@ def addAsignaturaView(request, id_linea):
     return render(request, 'jefeCarrera/addAsignatura.html', ctx)
 
 def crearFechas(request):
-    eventos = Evento.objects.all()
+    eventos = Evento.objects.filter(anfitrion=request.user)
+    eventosInvitados = Evento.objects.filter(tipoEvento='jefe')
     try:
         storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
         credential = storage.get()
@@ -241,9 +258,9 @@ def crearFechas(request):
             descripcion = form.cleaned_data['descripcion']
             tipoEvento = form.cleaned_data['tipoEvento']
             start = form.cleaned_data['start']
-            start = rfc3339(start)
+            inicio = build_rfc3339_phrase(start)
             end = form.cleaned_data['end']
-            end = rfc3339(end)
+            fin = build_rfc3339_phrase(end)
             nuevoEvent = Evento()
             temp = Evento()
             if tipoEvento == 'general' :
@@ -252,25 +269,26 @@ def crearFechas(request):
                     'summary': '%s'%(summary),
  
                     'start': {
-                        'dateTime': '%s'%(start),
+                        'dateTime': '%s'%(inicio),
                         # 'timeZone': 'America/Santiago'
                       },
                     'end': {
-                        'dateTime': '%s'%(end),
+                        'dateTime': '%s'%(fin),
                         # 'timeZone': 'America/Santiago'
                       }
                                     }               
-                
+                invitados = []
                 emails  = []
                 for email in todos:
                     x = {}
                     x.update({'email': email.email})
+                    invitados.append(email.email)
                     emails.append(x)
 
                 event.update({'attendees': emails})
                 created_event = service.events().insert(calendarId='primary', body=event).execute()
-                nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, 
-                descripcion=descripcion, id_calendar=created_event['id'], tipoEvento=tipoEvento)
+                nuevoEvento = Evento.objects.create(summary= summary, location = location, start =inicio, end=fin, 
+                descripcion=descripcion, id_calendar=created_event['id'], tipoEvento=tipoEvento, anfitrion=request.user, invitados =invitados)
                 nuevoEvento.save()
 
             if tipoEvento == 'coordinadores':
@@ -280,21 +298,22 @@ def crearFechas(request):
                     'summary': '%s'%(summary),
  
                     'start': {
-                        'dateTime': '%s'%(start),
+                        'dateTime': '%s'%(inicio),
                         # 'timeZone': 'America/Santiago'
                       },
                     'end': {
-                        'dateTime': '%s'%(end),
+                        'dateTime': '%s'%(fin),
                         # 'timeZone': 'America/Santiago'
                       }}
                 event['attendees'] =  [{'email': coordinador}]
+                created_event = service.events().insert(calendarId='primary', body=event).execute()     
                 nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, 
-                descripcion=descripcion, attendees=coordinador,  id_calendar=created_event['id'], tipoEvento=tipoEvento)
-                created_event = service.events().insert(calendarId='primary', body=event).execute()       
+                descripcion=descripcion,  id_calendar=created_event['id'], tipoEvento=tipoEvento , anfitrion=request.user, invitados =coordinador)
+                  
                 nuevoEvento.save()
     else:
         form = AgregarEventoForm()
-    ctx = {'form':form, 'eventos': eventos, 'username': request.user.username}
+    ctx = {'form':form, 'eventos': eventos, 'username': request.user.username, 'eventosInvitados': eventosInvitados}
     return render (request, 'jefeCarrera/Eventos.html', ctx)
 
 def editEventosView (request, id_evento):
@@ -323,9 +342,9 @@ def editEventosView (request, id_evento):
             descripcion = form.cleaned_data['descripcion']
             tipoEvento = form.cleaned_data['tipoEvento']
             start = form.cleaned_data['start']
-            start = rfc3339(start)
+            inicio = build_rfc3339_phrase(start)
             end = form.cleaned_data['end']
-            end = rfc3339(end)
+            fin = build_rfc3339_phrase(end)
             if tipoEvento == 'general' :
                 todos = User.objects.all()
                 idCal = evento.id_calendar
@@ -334,12 +353,12 @@ def editEventosView (request, id_evento):
                     'summary': '%s'%(summary),
  
                     'start': {
-                        'dateTime': '%s'%(start),
-                        # 'timeZone': 'America/Santiago'
+                        'dateTime': '%s'%(inicio),
+                        'timeZone': 'America/Santiago'
                       },
                     'end': {
-                        'dateTime': '%s'%(end),
-                        # 'timeZone': 'America/Santiago'
+                        'dateTime': '%s'%(fin),
+                        'timeZone': 'America/Santiago'
                       }
                                     }                                 
                 event['attendees']= [{'email': 'gabriela.leon@usach.cl'}]
@@ -352,7 +371,6 @@ def editEventosView (request, id_evento):
                 evento.start =start
                 evento.end=end
                 evento.descripcion=descripcion 
-                # evento.attendees=emails
                 evento.tipoEvento = tipoEvento
                 evento.save()
             if tipoEvento == 'coordinadores':
@@ -364,12 +382,12 @@ def editEventosView (request, id_evento):
                     'summary': '%s'%(summary),
  
                     'start': {
-                        'dateTime': '%s'%(start),
-                        # 'timeZone': 'America/Santiago'
+                        'dateTime': '%s'%(inicio),
+                        'timeZone': 'America/Santiago'
                       },
                     'end': {
-                        'dateTime': '%s'%(end),
-                        # 'timeZone': 'America/Santiago'
+                        'dateTime': '%s'%(fin),
+                        'timeZone': 'America/Santiago'
                       }}
                 event['attendees'] =  [{'email': coordinador}]
                 idCal = evento.id_calendar
@@ -420,7 +438,7 @@ def recursosView(request):
             descripcion = form.cleaned_data['descripcion']
             estado = form.cleaned_data['estado']
             fechaUltimaModificacion = datetime.now()
-            newRecurso = Recurso.objects.create(recurso = recurso, titulo_recurso=titulo_recurso, descripcion_recurso=descripcion, estado=estado, fechaUltimaModificacion=fechaUltimaModificacion)
+            newRecurso = Recurso.objects.create(recurso = recurso, titulo_recurso=titulo_recurso, creador=request.user, descripcion_recurso=descripcion, estado=estado, fechaUltimaModificacion=fechaUltimaModificacion)
             newRecurso.save()
             return HttpResponseRedirect('/recursos/')
     else:
@@ -485,6 +503,9 @@ def reportesIndicacionView(request):
     reportes = ReporteIndic.objects.all()
     return render(request, 'jefeCarrera/reportesIndicaciones.html', {'reportes':reportes})
 
+def logPrograma ( request, id_programa):
+    pass
+
 def analisisProgramaView(request, id_programa, decision):
     programa = Programa.objects.get(id=id_programa)
     id_p = programa.id
@@ -506,7 +527,9 @@ def analisisProgramaView(request, id_programa, decision):
             m.save()
             #programa pasa a formulacion
             programa.siIndic_toForm()
+            logEstado(p, p.state.title)
             programa.to_datosAsig()
+            logEstado(p, p.state.title)
             programa.save()
             # se ve si existe el indicador para el estado del siguiente estado
             try:
@@ -544,7 +567,7 @@ def analisisProgramaView(request, id_programa, decision):
                    ### se crea carpeta ###
             folder = drive_service.files().insert(body = body2).execute()
             id_folder = folder.get('id')
-            titulo = "Reporte de Indicaciones programa" + programa.asignatura + " " + programa.semestre + " " + programa.ano
+            titulo = "Reporte de Indicaciones Programa " + programa.asignatura + " " + programa.semestre + " " + programa.ano
             body = {
                 'title':'%s'%(titulo),
                 'mimeType': "application/vnd.google-apps.document",
@@ -601,6 +624,7 @@ def analisisProgramaView(request, id_programa, decision):
             m.cantidad = m.cantidad - 1
             m.save()
             programa.noIndic_toAprobJC()
+            logEstado(p, p.state.title)
             programa.save()
             try:
                 n = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -634,6 +658,7 @@ def aprobacionProgramaView(request, id_programa, decision):
             x.cantidad = x.cantidad - 1
             x.save()
             programa.siAprob_toFin()
+            logEstado(p, p.state.title)
             programa.save()
             try:
                 y = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -657,6 +682,7 @@ def aprobacionProgramaView(request, id_programa, decision):
             m.cantidad = m.cantidad - 1
             m.save()
             programa.noAprobJC_toForm()
+            logEstado(p, p.state.title)
             programa.save()
             try:
                 n = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -697,12 +723,12 @@ def addProfesoresView(request, id_linea):
                 newUser.save()
             else:
                 try:
-                    y = Profesor.objects.get(user=x.id)
+                    y = Profesor.objects.get(user=x)
                 except Profesor.DoesNotExist:
                     y = None
                 if  y is None:
-                    profe = Profesor.objects.create(user=x, linea=linea, ea="32")
-                    profile = UserProfile.objects.get(user=x.id)
+                    profe = Profesor.objects.create(user=x, linea=linea)
+                    profile = UserProfile.objects.get(user=x)
                     if profile.rol_PL!="PL":
                         profile.rol_PL= "PL"
                     profe.save()
@@ -715,5 +741,10 @@ def addProfesoresView(request, id_linea):
     ctx = {'form':form, 'linea':linea, 'asignaturas':asignaturas, 'profesores':profesores}
     return render(request, 'jefeCarrera/addProf.html', ctx)
 
-
+def logEstado (programa, state):
+    l= Log()
+    l.programa = programa
+    l.state = state
+    l.fecha = datetime.now()
+    l.save()    
             

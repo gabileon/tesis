@@ -132,17 +132,19 @@ INSTALLED_APPS = (
     'myapp.modulos.jefeCarrera',
     'myapp.modulos.coordLinea',
     'myapp.modulos.profLinea',
+    'myapp.modulos.indicadores',
     'djangotoolbox',
     'autoload',
     'dbindexer',
     'xworkflows',
     'django_xworkflows',
     'django_forms_bootstrap',
-    'djangoappengine',
     'gaeblob_storage',
+    'simplejson',
     'highcharts',
     'chartit',
     'datetimewidget',
+    'djangoappengine',
 )
 
 
@@ -183,4 +185,5 @@ EMAIL_BACKEND = 'djangoappengine.mail.EmailBackend'
 # EMAIL_HOST_PASSWORD =  'programasdiinf2014'
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 REDIRECT_URI = 'http://localhost:8000/oauth2callback/'
+#REDIRECT_URI = 'http://programas-diinf.appspot.com/oauth2callback/'
 DEFAULT_FILE_STORAGE = 'gaeblob_storage.backends.BlobPropertyStorage'

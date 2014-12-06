@@ -37,12 +37,12 @@
                     <li  class="active"><a href="/miperfil/">Mi Perfil</a></li>
                     <li><a href="/lineas/">Líneas de Asignatura</a></li>
                     <li><a href="/recursos/">Recursos de Aprendizaje</a></li>
+                     <li><a href="/roles/{{user.id}}">Cambiar de Rol</a></li>
                   </ul>
                 </li>
               </ul>     
               <ul>
-                <p class="bienvenido">Bienvenido <strong>{{user.username}}</strong></p>
-                <p class="logout"><a href="/logout/">Cerrar Sesión</a></p>
+                <p class="bienvenido">Bienvenido <strong>{{username}}</strong> <a href="/logout/"><span class="glyphicon glyphicon-log-out"></span></a></p>
               </ul>
             </div><!--/.nav-collapse -->
           </div>

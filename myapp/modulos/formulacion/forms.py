@@ -11,9 +11,9 @@ ANOS = (('2014','2014'), ('2015', '2015'))
 
 class crearProgramaForm(forms.Form):
 
-	asignaturas = [(c.id, c.nombreAsig) for c in Asignatura.objects.all()]
-
-	asignatura = forms.ChoiceField(required=True, label='Asignatura', choices=asignaturas)
+	# asignaturas = [(c.id, c.nombreAsig) for c in Asignatura.objects.all()]
+	# asignatura = forms.ChoiceField(required=True, label='Asignatura', choices=asignaturas)
+	asignatura = forms.CharField(widget=forms.TextInput())
 	semestre = forms.CharField(widget=forms.TextInput())
 	ano = forms.CharField(widget=forms.TextInput())
 	# semestre = forms.ChoiceField(choices=SEMESTRES)
@@ -49,7 +49,7 @@ class decisionEvaluacionForm(forms.Form):
 
 class UploadFileForm(forms.Form):
 	ESTADOS = (
-		('En General', (u"En General")),
+		('General', (u"General")),
 		('Formulacion Programa por Linea', (u"Formulacion Programa por Linea")),
 	 	('Definicion Datos Asignatura', (u"Definicion Datos Asignatura")),
 	 	('Definiciones Generales', (u"Definiciones Generales")),

@@ -16,6 +16,7 @@ class Linea(models.Model):
     coordinador = models.OneToOneField(User, null=True)
     nombreLinea = models.CharField(max_length=20)
     carpetaReportes = models.CharField(max_length=40)
+    carpeta = models.CharField(max_length=40)
 
 class Asignatura(models.Model):
     nombreAsig = models.CharField(max_length=20)
@@ -87,12 +88,19 @@ class MyWorkflow(xwf_models.Workflow):
 class Programa(xwf_models.WorkflowEnabled, models.Model):
 # SE DEFINE SU ESTADO QUE ESTA DADO POR EL WORKFLOW DEFINIDO ###
     state = xwf_models.StateField(MyWorkflow)
-    asignatura =  models.CharField(max_length=100)
+    #asignatura =  models.OneToOneField(Asignatura, null=True)
+    asignatura =   models.CharField(max_length=10)
     semestre =  models.CharField(max_length=10)
     ano =  models.CharField(max_length=10)
     fechaUltimaModificacion = models.DateTimeField()
     url = models.URLField(blank=False, null=True)
     profesorEncargado = models.OneToOneField(User, null=True)
+
+class Log(models.Model):
+    programa = models.OneToOneField(Programa)
+    fecha = models.DateTimeField()
+    state = models.CharField(max_length=20)
+    
     
 class Capacidad(models.Model):
     programa = models.OneToOneField(Programa)
@@ -124,9 +132,6 @@ class Completitud(models.Model):
     ultimaModificacionComp = models.DateTimeField(auto_now=True)
     completitudPrograma = models.TextField()
 
-
-
-
 class Recurso(models.Model):
     def url(self, filename):
         url = "MultimediaData/Recursos/%s"%(filename)
@@ -137,6 +142,7 @@ class Recurso(models.Model):
     estado = models.CharField(max_length=20, default="Generales")
     fechaUltimaModificacion = models.DateTimeField()
     recurso = models.FileField(upload_to=url)
+    creador = models.OneToOneField(User, null=True)
 
 class Profesor (models.Model):
     user =  models.OneToOneField(User, null=True)

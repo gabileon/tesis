@@ -17,6 +17,7 @@ import httplib2
 # Create your views here.
 
 
+
 CLIENT_SECRETS = os.path.join(os.path.dirname(__file__), 'client_secrets.json')
 FLOW = flow_from_clientsecrets(
     CLIENT_SECRETS,
@@ -55,7 +56,7 @@ def signup_view(request):
 			password_two = form.cleaned_data['password_two']
 			newUser = User.objects.create_user(username=username, first_name=name, last_name=last_name, email=email, password=password_one)
 			newUser.save()
-			newUserProfile = UserProfile.objects.create(user=newUser, rol_JC='JC')
+			newUserProfile = UserProfile.objects.create(user=newUser, rol_CL='CL')
 			newUserProfile.save()
 			return redirect('/login')
 		else:
