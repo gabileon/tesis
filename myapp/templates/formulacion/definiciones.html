@@ -39,10 +39,7 @@
                 </li>
               </ul>     
               <ul>
-                <p class="bienvenido">Bienvenido <strong>{{username}}</strong>
-                <a href="#"><span class="glyphicon glyphicon-envelope"></span><span class="badge">4</span></a>
-                </p>
-                <p class="logout"><a href="/logout/">Cerrar Sesión</a></p>
+                  <p class="bienvenido">Bienvenido <strong>{{username}}</strong> <a href="/logout/"><span class="glyphicon glyphicon-log-out"></span></a></p>
               </ul>
             </div><!--/.nav-collapse -->
           </div>
@@ -59,8 +56,9 @@
                 <h3 class="panel-title">Constribución al Perfil de Egreso</h3>
             </div>
             <div class="panel-body">
-                <a href="/definicionConstribucion/{{p.id}}"><button type="button" class="btn btn-default">Definir</button></a> 
-                <li>Estado actual: {{p.objetivo.estadoObj}}</li>
+                <p><a href="/definicionConstribucion/{{p.id}}"><button type="button" class="btn btn-info">Definir</button></a> 
+                
+                    Estado actual: {{p.objetivo.estadoObj}}</p>
             </div>
         </div>
 
@@ -69,7 +67,8 @@
                 <h3 class="panel-title">Resultados de Aprendizaje</h3>
             </div>
             <div class="panel-body">
-               <a href="/definicionRdA/{{p.id}}"><button type="button" class="btn btn-default">Definir</button></a>
+               <a href="/definicionRdA/{{p.id}}"><button type="button" class="btn btn-info">Definir</button></a>
+               <p></p>
                <li>Estado actual: {{p.capacidad.estadoCapac }} </li> 
             </div>
     </div>
@@ -80,12 +79,13 @@
                 <h3 class="panel-title">Estrategias de Enseñanza y de Aprendizaje</h3>
             </div>
             <div class="panel-body">
-                <a href="/definicionEstra/{{p.id}}"><button type="button" class="btn btn-default">Definir</button></a>
+                <a href="/definicionEstra/{{p.id}}"><button type="button" class="btn btn-info">Definir</button></a>
+                <p></p>
                 <li>Estado actual: {{p.contenido.estadoCont }}</li>
             </div>
         </div>  
         {%if p.objetivo.estadoObj == 'Finalizado' and p.contenido.estadoCont == 'Finalizado' and p.capacidad.estadoCapac == 'Finalizado' %}
-                <td><a href="/definicionclaseclase/{{p.id}}"><button type="button">Definir Clase a Clase</button></a></td>
+                <td><a href="/definicionclaseclase/{{p.id}}"><button type="button" class="btn btn-info">Definir Clase a Clase</button></a></td>
             {%endif%}   
             <br></br>
 </div>

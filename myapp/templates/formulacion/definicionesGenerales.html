@@ -1,107 +1,58 @@
+{% extends "base.html" %}
 {% load bootstrap_tags %}
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <title>Formulapp - Principal Profesor</title>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="description" content="">
-        <meta name="author" content="">
-        <link rel="icon" href="../../favicon.ico">
-        <script type="text/javascript" src="/media/js/jquery.js"></script>
-        <script type="text/javascript" src="/media/js/bootstrap.js"></script>
-        <link rel="stylesheet/less" href="/media/less/style.less">
-        <script type="text/javascript" src="/media/js/less-1.4.1.min.js"></script>
-    </head>
-    <body>
-        <nav class="navbar navbar-default navbar-static-top" role="navigation">
-          <div class="container">
-            <div class="navbar-header">
-              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-              </button>
-              <a class="navbar-brand" href="#">Project name</a>
-            </div>
-            <div id="navbar" class="navbar-collapse collapse">
-              <ul class="nav navbar-nav">
-                <li class="active"><a href="/principalPL/">Programas</a></li>
-                <li><a href="#about">Mensajeria</a></li>
-                <li><a href="/crearFechas/">Eventos</a></li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuracion<span class="caret"></span></a>
-                  <ul class="dropdown-menu" role="menu">
-                    <li><a href="/miperfil/">Mi Perfil</a></li>
-                  </ul>
-                </li>
-              </ul>     
-              <ul>
-                <p class="bienvenido">Bienvenido <strong>{{username}}</strong>
-                <a href="#"><span class="glyphicon glyphicon-envelope"></span><span class="badge">4</span></a>
-                </p>
-                <p class="logout"><a href="/logout/">Cerrar Sesión</a></p>
-              </ul>
-            </div><!--/.nav-collapse -->
-          </div>
-        </nav>
 
- <div class="row">
-  <div class="col-md-10 col-md-push-2">
+{% block title %}
   	<h2> {{p.state.title}}</h2>
-  	<p> Actualmente te encuentras en el estado de Definiciones Datos Asignatura. Estado en el cual definirás los aspectos generales de tu programa, ya sea nombre de la asignatura, TEL, requisitos, entre otros.
-  		<br>Todo lo que tendrás que definir se encuentra en la siguiente plantillas:</br>
-  		
-  		<br>La cual podrás utilizar en el documento drive que se creó para formular tu programa.
-  		Recuerda llevar constancia de tu trabajo marcando si ya está finalizado o si aún sigue en modificación. Ya que si no lo indicas no podrás seguir avanzando.</br>
+{%endblock%}
+{% block content %}
+    <p> Actualmente te encuentras en el estado de Definiciones Datos Asignatura. Estado en el cual definirás los aspectos generales de tu programa, ya sea nombre de la asignatura, TEL, requisitos, entre otros.
+      <br>Todo lo que tendrás que definir se encuentra en la siguiente plantillas:</br>
+      
+      <br>La cual podrás utilizar en el documento drive que se creó para formular tu programa.
+      Recuerda llevar constancia de tu trabajo marcando si ya está finalizado o si aún sigue en modificación. Ya que si no lo indicas no podrás seguir avanzando.</br>
 </p>
-<li>Documento en Drive  <td><a href="{{p.url}}"><span class="glyphicon glyphicon-cloud"></span></a></td></li>
-<div class="panel panel-primary">        
-        <div class="panel-heading">
-          <h3 class="panel-title">Recursos Disponibles</h3>
-        </div>  
-        <div class="panel-body">
-          {%for r in recursos%}
+{% endblock %}
+{%block drive%}
+<li>Documento en Drive  <td><a href="{{p.url}}"> <span class="glyphicon glyphicon-cloud"></span></a></td></li>
+{%endblock%}
+{%block recursosJefe%}
+  {%for r in recursos%}
           <li><a href="/files/serve/{{r.recurso}}">{{r.titulo_recurso}}</a></li>
           {%endfor%}
-        </div>
-</div>
-<div>
-  <form action="/definicionesGenerales/{{p.id}}/" method="POST">
-    {% csrf_token %}
-     <input type="radio" name="optionsRadios"  value="option2">Finalizando
-    <input type="radio" name="optionsRadios"  value="option1">Modificando
-    <button type="submit">Guardar</button>
-</form>
-</div>
-</div>
+{%endblock%}
+  {%block defEstado%}
+ <button type="button"   class="btn btn-info" data-toggle="modal" data-target="#myModal">
+                        Guardar avance
+                        </button>
+ 
+                        <!-- Modal -->
+                        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                          <div class="modal-dialog">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Cerrar</span></button>
+                                <h4 class="modal-title" id="myModalLabel">Guardar Avance</h4>
+                              </div>
+                              <div class="modal-body">
+                                <p>¿En qué estado se encuentra la definición de datos de asignatura?</p>
+                                    <form id="defEstado"  class="form-horizontal" action="/definicionesGenerales/{{p.id}}/" method="POST">
+                                    {% csrf_token %}
+                                    
+                                    <p><input type="radio" name="optionsRadios"  value="option2"> Finalizado</p>
+                                    <p><input type="radio" name="optionsRadios"  value="option1"> Aún Modificando</p>
+                                    <button class="btn btn-success" type="submit">Guardar</button>
+                                </form>
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                               
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+  {%endblock%}          
 
-  <div class="col-md-2 col-md-pull-10">
-  	<h3 class="estados"> Estados </h3>
-
+{%block estado%}
   	<li class="activo">Definiciones Generales</li>
-    <li class="disabled"> Definicion de Constribución al Perfil de Egreso  </li>
-    <li class="disabled">Definición Resultados de Aprendizaje</li>
-    <li class="disabled">Estrategias de Ensenanza y de Aprendizaje</li>
-    <li class="disabled">Definicion de Clase a Clase</li>
-    <li class="disabled">Análisis de evaluaciones asociadas</li>
-    <li class="disabled">Verificacion Coherencia y Completitud</li>
-    <li class="disabled">Programación de Actividades</li>
-    <li class="disabled">Definición de Aspectos Administrativos</li>
-    <li class="disabled">Definición de Recursos de Aprendizaje</li>
-    <li class="disabled">Aprobación Línea</li>
-    <li class="disabled">Análisis Programa por Jefe de Carrera</li>
-    <li class="disabled">Aprobación Programa por Jefe de Carrera</li>
-  </div>
-</div>
-
-</body>    
-</html>
-
-
-
-
-
+{%endblock%}
 

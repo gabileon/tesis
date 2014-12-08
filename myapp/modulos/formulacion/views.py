@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.contrib.auth.models import User
 from datetime import datetime
-from myapp.modulos.formulacion.models import Programa, MyWorkflow, Recurso, Objetivo, Capacidad, Contenido, ClaseClase, Completitud
+from myapp.modulos.formulacion.models import Log, Programa, MyWorkflow, Recurso, Objetivo, Capacidad, Contenido, ClaseClase, Completitud
 from myapp.modulos.formulacion.forms import estadoForm, decisionEvaluacionForm, crearProgramaForm, definirObjetivosForm, definirCompletitudForm, definirCapacidadesForm, definirContenidosForm, definirClaseClaseForm
 from myapp.modulos.presentacion.models import CredentialsModel
 from myapp import settings
@@ -15,6 +15,12 @@ from apiclient.discovery import build
 import httplib2
 import os
 
+def logEstado (programa, state):
+    l= Log()
+    l.programa = programa
+    l.state = state
+    l.fecha = datetime.now()
+    l.save() 
 
 def defGenerales(request, id_programa):
 	### Obtenemos el perfil y se agrega el id ####
@@ -31,6 +37,8 @@ def defGenerales(request, id_programa):
 	 		y.cantidad = y.cantidad - 1
 	 		y.save()
 	 		programa.to_defGeneral()
+	 		programa.fechaUltimaModificacion = datetime.utcnow()
+	 		logEstado(programa, programa.state.title)
 	 		programa.save()
 	 		try:
 		 		x = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -45,6 +53,8 @@ def defGenerales(request, id_programa):
 		 	 	indicador.save()		 		
   			return HttpResponseRedirect('/definiciones/'+id_programa)
  		else:
+ 			programa.fechaUltimaModificacion = datetime.utcnow()
+	 		programa.save()
  			return HttpResponseRedirect('/principalPL/')
  	ctx = {'url': url, 'p': programa, 'form':form, 'recursos': recursos}
  	return render(request, 'formulacion/definicionesGenerales.html', ctx)
@@ -64,6 +74,8 @@ def definicionConstribucion(request, id_programa):
 		choice = request.POST['optionsRadios']
 		if choice=='option2':
 	 		programa.to_defGeneralCons()
+	 		logEstado(programa, programa.state.title)
+	 		programa.fechaUltimaModificacion = datetime.now()
 	 		programa.objetivo.estadoObj = "Finalizado"
 	 		programa.objetivo.save()
 	 		programa.save()
@@ -85,6 +97,8 @@ def definicionConstribucion(request, id_programa):
 			programa.objetivo.estadoObj = "Modificando"
 			programa.objetivo.save()
 			programa.to_defGeneralCons()
+			logEstado(programa, programa.state.title)
+			programa.fechaUltimaModificacion = datetime.now()
 			programa.save()
 			try:
 		 		x = ProgramasPorEstado.objects.get(estado=p.state.title)
@@ -112,6 +126,8 @@ def definicionRdA(request, id_programa):
 		choice = request.POST['optionsRadios']
 		if choice=='option2':
 	 		programa.to_defGeneralRdA()
+	 		logEstado(programa, programa.state.title)
+			programa.fechaUltimaModificacion = datetime.now()
 	 		programa.capacidad.estadoCapac = "Finalizado"
 	 		programa.capacidad.save()
 	 		programa.save()
@@ -122,6 +138,8 @@ def definicionRdA(request, id_programa):
 			programa.capacidad.estadoCapac = "Modificando"
 			programa.capacidad.save()
 			programa.to_defGeneralRdA()
+			logEstado(programa, programa.state.title)
+			programa.fechaUltimaModificacion = datetime.now()
 			programa.save()
 	    	return HttpResponseRedirect('/definiciones/'+id_programa)
 	programa.to_defRdA()
@@ -138,6 +156,8 @@ def definicionEstra(request, id_programa):
 		choice = request.POST['optionsRadios']
 		if choice=='option2':
 	 		programa.to_defGeneralEstra()
+	 		logEstado(programa, programa.state.title)
+			programa.fechaUltimaModificacion = datetime.now()
 	 		programa.contenido.estadoCont = "Finalizado"
 	 		programa.contenido.save()
 	 		programa.save()
@@ -147,6 +167,8 @@ def definicionEstra(request, id_programa):
 	           ## guardamos el producto 
 			programa.contenido.estadoCont = "Modificando"
 			programa.contenido.save()
+			logEstado(programa, programa.state.title)
+			programa.fechaUltimaModificacion = datetime.now()
 			programa.to_defGeneralEstra()
 			programa.save()
 	    	return HttpResponseRedirect('/definiciones/'+id_programa)

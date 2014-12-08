@@ -46,7 +46,7 @@ FLOW = flow_from_clientsecrets(
 def RolView(request, id_user):
     user = User.objects.get(id=id_user)
     perfil = UserProfile.objects.get(user=user.id)
-    return render(request, 'presentacion/cambiarRol.html', {'user':user, 'perfil':perfil})
+    return render(request, 'presentacion/cambiarRol.html', {'user':user, 'perfil':perfil, 'username':request.user.username})
 
 def cambiarRolView(request, id_user, rol):
     user = User.objects.get(id=id_user)
@@ -59,7 +59,10 @@ def cambiarRolView(request, id_user, rol):
         return HttpResponseRedirect('/principal_jc/')
     if rol == 'CL':
         perfil.rol_actual = 'CL'
-        return HttpResponseRedirect('/principal_cl/')
+        if perfil.fechaPrimerAcceso is None:
+            return redirect('/cambiarDatosCord/')
+        else:
+            return HttpResponseRedirect('/principal_cl/')
 
 def principalView(request):
     programa = Programa.objects.all().order_by('-fechaUltimaModificacion')
@@ -152,27 +155,23 @@ def perfilLineaView(request, id_linea):
                 newUser = User.objects.create(email=coordinador, username=username[0])
                 newUser.set_password(username[0])
                 newUser.save()
-                userProfile = UserProfile.objects.create(rol_CL='CL', user=newUser, cordLinea= linea)
+                userProfile = UserProfile.objects.create(rol_CL='CL', user=newUser, cordLinea= linea, fechaPrimerAcceso = None)
                 linea.coordinador= newUser
                 linea.save()
                 userProfile.save()
                 ## se envia email al nuevo coordinador ##
                 # message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",
-                #     subject="Notificacion")
+                #      subject="Notificacion")
 
                 # message.to = coordinador
-                # message.html = """
-                # <html><head></head><body>
-                # holi funciono :)!
-                # </body></html>
-                # """
+                # html_content = " Estimado:<br><br><br> ha sido designado como Coordinador de la linea" +linea.nombreLinea + ". Para la realizacion de esta funcion se necesitara que usted acceda a http://programas-diinf.appspot.com/login con su username y password"+username[0]". Al ingresar debera actualizar sus datos. Saludos"
                 # message.send()
 
             # Comprobar si existe el coordinador en el sistema
             else:
                 temp = User.objects.get(email=coordinador)
-                temp.rol_CL = 'CL'
                 profile = UserProfile.objects.get(user=temp.id)
+                profile.rol_CL = 'CL'
                 profile.cordLinea = linea
                 profile.save()
                 linea.coordinador = temp
@@ -181,16 +180,11 @@ def perfilLineaView(request, id_linea):
                     subject="Notificacion")
 
                 message.to = coordinador
-                message.html = """
-                <html><head></head><body>
-                holi!
-                </body></html>
-                """
+                # message.html " Estimado:<br><br><br> ha sido designado como Coordinador de la linea" 
+                # +linea.nombreLinea + ". Al ingresar a http://programas-diinf.appspot.com/login tendra acceso a entrar al rol del Coordinador de Linea. Saludos."
                 # message.send()
-                # html_content = " Estimado:<br><br><br> ha sido designado como Coordinador de la linea" 
-                #+linea.nombreLinea + ". Para la realizacion de esta funcion se necesitara que usted 
-                #acceda a http://programas-diinf.appspot.com/login con los siguientes datos:<br><br> 
-                #username= <br>password= . Al ingresar debera actualizar sus datos. Saludos" 
+                # message.send()
+                
 
         return HttpResponseRedirect('/perfilLinea/'+id_linea)   
     else:

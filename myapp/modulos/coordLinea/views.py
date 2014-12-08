@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from myapp.modulos.presentacion.models import UserProfile
+from myapp.modulos.presentacion.forms import cambiarDatosForm
 from myapp.modulos.formulacion.models import Log, Profesor, Programa, MyWorkflow, Objetivo, Capacidad, Contenido, ClaseClase, Linea, Asignatura, Recurso
 from myapp.modulos.presentacion.forms import ImageUploadForm
 from myapp.modulos.jefeCarrera.models import Evento, ReporteIndic
@@ -43,7 +44,7 @@ FLOW = flow_from_clientsecrets(
 
 def reportesIndicacionCordView(request):
     reportes = ReporteIndic.objects.all()
-    return render(request, 'coordLinea/reportesIndicaciones.html', {'reportes':reportes})
+    return render(request, 'coordLinea/reportesIndicaciones.html', {'reportes':reportes, 'username': request.user.username})
 
 def RolView(request, id_user):
     user = User.objects.get(id=id_user)
@@ -89,9 +90,31 @@ def changePasswordCordView(request, id_user):
     ctx = {'form':form, 'user':u, 'username': request.user.username}
     return render(request, 'presentacion/changePasswordCord.html', ctx)
 
+def cambiarDatosCordView(request ):
+    form = cambiarDatosForm()
+    user = request.user
+    profile = UserProfile.objects.get(user=user)
+    if request.method == "POST":
+        form = cambiarDatosForm(request.POST)
+        if form.is_valid():
+            name = form.cleaned_data['name']
+            last_name = form.cleaned_data['last_name']
+            password = form.cleaned_data['password']
+            user.first_name = name
+            user.last_name = last_name
+            user.set_password(password)
+            user.save()
+            profile.fechaPrimerAcceso = datetime.now()
+            profile.save()
+            redirect ('/miperfilCord/')
+    ctx = {'form': form, 'username': request.user.username}
+    return render(request, 'coordLinea/cambiarDatos.html', ctx)
+
 def miperfilCordView(request):
+
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    
     try:
         linea = Linea.objects.get(coordinador=userTemp.id)
     except Linea.DoesNotExist:
@@ -167,7 +190,7 @@ def crearFechasCoord(request):
             if tipoEvento == 'jefe':
                 jefeCarrera = UserProfile.objects.get(rol_JC='JC')
                 linea = Linea.objects.get(nombreLinea = 'Proyectos')
-                coordinador = linea.coordinador.email
+                # coordinador = linea.coordinador.email
                 event = {
                     'summary': '%s'%(summary),
  
@@ -370,7 +393,7 @@ def aprobadosCordViews(request):
     return render (request, 'coordLinea/progAprobados.html', ctx)
 
 def logCordView(request, id_programa):
-    log = Log.objects.filter(programa = id_programa)
+    log = Log.objects.filter(programa = id_programa).order_by('-fecha')
     ctx = {'username': request.user.username, 'log': log}
 
     return render (request, 'coordLinea/log.html', ctx)

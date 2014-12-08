@@ -50,7 +50,6 @@ class decisionEvaluacionForm(forms.Form):
 class UploadFileForm(forms.Form):
 	ESTADOS = (
 		('General', (u"General")),
-		('Formulacion Programa por Linea', (u"Formulacion Programa por Linea")),
 	 	('Definicion Datos Asignatura', (u"Definicion Datos Asignatura")),
 	 	('Definiciones Generales', (u"Definiciones Generales")),
 	 	('Definicion de Constribucion al Perfil de Egreso', (u"Definicion de Constribucion al Perfil de Egreso ")),

@@ -39,6 +39,12 @@ indexes:
   - name: __key__
     direction: desc
 
+- kind: formulacion_log
+  properties:
+  - name: programa_id
+  - name: fecha
+    direction: desc
+
 - kind: formulacion_programa
   properties:
   - name: profesorEncargado_id

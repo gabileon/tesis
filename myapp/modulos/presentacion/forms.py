@@ -14,3 +14,8 @@ class RegisterForm(forms.Form):
 
 class ImageUploadForm(forms.Form):
     image = forms.ImageField()
+
+class cambiarDatosForm(forms.Form):
+	name = forms.CharField(label="Nombre",widget=forms.TextInput())
+	last_name = forms.CharField(label="Apellido",widget=forms.TextInput())
+	password = forms.CharField(label="Password", widget=forms.PasswordInput(render_value=False))

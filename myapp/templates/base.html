@@ -1,70 +1,113 @@
+{% load bootstrap_tags %}
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>Jumbotron Template for Bootstrap</title>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="icon" href="../../favicon.ico">
-    <script type="text/javascript" src="/media/js/jquery.js"></script>
-    <script type="text/javascript" src="/media/js/bootstrap.js"></script>
-    <link rel="stylesheet/less" href="/media/less/style.less">
-    <script type="text/javascript" src="/media/js/less-1.4.1.min.js"></script>
-
-  </head>
-
-  <body>
-
-    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
-      <div class="container">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-            <span class="sr-only">Configuracion</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="#">Formulapp</a>
-        </div>
-        <div id="navbar" class="collapse navbar-collapse">
-          <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Programas</a></li>
-            <li><a href="#about">Mensajeria</a></li>
-            <li><a href="#contact">Indicadores</a></li>
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuracion<span class="caret"></span></a>
-              <ul class="dropdown-menu" role="menu">
-                <li><a href="#">Mi Perfil</a></li>
-                <li><a href="#">Lineas de Asignatura</a></li>
-                <li><a href="#">Recursos de Aprendizaje</a></li>
+    <head>
+        <title>Formulapp - Principal Profesor</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="icon" href="../../favicon.ico">
+        <script type="text/javascript" src="/media/js/jquery.js"></script>
+        <script type="text/javascript" src="/media/js/bootstrap.js"></script>
+        <link rel="stylesheet/less" href="/media/less/style.less">
+        <script type="text/javascript" src="/media/js/less-1.4.1.min.js"></script>
+            <script src="//oss.maxcdn.com/bootbox/4.2.0/bootbox.min.js"></script>
+    </head>
+    <body>
+        <nav class="navbar navbar-default navbar-static-top" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              <a class="navbar-brand" href="#">Project name</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+              <ul class="nav navbar-nav">
+                <li class="active"><a href="/principalPL/">Programas</a></li>
+                <li><a href="/crearFechas/">Eventos</a></li>
+                <li><a href="/recursosProfe/">Recursos de Aprendizaje</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuracion<span class="caret"></span></a>
+                  <ul class="dropdown-menu" role="menu">
+                    <li><a href="/miperfil/">Mi Perfil</a></li>
+                  </ul>
+                </li>
+              </ul>     
+              <ul>
+                     <p class="bienvenido">Bienvenido <strong>{{username}}</strong> <a href="/logout/"><span class="glyphicon glyphicon-log-out"></span></a></p>
               </ul>
-            </li>
-          </ul>
-        </div><!--/.nav-collapse -->
-        <ul>dospd</ul>
-      </div>
-    </nav>
+            </div><!--/.nav-collapse -->
+          </div>
+        </nav>
 
-    <div class="container">
-      <div class="page-header">}
-        {% block content%}
-        {% endblock content%}
-      </div>
-    </div>
+ <div class="row">
+  <div class="col-md-10 col-md-push-2">
+{% block title %}<h2> {{p.state.title}}</h2>{% endblock %}
 
-    <div class="footer">
-      <div class="container">
-      </div>
-    </div>
+{% block content %}
+
+{% endblock %}
+
+{%block drive%}
   
-      <footer>
-        <p>&copy; Company 2014</p>
-      </footer>
-    </div> <!-- /container -->
 
+  
+<li>Documento en Drive  <td><a href="{{p.url}}"> <span class="glyphicon glyphicon-cloud"></span></a></td></li>
 
+{%endblock%}
 
-  </body>
+<div class="panel panel-primary">        
+        <div class="panel-heading">
+          <h3 class="panel-title">Recursos Disponibles</h3>
+        </div>  
+        <div class="panel-body">
+          <h5>Recursos por el Jefe de Carrera</h5>
+          {%block recursosJefe%}
+          {%endblock%}
+          <h5>Recursos por el Coordinador</h5>
+          {%block recursosLinea%}
+          {%endblock%}
+        </div>
+</div>
+<div>
+  {%block defEstado%}
+  {%endblock%}
+</div>
+</div>
+
+  <div class="col-md-2 col-md-pull-10">
+ 
+  	<h3 class="estados"> Estados </h3>
+   {%block estados%}
+  	<li class="activo">Definiciones Generales</li>
+    <li class="disabled"> Definicion de Constribución al Perfil de Egreso  </li>
+    <li class="disabled">Definición Resultados de Aprendizaje</li>
+    <li class="disabled">Estrategias de Ensenanza y de Aprendizaje</li>
+    <li class="disabled">Definicion de Clase a Clase</li>
+    <li class="disabled">Análisis de evaluaciones asociadas</li>
+    <li class="disabled">Verificacion Coherencia y Completitud</li>
+    <li class="disabled">Programación de Actividades</li>
+    <li class="disabled">Definición de Aspectos Administrativos</li>
+    <li class="disabled">Definición de Recursos de Aprendizaje</li>
+    <li class="disabled">Aprobación Línea</li>
+    <li class="disabled">Análisis Programa por Jefe de Carrera</li>
+    <li class="disabled">Aprobación Programa por Jefe de Carrera</li>
+    {%endblock%}
+  </div>
+</div>
+{%block js%}
+{%endblock%}
+</body>    
 </html>
+
+
+
+
+
+
