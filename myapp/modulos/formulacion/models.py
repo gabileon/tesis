@@ -40,9 +40,9 @@ class MyWorkflow(xwf_models.Workflow):
         ('definicionClaseClase', (u"Definicion de Clase a Clase")),
         ('analisisEvaluacionesAsociadas', (u"Analisis de evaluaciones asociadas")),
         ('verificacionCoherenciaCompletitud', (u"Verificacion Coherencia y Completitud")),
-        ('programacionActividades', (u"Programacion de Actividades")),
         ('definicionAspecAdmin', (u"Definicion de Aspectos Administrativos")),
         ('definicionRecursos', (u"Definicion de Recursos de Aprendizaje")),
+        ('definicionAspectosFinales' , (u"Definicion de Aspectos Finales")),
         ('aprobacionLinea', (u"Aprobacion Linea")),
         ('fastTrack', (u"Fast Track")),
         ('analisisProgramaJC', (u"Analisis Programa por JC")),
@@ -58,6 +58,7 @@ class MyWorkflow(xwf_models.Workflow):
         ('to_defGeneralCons', 'definicionConstribucion', 'definicionGeneral'),
         ('to_defGeneralRdA', 'definicionRdA', 'definicionGeneral'),
         ('to_defGeneralEstra', 'definicionEstrategias', 'definicionGeneral'),
+        ('to_defGeneralClase', 'definicionClaseClase', 'definicionGeneral'),
         ('to_defGeneral', 'definicionDatosAsignatura', 'definicionGeneral'),
         ('to_defCons', 'definicionGeneral', 'definicionConstribucion'),
         ('to_defRdA', 'definicionGeneral', 'definicionRdA'),
@@ -66,9 +67,11 @@ class MyWorkflow(xwf_models.Workflow):
         ('to_analisisEval', 'definicionClaseClase', 'analisisEvaluacionesAsociadas'),
         ('noEvaluacion_toForm', 'analisisEvaluacionesAsociadas', 'formulacionPrograma'),
         ('siEvaluacion_toVerif', 'analisisEvaluacionesAsociadas', 'verificacionCoherenciaCompletitud'),
-        ('to_programacion', 'analisisEvaluacionesAsociadas', 'programacionActividades'),
-        ('to_defAspectos', 'programacionActividades', 'definicionAspecAdmin'),
-        ('to_defRecursos', 'programacionActividades', 'definicionRecursos'),
+        ('verificacion_toAspectosFinal', 'verificacionCoherenciaCompletitud', 'definicionAspectosFinales'),
+        ('to_AdmAspectos', 'definicionAspecAdmin', 'definicionAspectosFinales'),
+        ('to_RecAspectos', 'definicionRecursos', 'definicionAspectosFinales'),
+        ('to_defAspectos', 'definicionAspectosFinales', 'definicionAspecAdmin'),
+        ('to_defRecursos', 'definicionAspectosFinales', 'definicionRecursos'),
         ('to_aprobPrograma', ('definicionRecursos','definicionAspecAdmin'), 'aprobacionLinea'),
         ('noAprob_toForm', 'aprobacionLinea', 'formulacionPrograma'),
         ('siAprob_toFT', 'aprobacionLinea', 'fastTrack'),
@@ -102,35 +105,42 @@ class Log(models.Model):
     state = models.CharField(max_length=20)
     
     
-class Capacidad(models.Model):
+class Constribucion(models.Model):
     programa = models.OneToOneField(Programa)
-    estadoCapac  = models.CharField(max_length=10, default="Sin iniciar")
-    capacidadesPrograma = models.TextField()
-    ultimaModificacionCapac = models.DateTimeField(auto_now=True)
+    estado  = models.CharField(max_length=10, default="Sin iniciar")
 
-class Contenido(models.Model): 
+class RDA(models.Model): 
     programa = models.OneToOneField(Programa)
-    contenidosPrograma = models.TextField()
-    estadoCont = models.CharField(max_length=10, default="Sin iniciar")
-    ultimaModificacionCont = models.DateTimeField(auto_now=True)
+    estado = models.CharField(max_length=10, default="Sin iniciar")
 
-class Objetivo (models.Model):
+class Estrategias (models.Model):
     programa = models.OneToOneField(Programa)
-    objetivosPrograma = models.TextField()
-    estadoObj = models.CharField(max_length=10, default="Sin iniciar")
-    ultimaModificacionObj = models.DateTimeField(auto_now=True)
+    estado = models.CharField(max_length=10, default="Sin iniciar")
 
 class ClaseClase (models.Model):
     programa = models.OneToOneField(Programa)
-    claseclase = models.TextField()
-    estadoClase = models.CharField(max_length=10, default="Sin iniciar")
-    ultimaModificacionClase  = models.DateTimeField(auto_now=True)
+    estado = models.CharField(max_length=10, default="Sin iniciar")
 
 class Completitud(models.Model):
     programa = models.OneToOneField(Programa)
-    estadoComp = models.CharField(max_length=10, default="Sin iniciar")
-    ultimaModificacionComp = models.DateTimeField(auto_now=True)
-    completitudPrograma = models.TextField()
+    estado= models.CharField(max_length=10, default="Sin iniciar")
+
+class Administrativo(models.Model):
+    programa = models.OneToOneField(Programa)
+    estado= models.CharField(max_length=10, default="Sin iniciar")
+
+
+class RecursosApren(models.Model):
+    programa = models.OneToOneField(Programa)
+    estado= models.CharField(max_length=10, default="Sin iniciar")
+
+
+
+class Evaluaciones(models.Model):
+    voto = models.CharField(max_length=2)
+    votante = models.OneToOneField(User)
+    observacion = models.TextField()
+    programa = models.OneToOneField(Programa)
 
 class Recurso(models.Model):
     def url(self, filename):

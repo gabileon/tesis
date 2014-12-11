@@ -1,0 +1,122 @@
+{% load bootstrap_tags %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Formulapp - Principal Jefe Carrera</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="icon" href="../../favicon.ico">
+        <script type="text/javascript" src="/media/js/jquery.js"></script>
+        <script type="text/javascript" src="/media/js/bootstrap.js"></script>
+        <link rel="stylesheet/less" href="/media/less/style.less">
+        <script type="text/javascript" src="/media/js/less-1.4.1.min.js"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.js">
+        </script>
+
+    </head>
+    <body>
+        <nav class="navbar navbar-default navbar-static-top" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              <a class="navbar-brand" href="#">Project name</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+              <ul class="nav navbar-nav">
+                <li ><a href="/principal_jc/">Programas</a></li>
+                
+                <li><a href="/prueba/">Indicadores</a></li>
+                <li ><a href="/crearFechas/">Eventos</a></li>
+                <li><a href="/reportesIndicacion/">Reportes de Indicación</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuracion<span class="caret"></span></a>
+                  <ul class="dropdown-menu" role="menu">
+                    <li><a href="/miperfil/">Mi Perfil</a></li>
+                    <li><a href="/lineas/">Líneas de Asignatura</a></li>
+                    <li class="active"><a href="/recursos/">Recursos de Formulación</a></li>
+                     <li><a href="/roles/{{user.id}}">Cambiar de Rol</a></li>
+                  </ul>
+
+                </li>
+              </ul>     
+              <ul>
+                <p class="bienvenido">Bienvenido <strong>{{username}}</strong> <a href="/logout/"><span class="glyphicon glyphicon-log-out"></span></a></p>
+              </ul>
+            </div><!--/.nav-collapse -->
+          </div>
+        </nav>
+
+    <div class="row">  
+      <div class="panel panel-primary">        
+        <div class="panel-heading">
+          <h3 class="panel-title">Recursos</h3>
+        </div>  
+        <div class="panel-body">
+          {%if recursos%}
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>Estado</th>
+                <th>Fecha Modificación</th>
+                <th>Archivo</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+              </tr>
+            </thead>
+            <tbody>
+                        {%for e in recursos%}
+                        <tr>
+                            <td>{{e.titulo_recurso}}</td>
+                            <td>{{e.estado.title}}</td>
+                            <td>{{e.fechaUltimaModificacion}}</td>
+                            <td><a href="/files/serve/{{e.recurso}}"><span class="glyphicon glyphicon-paperclip"></a></span></td>
+                            <td><a class="glyphicon glyphicon-pencil" href="/editRecursos/{{e.id}}"></a></td></span></td> 
+                            <td><a class="borrar" href="/recursos/delete/{{e.id}}"><span class="glyphicon glyphicon-remove"></a></td>
+                            
+                        </tr>
+                        {%endfor%}
+                    </tbody>
+                </table>  
+        {%endif%}
+                <button type="button" class="btn btn-info" data-toggle="modal" data-target="#myModal">
+                          Agregar Nuevo Recurso
+                          </button>
+                        <!-- Modal -->
+                        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                          <div class="modal-dialog">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Cerrar</span></button>
+                                <h4 class="modal-title" id="myModalLabel">Agregar Nuevo Recurso</h4>
+                              </div>
+                              <div class="modal-body">
+                                    <form action="/recursos/" method="POST" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        {{form|as_bootstrap}}
+                                         <button type="submit" class="btn btn-success"><strong>Guardar</strong></button>
+                                    </form> 
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                               
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+            </div>
+  </div>
+        
+    </body>    
+</html>
+
+            

@@ -29,8 +29,8 @@
             <div id="navbar" class="navbar-collapse collapse">
               <ul class="nav navbar-nav">
                 <li class="active"><a href="/principalPL/">Programas</a></li>
-                <li><a href="#about">Mensajeria</a></li>
                 <li><a href="/crearFechas/">Eventos</a></li>
+                 <li><a href="/recursosProfe/">Recursos de Aprendizaje</a></li>
                 <li class="dropdown">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuracion<span class="caret"></span></a>
                   <ul class="dropdown-menu" role="menu">
@@ -45,51 +45,74 @@
           </div>
         </nav>
 
+
  <div class="row">
   <div class="col-md-10 col-md-push-2">
     <h2> {{p.state.title}}</h2>
-    <p> Actualmente te encuentras en el estado de Definiciones Generales. Estado en el cual definirás la constribución al Perfil de Egreso, estrategias y los Resultados de Aprendizajes esperados.
+    <p> Actualmente te encuentras en el estado de Definiciones Generales. Estado en el cual definirás la Constribución al Perfil de Egreso, Estrategias de Enseñanza y de Aprendizaje y los Resultados de Aprendizajes Esperados.
 </p>
-<li>Documento en Drive  <td><a href="{{p.url}}"><span class="glyphicon glyphicon-cloud"></span></a></td></li>
-<div class="panel panel-primary">        
-            <div class="panel-heading">
-                <h3 class="panel-title">Constribución al Perfil de Egreso</h3>
-            </div>
-            <div class="panel-body">
-                <p><a href="/definicionConstribucion/{{p.id}}"><button type="button" class="btn btn-info">Definir</button></a> 
-                
-                    Estado actual: {{p.objetivo.estadoObj}}</p>
-            </div>
+<br><br>
+
+
+      {%if estadoCons == 'Finalizado' and estadoEstra == 'Finalizado' and estadoRDA == 'Finalizado' %}
+
+      <div class="col-lg-3">
+          <img class="img-circle" src="/media/img/rda.jpg" alt="Generic placeholder image" style="width: 140px; height: 140px;">
+          <h3>Resultados de Aprendizajes Esperados</h3>
+          <p>Estado en el cual se debe definir los resultados esperados en los estudiantes al fin de la asignatura.</p>
+          <p>Estado actual: {{estadoRDA}}</p>
+          <p><a class="btn btn-default" href="/definicionRdA/{{p.id}}" 63t7redsguj role="button">Definir »</a></p>
+        </div><!-- /.col-lg-4 -->
+        <div class="col-lg-3">
+          <img class="img-circle" src="/media/img/estrategias.jpg" alt="Generic placeholder image" style="width: 140px; height: 140px;">
+          <h3> Estrategias de Enseñanza</h3>
+          <p>Estado en el cual se debe señalar y describir brevemente los métodos seleccionados para asegurar que los alumnos desarrollen los aprendizajes esperados. </p>
+          <p>Estado actual: {{estadoEstra}}</p>
+          <p><a class="btn btn-default" href="/definicionEstra/{{p.id}}" role="button">Definir »</a></p>
+        </div><!-- /.col-lg-4 -->
+        <div class="col-lg-3">
+          <img class="img-circle" src="/media/img/perfil.jpg" alt="Generic placeholder image" style="width: 140px; height: 140px;">
+          <h3>Constribución al Perfil de Egreso</h3>
+          <p>Estado en el cual se debe explicitar atributos o elementos del perfil de egreso de la carrera a los que aporta la asignatura. </p>
+          <p>Estado actual: {{estadoCons}} </p>
+          <p><a class="btn btn-default" href="/definicionConstribucion/{{p.id}}"role="button">Definir »</a></p>
         </div>
+        <div class="col-lg-3">
+          <img class="img-circle" src="/media/img/calendario.jpg" alt="Generic placeholder image" style="width: 140px; height: 140px;">
+          <h3>Clase a Clase</h3>
+          <p>Definición del Clase a Clase, en dónde se debe señalar por cada semana del semestre, el Resultado de Aprendizaje esperado y las unidades temáticas que serán vistas en ese periodo de tiempo.  </p>
+          <p>Estado actual: {{estadoClase}} </p>
+          <p><a class="btn btn-default" href="/definicionclaseclase/{{p.id}}"role="button">Definir »</a></p>
+        </div><!-- /.col-lg-4 -->
+               
 
-    <div class="panel panel-primary">        
-            <div class="panel-heading">
-                <h3 class="panel-title">Resultados de Aprendizaje</h3>
-            </div>
-            <div class="panel-body">
-               <a href="/definicionRdA/{{p.id}}"><button type="button" class="btn btn-info">Definir</button></a>
-               <p></p>
-               <li>Estado actual: {{p.capacidad.estadoCapac }} </li> 
-            </div>
-    </div>
-
-      
-      <div class="panel panel-primary">        
-            <div class="panel-heading">
-                <h3 class="panel-title">Estrategias de Enseñanza y de Aprendizaje</h3>
-            </div>
-            <div class="panel-body">
-                <a href="/definicionEstra/{{p.id}}"><button type="button" class="btn btn-info">Definir</button></a>
-                <p></p>
-                <li>Estado actual: {{p.contenido.estadoCont }}</li>
-            </div>
-        </div>  
-        {%if p.objetivo.estadoObj == 'Finalizado' and p.contenido.estadoCont == 'Finalizado' and p.capacidad.estadoCapac == 'Finalizado' %}
-                <td><a href="/definicionclaseclase/{{p.id}}"><button type="button" class="btn btn-info">Definir Clase a Clase</button></a></td>
-            {%endif%}   
+            {%else%}
+        <div class="col-lg-4">
+          <img class="img-circle" src="/media/img/rda.jpg" alt="Generic placeholder image" style="width: 140px; height: 140px;">
+          <h3>Resultados de Aprendizajes Esperados</h3>
+          <p>Estado en el cual se debe definir los resultados esperados en los estudiantes al fin de la asignatura.</p>
+          <p>Estado actual: {{estadoRDA}}</p>
+          <p><a class="btn btn-default" href="/definicionRdA/{{p.id}}" 63t7redsguj role="button">Definir »</a></p>
+        </div><!-- /.col-lg-4 -->
+        <div class="col-lg-4">
+          <img class="img-circle" src="/media/img/estrategias.jpg" alt="Generic placeholder image" style="width: 140px; height: 140px;">
+          <h3> Estrategias de Enseñanza</h3>
+          <p>Estado en el cual se debe señalar y describir brevemente los métodos seleccionados para asegurar que los alumnos desarrollen los aprendizajes esperados. </p>
+          <p>Estado actual: {{estadoEstra}}</p>
+          <p><a class="btn btn-default" href="/definicionEstra/{{p.id}}" role="button">Definir »</a></p>
+        </div><!-- /.col-lg-4 -->
+        <div class="col-lg-4">
+          <img class="img-circle" src="/media/img/perfil.jpg" alt="Generic placeholder image" style="width: 140px; height: 140px;">
+          <h3>Constribución al Perfil de Egreso</h3>
+          <p>Estado en el cual se debe explicitar atributos o elementos del perfil de egreso de la carrera a los que aporta la asignatura. </p>
+          <p>Estado actual {{estadoCons}}
+          <p><a class="btn btn-default" href="/definicionConstribucion/{{p.id}}"role="button">Definir »</a></p>
+        </div><!-- /.col-lg-4 -->
+      {%endif%} 
+              
             <br></br>
 </div>
-
+ 
 
   <div class="col-md-2 col-md-pull-10">
     <h3 class="estados"> Estados </h3>
@@ -98,7 +121,11 @@
     <li class="activo"> Definicion de Constribución al Perfil de Egreso  </li>
     <li class="activo">Definición Resultados de Aprendizaje</li>
     <li class="activo">Estrategias de Ensenanza y de Aprendizaje</li>
+    {%if estadoCons == 'Finalizado' and estadoEstra == 'Finalizado' and estadoRDA == 'Finalizado' %}
     <li class="disabled">Definicion de Clase a Clase</li>
+    {%else%}
+      <li class="activo">Definicion de Clase a Clase</li>
+      {%endif%}
     <li class="disabled">Análisis de evaluaciones asociadas</li>
     <li class="disabled">Verificacion Coherencia y Completitud</li>
     <li class="disabled">Programación de Actividades</li>

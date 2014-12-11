@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from myapp.modulos.presentacion.models import UserProfile
 from myapp.modulos.presentacion.forms import cambiarDatosForm
-from myapp.modulos.formulacion.models import Log, Profesor, Programa, MyWorkflow, Objetivo, Capacidad, Contenido, ClaseClase, Linea, Asignatura, Recurso
+from myapp.modulos.formulacion.models import Log, Profesor, Programa, MyWorkflow,  ClaseClase, Linea, Asignatura, Recurso
 from myapp.modulos.presentacion.forms import ImageUploadForm
 from myapp.modulos.jefeCarrera.models import Evento, ReporteIndic
 from myapp.modulos.coordLinea.forms import CoordinadorForm
@@ -67,12 +67,13 @@ def cambiarRolView(request, id_user, rol):
 def principalCLView(request):
     programa = Programa.objects.all().order_by('-fechaUltimaModificacion')
     programasAprobados= Programa.objects.filter(state='fin').count()
+    programasPorAnalizar = Programa.objects.filter(state='fastTrack').count()
     username = request.user.username
     userTemp = User.objects.get(username=request.user.username)
     profile = UserProfile.objects.get(user=userTemp)
     linea = Linea.objects.get(id=profile.cordLinea_id)
     # programasAprobados= Programa.objects.filter(state='fin').count().filter(linea=linea)
-    ctx = {'user': userTemp, 'username' : username, 'programas':programa, 'aprobados' : programasAprobados, 'profile': profile, 'linea':linea}
+    ctx = {'user': userTemp, 'username' : username, 'programas':programa, 'porAnalizar': programasPorAnalizar, 'aprobados' : programasAprobados, 'profile': profile, 'linea':linea}
     return render(request, 'coordLinea/vistaCL.html', ctx)
 
 def changePasswordCordView(request, id_user):
@@ -391,6 +392,12 @@ def aprobadosCordViews(request):
     username = request.user.username
     ctx = {'username': username, 'programas': programas}
     return render (request, 'coordLinea/progAprobados.html', ctx)
+def analizarCordViews (request):
+    programas = Programa.objects.filter(state="fastTrack")
+    username = request.user.username
+    ctx = {'username': username, 'programas': programas}
+    return render (request, 'coordLinea/progPorAnalizar.html', ctx)
+
 
 def logCordView(request, id_programa):
     log = Log.objects.filter(programa = id_programa).order_by('-fecha')

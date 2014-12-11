@@ -1,8 +1,7 @@
 from django.shortcuts import render, redirect
 import datetime, random, sha
-from myapp.modulos.formulacion.forms import decisionEvaluacionForm, crearProgramaForm, definirObjetivosForm, definirCompletitudForm, definirCapacidadesForm, definirContenidosForm, definirClaseClaseForm
-from myapp.modulos.formulacion.models import Log, Asignatura, Programa, MyWorkflow, Objetivo, Capacidad, Contenido, ClaseClase, Completitud
-from myapp.modulos.formulacion.forms import decisionEvaluacionForm, crearProgramaForm, definirObjetivosForm, definirCompletitudForm, definirCapacidadesForm, definirContenidosForm, definirClaseClaseForm
+from myapp.modulos.formulacion.forms import crearProgramaForm
+from myapp.modulos.formulacion.models import Log, Asignatura, Programa, MyWorkflow,  ClaseClase, Completitud
 from myapp.modulos.indicadores.models import ProgramasPorEstado
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect, HttpResponseForbidden
@@ -83,7 +82,7 @@ def principalPLView(request):
 		 		 	indicador.cantidad = indicador.cantidad + 1
 		 		 	indicador.save()		 		
 			except:
-	 			return render(request, 'comunicacion/error.html')
+	 			return redirect('/logout/')
 	else:
 		form = crearProgramaForm()
 				#GEt

@@ -61,6 +61,15 @@ class agregarAsignaturaForm(forms.Form):
 class agregarProfesoresForm(forms.Form):
     email = forms.EmailField(label="Correo Electronico", widget=forms.TextInput())
 
+    def clean_email(self):
+
+        if (self.cleaned_data.get('email', '')
+            .endswith('usach.cl')):
+
+            raise ValidationError("Debes Ingresar un email del dominio USACH.")
+
+        return self.cleaned_data.get('email', '')
+
 class changePasswordForm(forms.Form):
     old_password = forms.CharField(label="Password Antigua", widget=forms.PasswordInput(render_value=False))
     password = forms.CharField(label="Password Nueva", widget=forms.PasswordInput(render_value=False))

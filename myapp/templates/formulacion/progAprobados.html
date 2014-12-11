@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Formulapp - Principal Jefe Carrera</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="icon" href="../../favicon.ico">
+        <script type="text/javascript" src="/media/js/jquery.js"></script>
+        <script type="text/javascript" src="/media/js/bootstrap.js"></script>
+        <link rel="stylesheet/less" href="/media/less/style.less">
+        <script type="text/javascript" src="/media/js/less-1.4.1.min.js"></script>
+          <script type="text/javascript" src="/media/js/highcharts.js"></script>
+          <script src="bootstrap-switch.js"></script>
+    </head>
+    <body>
+        <nav class="navbar navbar-default navbar-static-top" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              <a class="navbar-brand" href="#">Project name</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+              <ul class="nav navbar-nav">
+                <li class="active"><a href="/principal_jc/">Programas</a></li>
+                <li><a href="/prueba/">Indicadores</a></li>
+                <li><a href="/crearFechas/">Eventos</a></li>
+                  <li><a href="/reportesIndicacion/">Reportes de Indicación</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuracion<span class="caret"></span></a>
+                  <ul class="dropdown-menu" role="menu">
+                    <li><a href="/miperfil/">Mi Perfil</a></li>
+                    <li><a href="/lineas/">Líneas de Asignatura</a></li>
+                    <li><a href="/recursos/">Recursos de Aprendizaje</a></li>
+
+                  </ul>
+                </li>
+              </ul>     
+              <ul>
+                <p class="bienvenido">Bienvenido <strong>{{username}}</strong>
+                </p>
+                <p class="logout"><a href="/logout/">Cerrar Sesión</a></p>
+              </ul>
+            </div><!--/.nav-collapse -->
+          </div>
+        </nav>
+
+    <div class="row">
+        <br></br>
+
+        <div class="panel panel-primary">        
+            <div class="panel-heading">
+                <h3 class="panel-title">Programas Aprobados</h3>
+            </div>
+            <div class="panel-body">
+            	{%if programas%}
+            	<table class="table">
+                    <thead>
+                        
+                        <tr>
+                            <th>Asignatura</th>
+                            <th>Fecha Finalización</th>
+                            <th>Profesor Encargado</th>
+                            <th>Documento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {%for p in programas%}
+                        <tr>
+                            <td>{{p.asignatura}}</td>
+                            <td>{{p.fechaUltimaModificacion}}</td>
+                            <td>{{p.profesorEncargado.first_name}} {{p.profesorEncargado.last_name}}</td>
+                            <td><a class="glyphicon glyphicon-file" href="{{p.url}}"></a></td></span>
+                        </tr>
+                        {%endfor%}
+                    </tbody>
+                </table>
+                {%else%}
+                <h4> No hay programas aprobados </h4>
+       			{%endif%}
+            </div>
+        </div>
+        
+    </body>    
+</html>
+
+            

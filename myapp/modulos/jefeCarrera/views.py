@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from myapp.modulos.presentacion.models import UserProfile
-from myapp.modulos.formulacion.models import Log, Profesor, Programa, MyWorkflow, Objetivo, Capacidad, Contenido, ClaseClase, Linea, Asignatura, Recurso
+from myapp.modulos.formulacion.models import Log, Profesor, Programa, MyWorkflow,  ClaseClase, Linea, Asignatura, Recurso
 from myapp.modulos.presentacion.forms import ImageUploadForm
 from myapp.modulos.jefeCarrera.models import Evento, ReporteIndic
 from myapp.modulos.coordLinea.forms import CoordinadorForm

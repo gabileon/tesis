@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Formulapp - Principal Coordinador de Linea</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="icon" href="../../favicon.ico">
+        <script type="text/javascript" src="/media/js/jquery.js"></script>
+        <script type="text/javascript" src="/media/js/bootstrap.js"></script>
+        <link rel="stylesheet/less" href="/media/less/style.less">
+        <script type="text/javascript" src="/media/js/less-1.4.1.min.js"></script>
+          <script type="text/javascript" src="/media/js/highcharts.js"></script>
+    </head>
+    <body>
+        <nav class="navbar navbar-default navbar-static-top" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              <a class="navbar-brand" href="#">Project name</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+              <ul class="nav navbar-nav">
+                <li class="active"><a href="/principal_cl/">Programas</a></li>
+                <li><a href="/crearFechasCord/">Eventos</a></li>
+                 <li><a href="/reportesIndicacionCord/">Reportes de Indicación</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuración<span class="caret"></span></a>
+                  <ul class="dropdown-menu" role="menu">
+                    <li><a href="/miperfilCord/">Mi Perfil</a></li>
+                    <li><a href="/recursosCord/">Recursos de Formulación</a></li>
+                    <li><a href="/roles/{{user.id}}">Cambiar de Rol</a></li>
+                  </ul>
+                </li>
+              </ul>     
+              <ul>
+                <p class="bienvenido">Bienvenido <strong>{{username}}</strong> <a href="/logout/"><span class="glyphicon glyphicon-log-out"></span></a></p>
+              </ul>
+            </div><!--/.nav-collapse -->
+          </div>
+        </nav>
+
+    <div class="row">
+        
+        <div class="panel panel-primary">        
+            <div class="panel-heading">
+                <h3 class="panel-title">Programas Línea {{linea.nombreLinea}}</h3>
+            </div>
+            <div class="panel-body">
+                <li role="presentation"><a class="programas"href="/programasAprobadosLinea/"{{linea.id}}>Programas Aprobados </a><span class="badge aprobados">{{aprobados}}</span></li>
+                <li role="presentation"><a class="programas"href="/programasPorAnalizarLinea/"{{linea.id}}>Programas Pre-análisis Jefe Carrera </a><span class="badge aprobados">{{porAnalizar}}</span></li>
+            </div>
+        </div>
+        <div class="panel panel-default">
+  <!-- Default panel contents -->
+            <div class="panel-heading">Últimas Modificaciones de la Línea</div>
+  <!-- Table -->
+                <table class="table">
+                    <thead>
+                        
+                        <tr>
+                            <th>Asignatura</th>
+                            <th>Profesor Encargado</th>
+                            <th>Estado</th>
+                            <th>Reporte de Indicaciones</th>
+                            <th>Última Modificación</th>
+                            <th>Log</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {%for p in programas%}
+                        <tr>
+                            <td>{{p.asignatura}}</td>
+                            <td>{{p.profesorEncargado}}</td>
+                            <td>{{p.state.title}}</td>
+                            {%if p.reporteindic %}
+                            <td><a class="glyphicon glyphicon-file" href="{{p.reporteindic.url}}"></a></span></td>  
+                            {%else%}
+                            <td></td>
+                            {%endif%}
+                            <td>{{p.fechaUltimaModificacion}}</td>
+                            <td><a href="/logCord/{{p.id}}"><span class="glyphicon glyphicon-list-alt"></span></a></td>
+                          
+                        </tr>
+                        {%endfor%}
+                    </tbody>
+                </table>
+            </div>
+        </div>    
+        
+    </body>    
+</html>
+
+            

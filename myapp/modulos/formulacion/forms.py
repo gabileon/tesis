@@ -3,21 +3,20 @@ from django import forms
 from myapp.modulos.formulacion.models import Asignatura
 from django.contrib.auth.models import Group
 
-SEMESTRES = (('I','I'), ('II', 'II'))
-SINO = ('Si', ' No')
-ANOS = (('2014','2014'), ('2015', '2015'))
+
 
 
 
 class crearProgramaForm(forms.Form):
 
+	SEMESTRES = (('I','I'), ('II', 'II'))
+	ANOS = (('2014','2014'), ('2015', '2015'))
+
 	# asignaturas = [(c.id, c.nombreAsig) for c in Asignatura.objects.all()]
 	# asignatura = forms.ChoiceField(required=True, label='Asignatura', choices=asignaturas)
 	asignatura = forms.CharField(widget=forms.TextInput())
-	semestre = forms.CharField(widget=forms.TextInput())
-	ano = forms.CharField(widget=forms.TextInput())
-	# semestre = forms.ChoiceField(choices=SEMESTRES)
-	# ano = forms.ChoiceField(choices=ANOS)
+	semestre = forms.ChoiceField(choices=SEMESTRES)
+	ano = forms.ChoiceField(choices=ANOS)
 
 	def clean(self):
 		return self.cleaned_data
@@ -28,24 +27,6 @@ class estadoForm(forms.Form):
         ('opt1', 'Modificando'),
     )
     estado = forms.ChoiceField(widget=forms.RadioSelect, choices=MY_CHOICES)
-
-class definirObjetivosForm(forms.Form): 
-	objetivos = forms.CharField(widget=forms.Textarea)
-
-class definirCapacidadesForm(forms.Form): 
-	capacidades = forms.CharField(widget=forms.Textarea)
-
-class definirContenidosForm(forms.Form): 
-	contenidos = forms.CharField(widget=forms.Textarea)
-
-class definirClaseClaseForm(forms.Form): 
-	claseclase  = forms.CharField(widget=forms.Textarea)
-
-class definirCompletitudForm(forms.Form): 
-	completitud  = forms.CharField(widget=forms.Textarea)
-
-class decisionEvaluacionForm(forms.Form):
-	decision = forms.ChoiceField(widget=forms.RadioSelect, choices=SINO)
 
 class UploadFileForm(forms.Form):
 	ESTADOS = (
@@ -58,7 +39,6 @@ class UploadFileForm(forms.Form):
 	 	('Definicion de Clase a Clase', (u"Definicion de Clase a Clase")),
 	 	('Analisis de evaluaciones asociadas', (u"Analisis de evaluaciones asociadas")),
 	 	('Verificacion Coherencia y Completitud', (u"Verificacion Coherencia y Completitud")),
-	 	('Programacion de Actividades', (u"Programacion de Actividades")),
 	 	('Definicion de Aspectos Administrativos', (u"Definicion de Aspectos Administrativos")),
 	 	('Definicion de Recursos de Aprendizaje', (u"Definicion de Recursos de Aprendizaje")),
 	 	)
@@ -72,3 +52,19 @@ class LineasForm(forms.Form):
 
 class analizarForm(forms.Form):
 	decision = forms.CheckboxInput()
+
+class evaluacionesForm(forms.Form):
+    MY_CHOICES = (
+        ('Si', 'Si'),
+        ('No', 'No'),
+    )
+    voto = forms.ChoiceField(widget=forms.RadioSelect, choices=MY_CHOICES)
+    observacion = forms.CharField(widget=forms.Textarea)
+
+class analisisLineaForm(forms.Form):
+    MY_CHOICES = (
+        ('Si', 'Si'),
+        ('No', 'No'),
+    )
+    voto = forms.ChoiceField(widget=forms.RadioSelect, choices=MY_CHOICES)
+    observacion = forms.CharField(widget=forms.Textarea)

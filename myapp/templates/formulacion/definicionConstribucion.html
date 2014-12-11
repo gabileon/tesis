@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load bootstrap_tags %}
+
+{% block title %}
+    <ol class="breadcrumb">
+  <li><a href="/principalPL/">Programas</a></li>
+  <li><a href="/definiciones/{{p.id}}">Definiciones</a></li>
+  <li class="active">{{p.state.title}}</li>
+</ol><h2> {{p.state.title}}</h2>
+{%endblock%}
+{% block content %}
+{% block foto %}
+<div class="row">
+  <div class="col-xs-6 col-md-4"></div>
+  <div class="col-xs-6 col-md-4">
+    <br>
+<img class="img-circle" src="/media/img/perfil.jpg" alt="Generic placeholder image" style="width: 140px; height: 140px;">
+</div>
+ <div class="col-xs-6 col-md-4"></div>
+</div>
+{%endblock%}
+{% block parrafo%}
+<br>
+    <p>En este estado deberas señalar y describir brevemente los métodos seleccionados para asegurar que los alumnos desarrollen los aprendizajes esperados. Además, debes indicar también si es que debiesen existir estrategias o actividades cruciales para alcanzar el desarrollo del curso como por ejemplo salidas a terreno, exposición oral, lectura en inglés, entre otras. </p>
+{% endblock %}
+{% endblock %}
+{%block drive%}
+<li>Documento en Drive  <td><a href="{{p.url}}"> <span class="glyphicon glyphicon-cloud"></span></a></td></li>
+{%endblock%}
+
+  {%block defEstado%}
+  <div class="row">
+  <div class="col-xs-6 col-md-4">
+  </div>
+  <div class="col-xs-6 col-md-4">.
+  <button type="button"   class="btn btn-info" data-toggle="modal" data-target="#myModal">
+                        Guardar avance
+                        </button></div>
+  <div class="col-xs-6 col-md-4"></div>
+</div>
+ 
+ 
+                        <!-- Modal -->
+                        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                          <div class="modal-dialog">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Cerrar</span></button>
+                                <h4 class="modal-title" id="myModalLabel">Guardar Avance</h4>
+                              </div>
+                              <div class="modal-body">
+                                <p>¿En qué estado se encuentra la definición de RdA?</p>
+                                    <form id="defEstado"  class="form-horizontal" action="/definicionConstribucion/{{p.id}}/" method="POST">
+                                    {% csrf_token %}
+                                    
+                                    <p><input type="radio" name="optionsRadios"  value="option2"> Finalizado</p>
+                                    <p><input type="radio" name="optionsRadios"  value="option1"> Aún Modificando</p>
+                                    <button class="btn btn-success" type="submit">Guardar</button>
+                                </form>
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                               
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+  {%endblock%}          
+
+{%block estado%}
+    <li class="activo">Definición Resultados de Aprendizaje</li>
+{%endblock%}
