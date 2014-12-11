@@ -1,0 +1,104 @@
+{% load bootstrap_tags %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Formulapp - Principal Profesor</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="icon" href="../../favicon.ico">
+        <script type="text/javascript" src="/media/js/jquery.js"></script>
+        <script type="text/javascript" src="/media/js/bootstrap.js"></script>
+        <link rel="stylesheet/less" href="/media/less/style.less">
+        <script type="text/javascript" src="/media/js/less-1.4.1.min.js"></script>
+    </head>
+    <body>
+        <nav class="navbar navbar-default navbar-static-top" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              <a class="navbar-brand" href="#">Project name</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+              <ul class="nav navbar-nav">
+                <li class="active"><a href="/principalPL/">Programas</a></li>
+                <li><a href="/crearFechas/">Eventos</a></li>
+                 <li><a href="/recursosProfe/">Recursos de Formulación</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuración<span class="caret"></span></a>
+                  <ul class="dropdown-menu" role="menu">
+                    <li><a href="/miperfil/">Mi Perfil</a></li>
+                  </ul>
+                </li>
+              </ul>     
+              <ul>
+                  <p class="bienvenido">Bienvenido <strong>{{username}}</strong> <a href="/logout/"><span class="glyphicon glyphicon-log-out"></span></a></p>
+              </ul>
+            </div><!--/.nav-collapse -->
+          </div>
+        </nav>
+
+
+ <div class="row">
+  <div class="col-md-10 col-md-push-2">
+    <h2> {{p.state.title}}</h2>
+    <p> Actualmente te encuentras en el último estado de la formulación, en donde debes definir los Aspectos Administrativos y los Recursos de Aprendizajes necesarios para el curso de la asignatura.
+      Cuando ambos aspectos esten finalizados, el programa pasará a la fase de análisis por el Jefe de Carrera, o si es necesario, y el coordinador de su línea lo determina así, pasará por un estado de FastTrack, pasando al estado de aprobación de inmediato.
+</p>
+<br><br>
+
+
+     
+
+      <div class="col-lg-6">
+          <img class="img-circle" src="/media/img/adm.jpg" alt="Generic placeholder image" style="width: 140px; height: 140px;">
+          <h3>Aspectos Administrativos</h3>
+          <p>Estado en el cual se debe definir los aspectos administrativos de la asignatura, ya sea porcetajes de asistencia, evaluaciones, entre otros.</p>
+          <p>Estado actual: {{estadoAdm}}</p>
+          <p><a class="btn btn-default" href="/aspectosAdm/{{p.id}}" role="button">Definir »</a></p>
+        </div><!-- /.col-lg-4 -->
+        <div class="col-lg-6">
+          <img class="img-circle" src="/media/img/recursos.jpg" alt="Generic placeholder image" style="width: 140px; height: 140px;">
+          <h3>Recursos de Aprendizaje</h3>
+          <p>Estado en el cual se debe señalar los recursos necesarios para que el alumno complemente lo aprendido en clases, a través de bibliografías, textos, apuntes, libros, sitios de interés, entre otros </p>
+          <p>Estado actual: {{estadoRec}}</p>
+          <p><a class="btn btn-default" href="/recursosAprend/{{p.id}}" role="button">Definir »</a></p>
+        </div><!-- /.col-lg-4 -->
+       
+        {%if estadoAdm == 'Finalizado' and estadoRec == 'Finalizado' %}
+        <a href="/preAnalisis/{{p.id}}"><button type="button" class="btn btn-info">Enviar Programa a mi Línea</button></a>
+
+{%endif%}
+</div>
+ 
+
+  <div class="col-md-2 col-md-pull-10">
+    <h3 class="estados"> Estados </h3>
+
+    <li class="disabled">Definiciones Generales</li>
+    <li class="disabled"> Definicion de Constribución al Perfil de Egreso  </li>
+    <li class="disabled">Definición Resultados de Aprendizaje</li>
+    <li class="disabled">Estrategias de Ensenanza y de Aprendizaje</li>
+    <li class="disabled">Definicion de Clase a Clase</li>
+    <li class="disabled">Análisis de evaluaciones asociadas</li>
+    <li class="disabled">Verificacion Coherencia y Completitud</li>
+    <li class="activo">Definición de Aspectos Administrativos</li>
+    <li class="activo">Definición de Recursos de Aprendizaje</li>
+    <li class="disabled">Aprobación Línea</li>
+    <li class="disabled">Análisis Programa por Jefe de Carrera</li>
+    <li class="disabled">Aprobación Programa por Jefe de Carrera</li>
+  </div>
+</div>
+
+</body>    
+</html>
+
+
+            
