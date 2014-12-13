@@ -28,13 +28,14 @@
             </div>
             <div id="navbar" class="navbar-collapse collapse">
               <ul class="nav navbar-nav">
-                <li class="active"><a href="/principalPL/">Programas</a></li>
+                <li ><a href="/principalPL/">Programas</a></li>
                 <li><a href="/fechasProfe/">Eventos</a></li>
                 <li><a href="/recursosProfe/">Recursos de Aprendizaje</a></li>
-                <li class="dropdown">
+                <li class="active" class="dropdown">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuracion<span class="caret"></span></a>
                   <ul class="dropdown-menu" role="menu">
-                    <li><a href="/miperfilProfesor/">Mi Perfil</a></li>
+                    <li class="active"><a href="/miperfilProfesor/">Mi Perfil</a></li>
+                      <li><a href="/roles/{{yo.id}}">Cambiar de Rol</a></li>
                   </ul>
                 </li>
               </ul>     
@@ -60,7 +61,7 @@
                         <li class="perfil"><strong>Username: </strong>{{user.username}}</li>
                         <li class="perfil"><strong>Rol: </strong>{{perfil.rol_PL}} {{perfil.rol_JC}} {{perfil.rol_CL}}</li>
                         <li class="perfil"><strong>Email: </strong>{{user.email}}</li>
-                        <a href="/cambiarPasswordCord/{{user.id}}"><button type="button" class="btn btn-info">Cambiar Contraseña</button></a>
+                        <a href="/changePasswordProf/{{user.id}}"><button type="button" class="btn btn-info">Cambiar Contraseña</button></a>
                     </div>
                     <div class="col-md-2"></div>
                     <div class="col-md-4">

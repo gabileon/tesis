@@ -92,6 +92,11 @@ def login_view(request):
 		ctx = {'form':form, 'status': status}
 		return render(request,'presentacion/login.html',ctx)
 
+def errorLoginView(request):
+	user = User.objects.get(username=request.user.username)
+	profile = UserProfile.objects.get(user=user)
+	rol = profile.rol_actual
+	return render(request,'presentacion/errorLogin.html',{'rol':rol, 'username': request.user.username})
 
 
 def logout_view(request):

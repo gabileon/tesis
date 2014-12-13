@@ -71,199 +71,257 @@ def cambiarRolView(request, id_user, rol):
     perfil = UserProfile.objects.get(user=user.id)
     if rol == 'PL':
         perfil.rol_actual = 'PL'
+        perfil.save()
+        if perfil.fechaPrimerAcceso is None:
+            return redirect('/cambiarDatosProfe/')
+        else:
+            return HttpResponseRedirect('/principal_cl/')
         return HttpResponseRedirect('/principalPL/')
     if rol == 'JC':
         perfil.rol_actual = 'JC'
+        perfil.save()
         return HttpResponseRedirect('/principal_jc/')
     if rol == 'CL':
         perfil.rol_actual = 'CL'
-        return HttpResponseRedirect('/principal_cl/')
+        perfil.save()
+        if perfil.fechaPrimerAcceso is None:
+            return redirect('/cambiarDatosCord/')
+        else:
+            return HttpResponseRedirect('/principal_cl/')
+
+def revisarRol (request):
+    user = User.objects.get(username=request.user.username)
+    perfil = UserProfile.objects.get(user=user.id)
+    bandera = None
+    if perfil.rol_actual == 'CL':
+        pass
+    else:
+        return redirect ('/errorLogin/')
+
 
 def principalCLView(request):
-    
-    programa = Programa.objects.all().order_by('-fechaUltimaModificacion')
-    programasAprobados= Programa.objects.filter(state='fin').count()
-    programasPorAnalizar = Programa.objects.filter(state='aprobacionLinea')
-    fast = Programa.objects.filter(state='fastTrack').count()
-    todos = Evaluacion.objects.all()
-    analisis = []
-    votaciones = []
-    for t in todos:
-        if t.votoEvalCord == False:
-            votaciones.append(t)
-    num = len(votaciones)   
-
-    for p in programasPorAnalizar:
-        if p.analisism.votoEvalCord==False:
-            analisis.append(p)
-    numAnalisis = len(analisis)
-    username = request.user.username
-    userTemp = User.objects.get(username=request.user.username)
-    profile = UserProfile.objects.get(user=userTemp)
-    linea = Linea.objects.get(id=profile.cordLinea_id)
-    # programasAprobados= Programa.objects.filter(state='fin').count().filter(linea=linea)
-    ctx = {'user': userTemp, 'username' : username, 'programas':programa, 'fast': fast, 'votaciones': num, 'porAnalizar': numAnalisis, 'aprobados' : programasAprobados, 'profile': profile, 'linea':linea}
-    return render(request, 'coordLinea/vistaCL.html', ctx)
-
-def votacionesEvaluacionView(request):
-    evaluaciones = Evaluacion.objects.filter(votoEvalCord=False)
-    form = evaluacionesForm()
-    ctx = {'username': request.user.username, 'programas': evaluaciones, 'form': form}
-    return render (request, 'coordLinea/votaciones.html', ctx)
-############ votacion evaluaciones asociadas ########
-def votacion (request, id_evaluacion):
-    evaluacion = Evaluacion.objects.get(id=id_evaluacion)
-    if request.method == 'POST':
-        form = evaluacionesForm(request.POST)
-        if form.is_valid():
-            voto = form.cleaned_data['voto']
-            observacion = form.cleaned_data['observacion']
-            votante = request.user
-            evaluac = Evaluaciones.objects.create(voto = voto, observacion=observacion, votante=votante, evaluacion= evaluacion)
-            evaluac.save()
-            evaluacion.votoEvalCord = True
-            evaluacion.save()
-            return HttpResponseRedirect('/votacionesEvaluacionLinea/')
-
-def changePasswordCordView(request, id_user):
-    u = User.objects.get(id=id_user)
-    form = changePasswordForm()
-    if request.method == "POST":
-        form = changePasswordForm(request.POST)
-        if form.is_valid():
-            old_password = form.cleaned_data['old_password']
-            password = form.cleaned_data['password']
-            if u is not None and u.check_password(old_password):
-                u.set_password(password)
-                u.save()
-                return HttpResponseRedirect("/miperfil/")
-    ctx = {'form':form, 'user':u, 'username': request.user.username}
-    return render(request, 'presentacion/changePasswordCord.html', ctx)
-
-def cambiarDatosCordView(request ):
-    form = cambiarDatosForm()
-    user = request.user
-    profile = UserProfile.objects.get(user=user)
-    if request.method == "POST":
-        form = cambiarDatosForm(request.POST)
-        if form.is_valid():
-            name = form.cleaned_data['name']
-            last_name = form.cleaned_data['last_name']
-            password = form.cleaned_data['password']
-            user.first_name = name
-            user.last_name = last_name
-            user.set_password(password)
-            user.save()
-            profile.fechaPrimerAcceso = datetime.now()
-            profile.save()
-            redirect ('/miperfilCord/')
-    ctx = {'form': form, 'username': request.user.username}
-    return render(request, 'coordLinea/cambiarDatos.html', ctx)
-
-def miperfilCordView(request):
-
+    user = User.objects.get(username=request.user.username)
+    perfil = UserProfile.objects.get(user=user.id)
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
-    
-    try:
-        linea = Linea.objects.get(coordinador=userTemp.id)
-    except Linea.DoesNotExist:
-        linea = None
-    ctx = {'user': userTemp, 'perfil': perfilTemp, 'linea':linea, 'username': request.user.username}
-    if request.method == 'POST':
-        form = ImageUploadForm(request.POST, request.FILES)
-        if form.is_valid():
-            foto = form.cleaned_data['image']
-            perfilTemp.foto = foto 
-            perfilTemp.save()
-            return redirect('/miperfil/')
-    return render(request, 'coordLinea/perfilConf.html', ctx)
+    if perfilTemp.rol_actual == 'CL':
+        programa = Programa.objects.all().order_by('-fechaUltimaModificacion')
+        programasAprobados= Programa.objects.filter(state='fin').count()
+        programasPorAnalizar = Programa.objects.filter(state='aprobacionLinea')
+        fast = Programa.objects.filter(state='fastTrack').count()
+        todos = Evaluacion.objects.all()
+        analisis = []
+        votaciones = []
+        for t in todos:
+            if t.votoEvalCord == False:
+                votaciones.append(t)
+        num = len(votaciones)   
+
+        for p in programasPorAnalizar:
+            if p.analisism.votoEvalCord==False:
+                analisis.append(p)
+        numAnalisis = len(analisis)
+        username = request.user.username
+        userTemp = User.objects.get(username=request.user.username)
+        profile = UserProfile.objects.get(user=userTemp)
+        linea = Linea.objects.get(id=profile.cordLinea_id)
+        # programasAprobados= Programa.objects.filter(state='fin').count().filter(linea=linea)
+        ctx = {'user': userTemp, 'username' : username, 'programas':programa, 'fast': fast, 'votaciones': num, 'porAnalizar': numAnalisis, 'aprobados' : programasAprobados, 'profile': profile, 'linea':linea}
+        return render(request, 'coordLinea/vistaCL.html', ctx)
+    else:
+        return redirect ('/errorLogin/')
+
+def votacionesEvaluacionView(request):
+    userTemp = User.objects.get(username=request.user.username)
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    if perfilTemp.rol_actual == 'CL':
+        evaluaciones = Evaluacion.objects.filter(votoEvalCord=False)
+        form = evaluacionesForm()
+        ctx = {'username': request.user.username, 'programas': evaluaciones, 'form': form}
+        return render (request, 'coordLinea/votaciones.html', ctx)
+    else:
+        return redirect ('/errorLogin/')
+############ votacion evaluaciones asociadas ########
+def votacion (request, id_evaluacion):
+    userTemp = User.objects.get(username=request.user.username)
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    if perfilTemp.rol_actual == 'CL':
+        evaluacion = Evaluacion.objects.get(id=id_evaluacion)
+        if request.method == 'POST':
+            form = evaluacionesForm(request.POST)
+            if form.is_valid():
+                voto = form.cleaned_data['voto']
+                observacion = form.cleaned_data['observacion']
+                votante = request.user
+                evaluac = Evaluaciones.objects.create(voto = voto, observacion=observacion, votante=votante, evaluacion= evaluacion)
+                evaluac.save()
+                evaluacion.votoEvalCord = True
+                evaluacion.save()
+                return HttpResponseRedirect('/votacionesEvaluacionLinea/')
+    else:
+        return redirect ('/errorLogin/')
+
+def changePasswordCordView(request, id_user):
+    userTemp = User.objects.get(username=request.user.username)
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    if perfilTemp.rol_actual == 'CL':
+        u = User.objects.get(id=id_user)
+        form = changePasswordForm()
+        if request.method == "POST":
+            form = changePasswordForm(request.POST)
+            if form.is_valid():
+                old_password = form.cleaned_data['old_password']
+                password = form.cleaned_data['password']
+                if u is not None and u.check_password(old_password):
+                    u.set_password(password)
+                    u.save()
+                    return HttpResponseRedirect("/miperfil/")
+        ctx = {'form':form, 'user':u, 'username': request.user.username}
+        return render(request, 'presentacion/changePasswordCord.html', ctx)
+    else:
+        return redirect ('/errorLogin/')
+
+def cambiarDatosCordView(request ):
+    userTemp = User.objects.get(username=request.user.username)
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    if perfilTemp.rol_actual == 'CL':
+        form = cambiarDatosForm()
+        user = request.user
+        profile = UserProfile.objects.get(user=user)
+        if request.method == "POST":
+            form = cambiarDatosForm(request.POST)
+            if form.is_valid():
+                name = form.cleaned_data['name']
+                last_name = form.cleaned_data['last_name']
+                password = form.cleaned_data['password']
+                user.first_name = name
+                user.last_name = last_name
+                user.set_password(password)
+                user.save()
+                profile.fechaPrimerAcceso = datetime.now()
+                profile.save()
+                redirect ('/miperfilCord/')
+        ctx = {'form': form, 'username': request.user.username}
+        return render(request, 'coordLinea/cambiarDatos.html', ctx)
+    else:
+        return redirect ('/errorLogin/')
+
+def miperfilCordView(request):
+    userTemp = User.objects.get(username=request.user.username)
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    if perfilTemp.rol_actual == 'CL':
+        userTemp = User.objects.get(username=request.user.username)
+        perfilTemp = UserProfile.objects.get(user=userTemp.id)
+        
+        try:
+            linea = Linea.objects.get(coordinador=userTemp.id)
+        except Linea.DoesNotExist:
+            linea = None
+        ctx = {'user': userTemp, 'perfil': perfilTemp, 'linea':linea, 'username': request.user.username}
+        if request.method == 'POST':
+            form = ImageUploadForm(request.POST, request.FILES)
+            if form.is_valid():
+                foto = form.cleaned_data['image']
+                perfilTemp.foto = foto 
+                perfilTemp.save()
+                return redirect('/miperfil/')
+        return render(request, 'coordLinea/perfilConf.html', ctx)
+    else:
+        return redirect ('/errorLogin/')
 
 def crearFechasCoord(request):
     userTemp = User.objects.get(username=request.user.username)
-    profile = UserProfile.objects.get(user=userTemp)
-    linea = Linea.objects.get(id=profile.cordLinea_id)
-    eventos = Evento.objects.filter(anfitrion=request.user)
-    todos = Evento.objects.all()
-    try:
-        storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
-        credential = storage.get()
-        http= httplib2.Http()
-        http= credential.authorize(http)
-        service = build('calendar', 'v3', http=http)
-    except:
-        return redirect('/logout/')
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    if perfilTemp.rol_actual == 'CL':
+        userTemp = User.objects.get(username=request.user.username)
+        profile = UserProfile.objects.get(user=userTemp)
+        linea = Linea.objects.get(id=profile.cordLinea_id)
+        eventos = Evento.objects.filter(anfitrion=request.user)
+        todos = Evento.objects.all()
+        try:
+            storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
+            credential = storage.get()
+            http= httplib2.Http()
+            http= credential.authorize(http)
+            service = build('calendar', 'v3', http=http)
+        except:
+            return redirect('/logout/')
 
-    calendar_list_entry = service.calendarList().get(calendarId='primary').execute()
-    form = AgregarEventoCordForm()
-    if request.method == 'POST':
-        form = AgregarEventoCordForm(request.POST)
-        if form.is_valid():
-            summary = form.cleaned_data['summary']
-            location = form.cleaned_data['location']
-            descripcion = form.cleaned_data['descripcion']
-            tipoEvento = form.cleaned_data['tipoEvento']
-            start = form.cleaned_data['start']
-            inicio = build_rfc3339_phrase(start)
-            end = form.cleaned_data['end']
-            fin = build_rfc3339_phrase(end)
-            nuevoEvent = Evento()
-            temp = Evento()
-            if tipoEvento == 'profesor' :
-                profesores = Profesor.objects.filter(linea=linea.id)
-                event = {
-                    'summary': '%s'%(summary),
- 
-                    'start': {
-                        'dateTime': '%s'%(inicio),
-                        # 'timeZone': 'America/Santiago'
-                      },
-                    'end': {
-                        'dateTime': '%s'%(fin),
-                        # 'timeZone': 'America/Santiago'
-                      }
-                                    }               
-                invitados = []
-                emails  = []
-                for email in profesores:
-                    x = {}
-                    x.update({'email': email.user.email})
-                    invitados.append(email.user.email)
-                    emails.append(x)
-
-                event.update({'attendees': emails})
-                created_event = service.events().insert(calendarId='primary', body=event).execute()
-                nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, 
-                descripcion=descripcion, id_calendar=created_event['id'], tipoEvento=tipoEvento, anfitrion=request.user, invitados =invitados)
-                nuevoEvento.save()
-
-            if tipoEvento == 'jefe':
-                jefeCarrera = UserProfile.objects.get(rol_JC='JC')
-                linea = Linea.objects.get(nombreLinea = 'Proyectos')
-                # coordinador = linea.coordinador.email
-                event = {
-                    'summary': '%s'%(summary),
- 
-                    'start': {
-                        'dateTime': '%s'%(inicio),
-                        # 'timeZone': 'America/Santiago'
-                      },
-                    'end': {
-                        'dateTime': '%s'%(fin),
-                        # 'timeZone': 'America/Santiago'
-                      }}
-                event['attendees'] =  [{'email': jefeCarrera.user.email}]
-                created_event = service.events().insert(calendarId='primary', body=event).execute()     
-                nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, 
-                descripcion=descripcion,  id_calendar=created_event['id'], tipoEvento=tipoEvento , anfitrion=request.user, invitados =jefeCarrera.user.email)
-                  
-                nuevoEvento.save()
-    else:
+        calendar_list_entry = service.calendarList().get(calendarId='primary').execute()
         form = AgregarEventoCordForm()
-    ctx = {'form':form, 'eventos': eventos, 'username': request.user.username, 'todos': todos}    
-    return render (request, 'coordLinea/Eventos.html', ctx)
+        if request.method == 'POST':
+            form = AgregarEventoCordForm(request.POST)
+            if form.is_valid():
+                summary = form.cleaned_data['summary']
+                location = form.cleaned_data['location']
+                descripcion = form.cleaned_data['descripcion']
+                tipoEvento = form.cleaned_data['tipoEvento']
+                start = form.cleaned_data['start']
+                inicio = build_rfc3339_phrase(start)
+                end = form.cleaned_data['end']
+                fin = build_rfc3339_phrase(end)
+                nuevoEvent = Evento()
+                temp = Evento()
+                if tipoEvento == 'profesor' :
+                    profesores = Profesor.objects.filter(linea=linea.id)
+                    event = {
+                        'summary': '%s'%(summary),
+     
+                        'start': {
+                            'dateTime': '%s'%(inicio),
+                            # 'timeZone': 'America/Santiago'
+                          },
+                        'end': {
+                            'dateTime': '%s'%(fin),
+                            # 'timeZone': 'America/Santiago'
+                          }
+                                        }               
+                    invitados = []
+                    emails  = []
+                    for email in profesores:
+                        x = {}
+                        x.update({'email': email.user.email})
+                        invitados.append(email.user.email)
+                        emails.append(x)
+
+                    event.update({'attendees': emails})
+                    created_event = service.events().insert(calendarId='primary', body=event).execute()
+                    nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, 
+                    descripcion=descripcion, id_calendar=created_event['id'], tipoEvento=tipoEvento, anfitrion=request.user, invitados =invitados)
+                    nuevoEvento.save()
+
+                if tipoEvento == 'jefe':
+                    jefeCarrera = UserProfile.objects.get(rol_JC='JC')
+                    linea = Linea.objects.get(nombreLinea = 'Proyectos')
+                    # coordinador = linea.coordinador.email
+                    event = {
+                        'summary': '%s'%(summary),
+     
+                        'start': {
+                            'dateTime': '%s'%(inicio),
+                            # 'timeZone': 'America/Santiago'
+                          },
+                        'end': {
+                            'dateTime': '%s'%(fin),
+                            # 'timeZone': 'America/Santiago'
+                          }}
+                    event['attendees'] =  [{'email': jefeCarrera.user.email}]
+                    created_event = service.events().insert(calendarId='primary', body=event).execute()     
+                    nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, 
+                    descripcion=descripcion,  id_calendar=created_event['id'], tipoEvento=tipoEvento , anfitrion=request.user, invitados =jefeCarrera.user.email)
+                      
+                    nuevoEvento.save()
+        else:
+            form = AgregarEventoCordForm()
+        ctx = {'form':form, 'eventos': eventos, 'username': request.user.username, 'todos': todos}    
+        return render (request, 'coordLinea/Eventos.html', ctx)
+    else:
+        return redirect ('/errorLogin/')
+
+
 ##falta arreglar
 def editEventosView (request, id_evento):
+    revisarRol(request)
     try:
         storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
         credential = storage.get()
@@ -289,9 +347,9 @@ def editEventosView (request, id_evento):
             descripcion = form.cleaned_data['descripcion']
             tipoEvento = form.cleaned_data['tipoEvento']
             start = form.cleaned_data['start']
-            start = rfc3339(start)
+            start = build_rfc3339_phrase(start)
             end = form.cleaned_data['end']
-            end = rfc3339(end)
+            end = build_rfc3339_phrase(end)
             if tipoEvento == 'general' :
                 todos = User.objects.all()
                 idCal = evento.id_calendar
@@ -353,52 +411,73 @@ def editEventosView (request, id_evento):
     return render(request, 'coordLinea/editEvents.html', {'form':form, 'evento': evento, 'invitados' : invitados})
 
 def deleteFechasCordView (request, id_evento):
-    try:
-        storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
-        credential = storage.get()
-        http= httplib2.Http()
-        http= credential.authorize(http)
-        service = build('calendar', 'v3', http=http)
-    except:
-        return redirect('/logout/')
-    evento  = Evento.objects.get(id=id_evento)
-    service.events().delete(calendarId='primary', eventId=evento.id_calendar).execute()
-    evento.delete()
-    return redirect('/crearFechasCord/')
-  
+    userTemp = User.objects.get(username=request.user.username)
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    if perfilTemp.rol_actual == 'CL':
+        try:
+            storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
+            credential = storage.get()
+            http= httplib2.Http()
+            http= credential.authorize(http)
+            service = build('calendar', 'v3', http=http)
+        except:
+            return redirect('/logout/')
+        evento  = Evento.objects.get(id=id_evento)
+        service.events().delete(calendarId='primary', eventId=evento.id_calendar).execute()
+        evento.delete()
+        return redirect('/crearFechasCord/')
+    else:
+        return redirect ('/errorLogin/')
+      
 def otroPerfilView(request, id_user):
-    actual = request.user
-    userTemp = User.objects.get(id =id_user)
-    perfil = UserProfile.objects.get(user=userTemp.id)
-    ctx = {'user': userTemp, 'perfil': perfil, 'actual':actual}
-    return render(request, 'presentacion/perfil.html', ctx)
+    userTemp = User.objects.get(username=request.user.username)
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    if perfilTemp.rol_actual == 'CL':
+        actual = request.user
+        userTemp = User.objects.get(id =id_user)
+        perfil = UserProfile.objects.get(user=userTemp.id)
+        ctx = {'user': userTemp, 'perfil': perfil, 'actual':actual}
+        return render(request, 'presentacion/perfil.html', ctx)
+    else:
+        return redirect ('/errorLogin/')
 
 def recursosCordView(request):
-    Recursos = Recurso.objects.filter(creador=request.user)
-    jefe = UserProfile.objects.get(rol_JC='JC')
-    recursosJefe = Recurso.objects.filter(creador=jefe.user)
-    if request.method == 'POST':
-        form = UploadFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            # handle_uploaded_file(request.FILES['file'])
-            ###### el nombre dle recurso no debe tener espacios
-            recurso = form.cleaned_data['recurso']            
-            titulo_recurso = form.cleaned_data['title']
-            descripcion = form.cleaned_data['descripcion']
-            estado = form.cleaned_data['estado']
-            fechaUltimaModificacion = datetime.now()
-            newRecurso = Recurso.objects.create(recurso = recurso, creador=request.user, titulo_recurso=titulo_recurso, descripcion_recurso=descripcion, estado=estado, fechaUltimaModificacion=fechaUltimaModificacion)
-            newRecurso.save()
-            return HttpResponseRedirect('/recursosCord/')
+    userTemp = User.objects.get(username=request.user.username)
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    if perfilTemp.rol_actual == 'CL':
+        Recursos = Recurso.objects.filter(creador=request.user)
+        jefe = UserProfile.objects.get(rol_JC='JC')
+        recursosJefe = Recurso.objects.filter(creador=jefe.user)
+        if request.method == 'POST':
+            form = UploadFileForm(request.POST, request.FILES)
+            if form.is_valid():
+                # handle_uploaded_file(request.FILES['file'])
+                ###### el nombre dle recurso no debe tener espacios
+                recurso = form.cleaned_data['recurso']            
+                titulo_recurso = form.cleaned_data['title']
+                descripcion = form.cleaned_data['descripcion']
+                estado = form.cleaned_data['estado']
+                fechaUltimaModificacion = datetime.now()
+                newRecurso = Recurso.objects.create(recurso = recurso, creador=request.user, titulo_recurso=titulo_recurso, descripcion_recurso=descripcion, estado=estado, fechaUltimaModificacion=fechaUltimaModificacion)
+                newRecurso.save()
+                return HttpResponseRedirect('/recursosCord/')
+        else:
+            form = UploadFileForm()
+        ctx = {'form': form, 'recursos': Recursos, 'username': request.user.username, 'recursosJefe': recursosJefe}
+        return render(request, 'coordLinea/recursos.html', ctx)
     else:
-        form = UploadFileForm()
-    ctx = {'form': form, 'recursos': Recursos, 'username': request.user.username, 'recursosJefe': recursosJefe}
-    return render(request, 'coordLinea/recursos.html', ctx) 
+        return redirect ('/errorLogin/')
+
 
 def deleteRecursoView(request, id_recurso):
-    Recursos = Recurso.objects.get(id=id_recurso)
-    Recursos.delete()
-    return HttpResponseRedirect('/recursos/')
+    userTemp = User.objects.get(username=request.user.username)
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    if perfilTemp.rol_actual == 'CL':
+        Recursos = Recurso.objects.get(id=id_recurso)
+        Recursos.delete()
+        return HttpResponseRedirect('/recursos/')
+    else:
+        return redirect ('/errorLogin/')
 
 def editRecursosView(request, id_recurso):
     # recurs = Recurso.objects.get(id=id_recurso)
@@ -408,59 +487,78 @@ def editRecursosView(request, id_recurso):
     #             'title' : recurs.titulo_recurso,
     #             'descripcion' : recurs.descripcion_recurso,
     #             'estado' : recurs.estado})
+    userTemp = User.objects.get(username=request.user.username)
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    if perfilTemp.rol_actual == 'CL':
+        Recursos = Recurso.objects.get(id=id_recurso)
+        if request.method == 'GET':
+            form = UploadFileForm(initial={
+                'recurso' : Recursos.recurso,
+                'title' : Recursos.titulo_recurso,
+                'descripcion' : Recursos.descripcion_recurso,
+                'estado' : Recursos.estado})
+        if request.method == 'POST':
+            form = UploadFileForm(request.POST, request.FILES)
+            if form.is_valid():
+                # Recursos = Recurso.objects.get(id=id_recurso)
+                # Recursos.delete()
+                recurso = form.cleaned_data['recurso']            
+                titulo_recurso = form.cleaned_data['title']
+                descripcion = form.cleaned_data['descripcion']
+                estado = form.cleaned_data['estado']
+                fechaUltimaModificacion = datetime.now()
 
-    Recursos = Recurso.objects.get(id=id_recurso)
-    if request.method == 'GET':
-        form = UploadFileForm(initial={
-            'recurso' : Recursos.recurso,
-            'title' : Recursos.titulo_recurso,
-            'descripcion' : Recursos.descripcion_recurso,
-            'estado' : Recursos.estado})
-    if request.method == 'POST':
-        form = UploadFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            # Recursos = Recurso.objects.get(id=id_recurso)
-            # Recursos.delete()
-            recurso = form.cleaned_data['recurso']            
-            titulo_recurso = form.cleaned_data['title']
-            descripcion = form.cleaned_data['descripcion']
-            estado = form.cleaned_data['estado']
-            fechaUltimaModificacion = datetime.now()
-
-            Recursos.recurso = recurso            
-            Recursos.titulo_recurso = titulo_recurso
-            Recursos.descripcion = descripcion
-            Recursos.estado = estado
-            Recursos.fechaUltimaModificacion = fechaUltimaModificacion
-            Recursos.save()
-        return redirect('/recursos/')
-    return render(request, 'jefeCarrera/editRecursos.html', {'form': form})    
+                Recursos.recurso = recurso            
+                Recursos.titulo_recurso = titulo_recurso
+                Recursos.descripcion = descripcion
+                Recursos.estado = estado
+                Recursos.fechaUltimaModificacion = fechaUltimaModificacion
+                Recursos.save()
+            return redirect('/recursos/')
+        return render(request, 'jefeCarrera/editRecursos.html', {'form': form})
+    else:
+        return redirect ('/errorLogin/') 
 
 def aprobadosCordViews(request):
-    programas = Programa.objects.filter(state="fin")
-    username = request.user.username
-    ctx = {'username': username, 'programas': programas}
-    return render (request, 'coordLinea/progAprobados.html', ctx)
+    userTemp = User.objects.get(username=request.user.username)
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    if perfilTemp.rol_actual == 'CL':
+        programas = Programa.objects.filter(state="fin")
+        username = request.user.username
+        ctx = {'username': username, 'programas': programas}
+        return render (request, 'coordLinea/progAprobados.html', ctx)
+    else:
+        return redirect ('/errorLogin/')
 
 ###################### Fast Track #############################
 def analizarCordViews (request):
-    programas = Programa.objects.filter(state="fastTrack")
-    username = request.user.username
-    ctx = {'username': username, 'programas': programas}
-    return render (request, 'coordLinea/progPorAnalizarFT.html', ctx)
+    userTemp = User.objects.get(username=request.user.username)
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    if perfilTemp.rol_actual == 'CL':
+        programas = Programa.objects.filter(state="fastTrack")
+        username = request.user.username
+        ctx = {'username': username, 'programas': programas}
+        return render (request, 'coordLinea/progPorAnalizarFT.html', ctx)
+    else:
+        return redirect ('/errorLogin/')
 
 ################# AProbacion Linea ########################
 
 def preAnalisisCordView(request):
-    programas = Programa.objects.filter(state="aprobacionLinea")
-    analisis = []
-    for p in programas:
-        if p.analisism.votoEvalCord==False:
-            analisis.append(p)
-    username = request.user.username
-    form = analisisLineaForm() 
-    ctx = {'username': username, 'programas': analisis, 'form': form}
-    return render (request, 'coordLinea/votacionesAnalisis.html', ctx)
+    userTemp = User.objects.get(username=request.user.username)
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    if perfilTemp.rol_actual == 'CL':
+        programas = Programa.objects.filter(state="aprobacionLinea")
+        analisis = []
+        for p in programas:
+            if p.analisism.votoEvalCord==False:
+                analisis.append(p)
+        username = request.user.username
+        form = analisisLineaForm() 
+        ctx = {'username': username, 'programas': analisis, 'form': form}
+        return render (request, 'coordLinea/votacionesAnalisis.html', ctx)
+    else:
+        return redirect ('/errorLogin/')
 
 ############# FORM Y PROCESO DE VOTACION ANALISIS DEL COORDINADOR ############
 def analisisVot(evaluacion):
@@ -554,27 +652,38 @@ def analisisVot(evaluacion):
     else:
         termino = 0
     return bandera
-def votacionCordAnalisis (request, id_programa):
-    programa = Programa.objects.get(id=id_programa)
-    analisis = programa.analisism
-    if request.method == 'POST':
-        form = analisisLineaForm(request.POST)
-        if form.is_valid():
-            voto = form.cleaned_data['voto']
-            observacion = form.cleaned_data['observacion']
-            votante = request.user
-            eva = Analisis.objects.create(voto = voto, observacion=observacion, votante=votante, analisis=analisis)
-            eva.save()
-            analisis.votoEvalCord = True
-            analisis.save()
-            analisisVot(analisis)
-            return redirect('/programasPorAnalizarLinea/')
 
+def votacionCordAnalisis (request, id_programa):
+    userTemp = User.objects.get(username=request.user.username)
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    if perfilTemp.rol_actual == 'CL':
+        programa = Programa.objects.get(id=id_programa)
+        analisis = programa.analisism
+        if request.method == 'POST':
+            form = analisisLineaForm(request.POST)
+            if form.is_valid():
+                voto = form.cleaned_data['voto']
+                observacion = form.cleaned_data['observacion']
+                votante = request.user
+                eva = Analisis.objects.create(voto = voto, observacion=observacion, votante=votante, analisis=analisis)
+                eva.save()
+                analisis.votoEvalCord = True
+                analisis.save()
+                analisisVot(analisis)
+                return redirect('/programasPorAnalizarLinea/')
+    else:
+        return redirect ('/errorLogin/')
+
+########### FIN ##################3
 
 def logCordView(request, id_programa):
-    log = Log.objects.filter(programa = id_programa).order_by('-fecha')
-    ctx = {'username': request.user.username, 'log': log}
-
-    return render (request, 'coordLinea/log.html', ctx)
+    userTemp = User.objects.get(username=request.user.username)
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    if perfilTemp.rol_actual == 'CL':
+        log = Log.objects.filter(programa = id_programa).order_by('-fecha')
+        ctx = {'username': request.user.username, 'log': log}
+        return render (request, 'coordLinea/log.html', ctx)
+    else:
+        return redirect ('/errorLogin/')
 
             

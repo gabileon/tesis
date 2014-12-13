@@ -8,5 +8,6 @@ urlpatterns = patterns('myapp.modulos.presentacion.views',
 	url(r'^logout/$', 'logout_view', name= 'logout_view'),
 	url(r'^sign_up/$', 'signup_view', name='vista_signup'),
 	url(r'^oauth2callback/$', 'oauth2_view', name ='oauth_view'),
+	url(r'^errorLogin/$', 'errorLoginView'),
 
 )
