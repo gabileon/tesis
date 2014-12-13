@@ -68,9 +68,9 @@
                     <tbody>
                         {%for p in programas%}
                         <tr>
-                            <td>{{p.asignatura}}</td>
+                            <td>{{p.asignatura.nombreAsig}}</td>
                             <td>{{p.fechaUltimaModificacion}}</td>
-                            <td>{{p.profesorEncargado.first_name}} {{p.profesorEncargado.last_name}}</td>
+                            <td>{{p.profesorEncargado}}</td>
                             <td><a class="glyphicon glyphicon-file" href="{{p.url}}"></a></td></span>
                         </tr>
                         {%endfor%}

@@ -15,10 +15,8 @@ class UserProfile(models.Model):
 	rol_CL = models.CharField(max_length=250, blank=True)
 	rol_actual = models.CharField(max_length=250, blank=True)
 	foto = models.ImageField("Foto de Perfil", upload_to=url, default= 'media/img/user-default.png')
-	# telefono = models.PositiveIntegerField()
 	cordLinea = models.ForeignKey(Linea, null=True, related_name='coordinador_linea')
-	# models.ForeignKey(Linea, null=True, related_name='cordinador_linea')
-	carpeta = models.CharField(max_length=250, blank=True)
+	carpetaProgramas = models.CharField(max_length=250, default= "NO CREADA")
 	carpetaReportes = models.CharField(max_length=250, null=True)
 	fechaPrimerAcceso = models.DateTimeField(null=True)
 	def create_user_profile(sender, instance, created, **kwargs):  
@@ -29,8 +27,6 @@ class UserProfile(models.Model):
 class CredentialsModel(models.Model):
 	id_user = models.ForeignKey(User, unique=True)
 	credential = CredentialsField()
-
-# class Mensajes(models.Model):
 	
 
 

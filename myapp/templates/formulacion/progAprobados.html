@@ -44,9 +44,7 @@
                 </li>
               </ul>     
               <ul>
-                <p class="bienvenido">Bienvenido <strong>{{username}}</strong>
-                </p>
-                <p class="logout"><a href="/logout/">Cerrar Sesión</a></p>
+                <p class="bienvenido">Bienvenido <strong>{{username}}</strong> <a href="/logout/"><span class="glyphicon glyphicon-log-out"></span></a></p></p>
               </ul>
             </div><!--/.nav-collapse -->
           </div>
@@ -74,9 +72,9 @@
                     <tbody>
                         {%for p in programas%}
                         <tr>
-                            <td>{{p.asignatura}}</td>
+                            <td>{{p.asignatura.nombreAsig}}</td>
                             <td>{{p.fechaUltimaModificacion}}</td>
-                            <td>{{p.profesorEncargado.first_name}} {{p.profesorEncargado.last_name}}</td>
+                            <td>{{p.profesorEncargado}}</td>
                             <td><a class="glyphicon glyphicon-file" href="{{p.url}}"></a></td></span>
                         </tr>
                         {%endfor%}

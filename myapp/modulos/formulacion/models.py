@@ -21,7 +21,6 @@ class Linea(models.Model):
 class Asignatura(models.Model):
     nombreAsig = models.CharField(max_length=20)
     plan = models.CharField(max_length=5)
-    profesorAsignado = models.OneToOneField(User, null=True)
     linea = models.ForeignKey(Linea)
 
 
@@ -91,13 +90,13 @@ class MyWorkflow(xwf_models.Workflow):
 class Programa(xwf_models.WorkflowEnabled, models.Model):
 # SE DEFINE SU ESTADO QUE ESTA DADO POR EL WORKFLOW DEFINIDO ###
     state = xwf_models.StateField(MyWorkflow)
-    #asignatura =  models.OneToOneField(Asignatura, null=True)
-    asignatura =   models.CharField(max_length=10)
+    asignatura =  models.OneToOneField(Asignatura, null=True)
     semestre =  models.CharField(max_length=10)
     ano =  models.CharField(max_length=10)
     fechaUltimaModificacion = models.DateTimeField()
     url = models.URLField(blank=False, null=True)
     profesorEncargado = models.OneToOneField(User, null=True)
+    id_file =  models.CharField(max_length=100)
 
 class Log(models.Model):
     programa = models.OneToOneField(Programa)
@@ -129,18 +128,31 @@ class Administrativo(models.Model):
     programa = models.OneToOneField(Programa)
     estado= models.CharField(max_length=10, default="Sin iniciar")
 
-
 class RecursosApren(models.Model):
     programa = models.OneToOneField(Programa)
     estado= models.CharField(max_length=10, default="Sin iniciar")
 
-
+class Evaluacion (models.Model):
+    programa = models.OneToOneField(Programa)
+    votoEvalCord = models.BooleanField(default=False)
+    votoProfe = models.BooleanField(default=False)
 
 class Evaluaciones(models.Model):
     voto = models.CharField(max_length=2)
     votante = models.OneToOneField(User)
     observacion = models.TextField()
+    evaluacion = models.OneToOneField(Evaluacion)
+
+class AnalisisM(models.Model):
     programa = models.OneToOneField(Programa)
+    votoEvalCord = models.BooleanField(default=False)
+    votoProfe = models.BooleanField(default=False)
+
+class Analisis(models.Model):
+    voto = models.CharField(max_length=2)
+    votante = models.OneToOneField(User)
+    observacion = models.TextField()
+    analisis = models.OneToOneField(AnalisisM)
 
 class Recurso(models.Model):
     def url(self, filename):

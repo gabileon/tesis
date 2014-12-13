@@ -1,3 +1,4 @@
+{% load bootstrap_tags %}
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -62,19 +63,21 @@
                             <th>Asignatura</th>
                             <th>Profesor Encargado </th>
                             <th>Documento</th>
-                            <th>¿Fast Track?</th>
+                            <th>¿Aprueba el Programa?</th>
                         </tr>
                     </thead>
                     <tbody>
                         {%for p in programas%}
                         <tr>
-                            <td>{{p.asignatura}}</td>
-                            <td>{{p.profesorEncargado.first_name}} {{p.profesorEncargado.last_name}}</td>
+                            <td>{{p.asignatura.nombreAsig}}</td>
+                            <td>{{p.profesorEncargado}}</td>
                             <td><a class="glyphicon glyphicon-file" href="{{p.url}}"></a></td></span>
 
-                            <td><button type="button" class="btn btn-default" data-container="body" data-toggle="popover" data-placement="right"  data-content="Para enviar el programa a Fast Track debes marcar tu opción en la siguiente columna"><span class="glyphicon glyphicon-edit"></span> Información</button>
+                            <td>
                               <form>
-                                <a href="/fastTrack/{{p.id}}/yes">  <span class="glyphicon glyphicon-ok"></span> </a>    <a href="/fastTrack/{{p.id}}/no">     <span class="glyphicon glyphicon-remove"></span> </a>
+                                <a href="/votacionAnalisis/{{p.id}}/yes/">  <span class="glyphicon glyphicon-ok"></span> </a>
+                            </td>
+                            <td><a href="/votacionAnalisis/{{p.id}}/no/">     <span class="glyphicon glyphicon-remove"></span> </a>
                               </form>
                               
                             </td>

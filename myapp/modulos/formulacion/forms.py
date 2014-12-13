@@ -4,22 +4,18 @@ from myapp.modulos.formulacion.models import Asignatura
 from django.contrib.auth.models import Group
 
 
-
-
-
 class crearProgramaForm(forms.Form):
 
+	creator_choices = [(a.id, a.nombreAsig) for a in Asignatura.objects.all()]
+	asignatura = forms.ChoiceField(required=True, label='Asignatura', choices=creator_choices)
 	SEMESTRES = (('I','I'), ('II', 'II'))
 	ANOS = (('2014','2014'), ('2015', '2015'))
-
-	# asignaturas = [(c.id, c.nombreAsig) for c in Asignatura.objects.all()]
-	# asignatura = forms.ChoiceField(required=True, label='Asignatura', choices=asignaturas)
-	asignatura = forms.CharField(widget=forms.TextInput())
 	semestre = forms.ChoiceField(choices=SEMESTRES)
 	ano = forms.ChoiceField(choices=ANOS)
 
 	def clean(self):
 		return self.cleaned_data
+
 
 class estadoForm(forms.Form):
     MY_CHOICES = (
@@ -55,8 +51,8 @@ class analizarForm(forms.Form):
 
 class evaluacionesForm(forms.Form):
     MY_CHOICES = (
-        ('Si', 'Si'),
-        ('No', 'No'),
+        ('Si', 'Si Existen Evaluaciones Asociadas'),
+        ('No', 'No Existen Evaluaciones Asociadas'),
     )
     voto = forms.ChoiceField(widget=forms.RadioSelect, choices=MY_CHOICES)
     observacion = forms.CharField(widget=forms.Textarea)

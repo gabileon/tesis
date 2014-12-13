@@ -56,6 +56,8 @@
             <div class="panel-body">
                 <li role="presentation"><a class="programas"href="/programasAprobadosLinea/"{{linea.id}}>Programas Aprobados </a><span class="badge aprobados">{{aprobados}}</span></li>
                 <li role="presentation"><a class="programas"href="/programasPorAnalizarLinea/"{{linea.id}}>Programas Pre-análisis Jefe Carrera </a><span class="badge aprobados">{{porAnalizar}}</span></li>
+                <li role="presentation"><a class="programas"href="/fastTrack/"{{linea.id}}>Programas Evaluación Fast Track</a><span class="badge aprobados">{{fast}}</span></li>
+                <li role="presentation"><a class="programas"href="/votacionesEvaluacionLinea/"{{linea.id}}>Votaciones Existencia de Evaluaciones </a><span class="badge aprobados">{{votaciones}}</span></li>
             </div>
         </div>
         <div class="panel panel-default">
@@ -77,7 +79,7 @@
                     <tbody>
                         {%for p in programas%}
                         <tr>
-                            <td>{{p.asignatura}}</td>
+                            <td>{{p.asignatura.nombreAsig}}</td>
                             <td>{{p.profesorEncargado}}</td>
                             <td>{{p.state.title}}</td>
                             {%if p.reporteindic %}

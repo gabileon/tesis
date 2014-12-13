@@ -29,12 +29,12 @@
             <div id="navbar" class="navbar-collapse collapse">
               <ul class="nav navbar-nav">
                 <li class="active"><a href="/principalPL/">Programas</a></li>
-                <li><a href="/crearFechas/">Eventos</a></li>
+                <li><a href="/fechasProfe/">Eventos</a></li>
                  <li><a href="/recursosProfe/">Recursos de Aprendizaje</a></li>
                 <li class="dropdown">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuración<span class="caret"></span></a>
                   <ul class="dropdown-menu" role="menu">
-                    <li><a href="/miperfil/">Mi Perfil</a></li>
+                    <li><a href="/miperfilProfesor/">Mi Perfil</a></li>
                   </ul>
                 </li>
               </ul>     
@@ -46,18 +46,32 @@
         </nav>
 
 
- <div class="row">
-  <div class="col-md-10 col-md-push-2">
-    <h2> {{p.asignatura}} {{p.semestre}} {{p.ano}}</h2>
-    <br>
-    <p> Actualmente te encuentras en el estado de Análisis de Evaluaciones Asociadas del programa {p.asignatura}} {{p.semestre}} {{p.ano}}, el cual necesita de tu voto para poder seguir el proceso de formulación. A continuación está el link para revisar el programa en dónde se debe analizar si existen evaluaciones asociadas sobre lo definido en él. </p>
+     <div class="row">
+        <br></br>
 
-   <li>Documento en Drive  <td><a href="{{p.url}}"> <span class="glyphicon glyphicon-cloud"></span></a></td></li>
-      {%if estado = 1 %}
-      <p>Para continuar, vota por el programa presionando el botón "Votar".</p>
-
-
- <button type="button" class="btn btn-success" data-toggle="modal" data-target="#myModal">
+        <div class="panel panel-primary">        
+            <div class="panel-heading">
+                <h3 class="panel-title">Votaciones Pendientes de Programas</h3>
+            </div>
+            <div class="panel-body">
+                <p><strong>Análisis de Evaluaciones Asociadas</strong></p>
+              {%if programas%}
+              <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Asignatura</th>
+                            <th>Profesor Encargado</th>
+                            <th>Documento</th>
+                            <th>Votación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {%for p in programas%}
+                        <tr>
+                            <td>{{p.asignatura.nombreAsig}}</td>
+                            <td>{{p.profesorEncargado}}</td>
+                            <td><a class="glyphicon glyphicon-file" href="{{p.url}}"></a></td></span>
+                            <td><button type="button" class="btn btn-success" data-toggle="modal" data-target="#myModal">
                         Votar
                         </button>
                         <!-- Modal -->
@@ -66,10 +80,10 @@
                     <div class="modal-content">
                       <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Cerrar</span></button>
-                        <h4 class="modal-title" id="myModalLabel">Evaluaciones Asociadas</h4>
+                        <h4 class="modal-title" id="myModalLabel">Análisis de Evaluaciones Asociadas</h4>
                       </div>
                       <div class="modal-body">
-                            <form action="." method="POST">
+                            <form action="/votacionesEvaluacionOtroProfe/{{p.id}}/" method="POST">
                                 {%csrf_token%}
                                 {{form|as_bootstrap}}
                                  <button type="submit" class="btn btn-success"><strong>Guardar</strong></button>
@@ -81,19 +95,19 @@
                       </div>
                     </div>
                   </div>
-                </div>
+                </div></td>
+                        </tr>
+                        {%endfor%}
+                    </tbody>
+                </table>
                 {%else%}
-        <p>Ya votaste por el programa. Debes esperar que los demás profesores y el coordinador voten.</p>
-{%endif%}
+                <br>
+                <h4> No hay programas por revisar</h4>
+            {%endif%}
+            </div>
+        </div>
 
 
-
-<a href="/verificacionCoherencia/{{programa.id}}"><button type="button" class="btn btn-success">Verificación Coherencia y Completitud</button></a>
-{%endif%}
-{%if termino = 1 and perdieron == 1%}
-<a href="/verificacionCoherencia/{{programa.id}}"><button type="button" class="btn btn-danger">Formulación Programa</button></a>
-{%endif%}
-</div>
  
 
   <div class="col-md-2 col-md-pull-10">

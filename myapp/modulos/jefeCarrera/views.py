@@ -521,9 +521,9 @@ def analisisProgramaView(request, id_programa, decision):
             m.save()
             #programa pasa a formulacion
             programa.siIndic_toForm()
-            logEstado(p, p.state.title)
+            logEstado(programa, programa.state.title)
             programa.to_datosAsig()
-            logEstado(p, p.state.title)
+            logEstado(programa, programa.state.title)
             programa.save()
             # se ve si existe el indicador para el estado del siguiente estado
             try:
@@ -561,7 +561,7 @@ def analisisProgramaView(request, id_programa, decision):
                    ### se crea carpeta ###
             folder = drive_service.files().insert(body = body2).execute()
             id_folder = folder.get('id')
-            titulo = "Reporte de Indicaciones Programa " + programa.asignatura + " " + programa.semestre + " " + programa.ano
+            titulo = "Reporte de Indicaciones Programa " + programa.asignatura.nombreAsig + " " + programa.semestre + " " + programa.ano
             body = {
                 'title':'%s'%(titulo),
                 'mimeType': "application/vnd.google-apps.document",
@@ -590,7 +590,7 @@ def analisisProgramaView(request, id_programa, decision):
                 drive_service = build('drive', 'v2', http=http, developerKey="hbP6_4UJIKe-m74yLd8tQDfT")
             except:
                 return redirect('/logout/')
-            titulo = "Reporte de Indicaciones Programa " + programa.asignatura + " " + programa.semestre + " " + programa.ano
+            titulo = "Reporte de Indicaciones Programa " + programa.asignatura.nombreAsig + " " + programa.semestre + " " + programa.ano
             body = {
                 'title':'%s'%(titulo),
                 'mimeType': "application/vnd.google-apps.document",
@@ -618,7 +618,7 @@ def analisisProgramaView(request, id_programa, decision):
             m.cantidad = m.cantidad - 1
             m.save()
             programa.noIndic_toAprobJC()
-            logEstado(p, p.state.title)
+            logEstado(programa, programa.state.title)
             programa.save()
             try:
                 n = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -652,7 +652,7 @@ def aprobacionProgramaView(request, id_programa, decision):
             x.cantidad = x.cantidad - 1
             x.save()
             programa.siAprob_toFin()
-            logEstado(p, p.state.title)
+            logEstado(programa, programa.state.title)
             programa.save()
             try:
                 y = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -676,7 +676,6 @@ def aprobacionProgramaView(request, id_programa, decision):
             m.cantidad = m.cantidad - 1
             m.save()
             programa.noAprobJC_toForm()
-            logEstado(p, p.state.title)
             programa.save()
             try:
                 n = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -689,7 +688,8 @@ def aprobacionProgramaView(request, id_programa, decision):
                 n.cantidad = y.cantidad + 1
                 n.save()
     return HttpResponseRedirect('/programasPorAprobar/')
-        
+
+    
 def addProfesoresView(request, id_linea):
     linea = Linea.objects.get(id=id_linea)
     form = agregarProfesoresForm()

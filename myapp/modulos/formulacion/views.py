@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.contrib.auth.models import User
 from datetime import datetime
-from myapp.modulos.formulacion.models import Administrativo, RecursosApren, Linea, Profesor, Evaluaciones, Log, Programa, MyWorkflow, Recurso, Constribucion, RDA, Estrategias, ClaseClase, Completitud
+from myapp.modulos.formulacion.models import Evaluacion, Analisis, AnalisisM, Administrativo, RecursosApren, Linea, Profesor, Evaluaciones, Log, Programa, MyWorkflow, Recurso, Constribucion, RDA, Estrategias, ClaseClase, Completitud
 from myapp.modulos.formulacion.forms import estadoForm, crearProgramaForm, evaluacionesForm, analisisLineaForm
 from myapp.modulos.presentacion.models import CredentialsModel
 from myapp import settings
@@ -73,8 +73,13 @@ def defGenerales(request, id_programa):
   			recursos = RecursosApren()
   			recursos.programa = programa
   			recursos.save()
+  			evaluacion = Evaluacion()
+  			evaluacion.programa = programa
+  			evaluacion.save()
+  			analisis = AnalisisM()
+  			analisis.programa = programa
+  			analisis.save()
   			return HttpResponseRedirect('/definiciones/'+id_programa)
-
  		else:
  			programa.fechaUltimaModificacion = datetime.utcnow()
 	 		programa.save()
@@ -121,7 +126,7 @@ def definicionConstribucion(request, id_programa):
 		if choice=='option2':
 	 		programa.to_defGeneralCons()
 	 		programa.fechaUltimaModificacion = datetime.now()
-	 		
+	 		logEstado(programa, programa.state.title)
 	 		constribucion.estado = "Finalizado"
 	 		constribucion.save()
 	 		programa.save()
@@ -269,57 +274,101 @@ def definicionClaseClase_view(request, id_programa):
 	ctx = {'form': form, 'p' : programa, 'form': form, 'username': request.user.username}
 	return render(request, 'formulacion/definicionClaseClase.html', ctx)
 
-def evaluacionesAsociadasView(request, id_programa):
-	
-	form = evaluacionesForm()
 
-	programa = Programa.objects.get(id=id_programa)
+####### ANALISIS EVALUACIONES ASOCIADAS POR EL PROFESOR ENCARGADO########
+def evaluacionesAsociadasView(request, id_programa):
 	form = evaluacionesForm()
+	programa = Programa.objects.get(id=id_programa)
 	profe = programa.profesorEncargado
 	linea = Profesor.objects.get(user = profe).linea
 	coordinadorLinea = linea.coordinador
 	profesoresLinea = Profesor.objects.filter(linea=linea).count()
-	votos = Evaluaciones.objects.filter(programa=programa)
-	perdieron = 0
+	evaluacion = Evaluacion.objects.get(programa=programa)
+	### ver si voto el profe ##
+	if evaluacion.votoProfe == True:
+		estado = 1
+	else:
+		estado = 0
+	if evaluacion.votoEvalCord == True:
+		cord = 1
+	else:
+		cord = 0
+	votos = Evaluaciones.objects.filter(evaluacion =evaluacion)
+	nvotos = Evaluaciones.objects.filter(evaluacion =evaluacion).count()
+
+	if (nvotos == profesoresLinea + 1):
+		bandera = evaluacionesVot(evaluacion)
+
+	if estado == 0:
+		if request.method == 'POST':
+			form = evaluacionesForm(request.POST)
+			if form.is_valid():
+				voto = form.cleaned_data['voto']
+				observacion = form.cleaned_data['observacion']
+				votante = request.user
+				eva = Evaluaciones.objects.create(voto = voto, observacion=observacion, votante=votante, evaluacion=evaluacion)
+				eva.save()
+				evaluacion.votoProfe = True
+				evaluacion.save()
+				return redirect('/principalPL')
+	ctx = {'form': form, 'p' : programa, 'votos': votos, 'username': request.user.username, 'estado':estado, 'numvotos': profesoresLinea}
+	return render(request, 'formulacion/evaluacionAsociadaOwn.html', ctx)
+
+## PROCESO DE VOTACION ####
+def evaluacionesVot(evaluacion):
+	profe = evaluacion.programa.profesorEncargado
 	termino = 0
-	estadoMiVoto = 'no'
-	try:
-		voteYo = Evaluaciones.objects.filter(programa=programa).get(votante=profe)
-	except:
-		voteYo = None
-	if voteYo is not None:
-		voteYo = 1
-	else:
-		voteYo = 0
-	## ver si voto el coordinador ##
-	try:
-		votoCoord = Evaluaciones.objects.get(votante=coordinadorLinea)
-	except:
-		votoCoord = 0
-	if votoCoord is None:
-		votoCoord = 1
-	else:
-		votoCoord = 0
-
-	## form ###
-	# try:
-	#  	votos = Evaluaciones.objects.filter(programa=programa)
-	 	
-	# except:
-	#  	votos = None
-
-	if len(votos) != 0 :
-		numVotos = Evaluaciones.objects.filter(programa=programa).count()
-		
-		if numVotos == (profesoresLinea + 1):
-			## todos votaron
-			termino = 1
-			votosSi = votos.filter(voto='Si').count()
-			votosNo =  votos.filter(voto='No').count()
-			if votosSi>votosNo :
-
-				## si hay evaluaciones
-				## se envia email al profe y al coordinador
+	bandera = None
+	programa = evaluacion.programa
+	votos = Evaluaciones.objects.filter(evaluacion =evaluacion)
+	numVotos = len(votos)
+	linea = Profesor.objects.get(user = profe).linea
+	coordinadorLinea = linea.coordinador
+	profesoresLinea = Profesor.objects.filter(linea=linea).count()
+	##### Termino la votacion #######
+	if (numVotos == (profesoresLinea+1 )):
+		termino = 1
+		#### conteo de votos ###
+		votosSi = votos.filter(voto='Si').count()
+		votosNo =  votos.filter(voto='No').count()
+		################# Resultados ###########
+		if votosSi>votosNo :
+			programa.siEvaluacion_toVerif()
+			logEstado(programa, programa.state.title)
+			try:
+				x = ProgramasPorEstado.objects.get(estado=programa.state.title)
+			except ProgramasPorEstado.DoesNotExist:
+				x = None
+			if x is None:
+				newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+			 	newIndicador.save()
+			else:
+				indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
+				indicador.cantidad = indicador.cantidad + 1
+				indicador.save()
+			programa.save()
+			bandera = True
+		if votosSi<votosNo:
+			bandera = True
+			programa.noEvaluacion_toForm()
+			logEstado(programa, programa.state.title)
+			programa.to_datosAsig()
+			programa.save()
+			try:
+				x = ProgramasPorEstado.objects.get(estado=programa.state.title)
+			except ProgramasPorEstado.DoesNotExist:
+				x = None
+			if x is None:
+				newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+			 	newIndicador.save()
+			else:
+				indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
+				indicador.cantidad = indicador.cantidad + 1
+				indicador.save()
+		if votosNo==votosSi:
+			## veo el voto del coordinador
+			votoDelCoord = Evaluaciones.objects.filter(evaluacion=evaluacion).get(votante = coordinadorLinea)
+			if votoDelCoord == 'Si':
 				perdieron = 0
 				programa.siEvaluacion_toVerif()
 				logEstado(programa, programa.state.title)
@@ -334,38 +383,10 @@ def evaluacionesAsociadasView(request, id_programa):
 					indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
 					indicador.cantidad = indicador.cantidad + 1
 					indicador.save()
-				### envio el email al coordinador y al profeEncargado
-				# message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-    #         	message.to = coordinadorLinea.email
-    #             message.html """"
-				# 			<html><head></head><body>
-				# 			Estimado:
-
-				# 			Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-				# 			Asociadas a lo definido en el programa de asignatura %s %s %s del profesor %s %s , ha sido exitosa
-				# 			por lo que el programa ha pasado al estado de Verificacion de Completitud y Coherencia.
-				# 			Saludos
-				# 			</body></html>
-				# 		"""%(programa.asignatura, programa.semestre, programa.ano, profe.first_name, profe.last_name)
-
-    #             message.send()
-    #             message = Email.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-    #         	message.to = profe.email
-    #             message.html """"
-				# 			<html><head></head><body>
-				# 			Estimado:
-
-				# 			Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-				# 			Asociadas a lo definido en el programa de asignatura %s %s %s, ha sido exitosa
-				# 			por lo que el programa ha pasado al estado de Verificacion de Completitud y Coherencia.
-				# 			Saludos
-				# 			</body></html>
-				# 		"""%(programa.asignatura, programa.semestre, programa.ano, profesor.first_name, profesor.last_name)
-
-    #             message.send()
 				programa.save()
-
-			if votosSi<votosNo:
+				bandera = True
+			else:
+				bandera = False
 				perdieron = 1
 				programa.noEvaluacion_toForm()
 				logEstado(programa, programa.state.title)
@@ -382,411 +403,121 @@ def evaluacionesAsociadasView(request, id_programa):
 					indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
 					indicador.cantidad = indicador.cantidad + 1
 					indicador.save()
+	else:
+		termino = 0
+	return bandera
 
-				#message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-      #       	message.to = coordinadorLinea.email
-      #           message.html """"
-						# 	<html><head></head><body>
-						# 	Estimado:
+def evaluacionesAsociadasOthersView(request):
 
-						# 	Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-						# 	Asociadas a lo definido en el programa de asignatura %s %s %s del profesor %s %s , no ha sido exitosa
-						# 	por lo que el programa ha vuelto al estado de Formulacion de Programa, para su analisis.
-						# 	Saludos
-						# 	</body></html>
-						# """%(programa.asignatura, programa.semestre, programa.ano, profe.first_name, profe.last_name)
+# 							### envio el email al coordinador y al profeEncargado
+# 							# message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
+# 			    #         	message.to = coordinadorLinea.email
+# 			    #             message.html """"
+# 							# 			<html><head></head><body>
+# 							# 			Estimado:
 
-      #           message.send()
-      #           message = Email.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-      #       	message.to = profe.email
-      #           message.html """"
-						# 	<html><head></head><body>
-						# 	Estimado:
+# 							# 			Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
+# 							# 			Asociadas a lo definido en el programa de asignatura %s %s %s del profesor %s %s , ha sido exitosa
+# 							# 			por lo que el programa ha pasado al estado de Verificacion de Completitud y Coherencia.
+# 							# 			Saludos
+# 							# 			</body></html>
+# 							# 		"""%(programa.asignatura, programa.semestre, programa.ano, profe.first_name, profe.last_name)
 
-						# 	Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-						# 	Asociadas a lo definido en el programa de asignatura %s %s %s, no ha sido exitosa
-						# 	por lo que el programa ha vuelto al estado de Formulacion de Programa, para su analisis.
-						# 	Saludos.
+# 			    #             message.send()
+# 			    #             message = Email.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
+# 			    #         	message.to = profe.email
+# 			    #             message.html """"
+# 							# 			<html><head></head><body>
+# 							# 			Estimado:
 
+# 							# 			Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
+# 							# 			Asociadas a lo definido en el programa de asignatura %s %s %s, ha sido exitosa
+# 							# 			por lo que el programa ha pasado al estado de Verificacion de Completitud y Coherencia.
+# 							# 			Saludos
+# 							# 			</body></html>
+# 							# 		"""%(programa.asignatura, programa.semestre, programa.ano, profesor.first_name, profesor.last_name)
 
+# 			    #             message.send()
 
+# 							#message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
+# 			      #       	message.to = coordinadorLinea.email
+# 			      #           message.html """"
+# 									# 	<html><head></head><body>
+# 									# 	Estimado:
 
-						# 	</body></html>
-						# """%(programa.asignatura, programa.semestre, programa.ano, profesor.first_name, profesor.last_name)
+# 									# 	Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
+# 									# 	Asociadas a lo definido en el programa de asignatura %s %s %s del profesor %s %s , no ha sido exitosa
+# 									# 	por lo que el programa ha vuelto al estado de Formulacion de Programa, para su analisis.
+# 									# 	Saludos
+# 									# 	</body></html>
+# 									# """%(programa.asignatura, programa.semestre, programa.ano, profe.first_name, profe.last_name)
 
-      #           message.send()
-			if votosNo==votosSi:
-				## veo el voto del coordinador
-				votoDelCoord = Evaluaciones.objects.filter(programa = id_programa).get(votante = coordinadorLinea)
-				if votoDelCoord == 'Si':
-					perdieron = 0
-					programa.siEvaluacion_toVerif()
-					logEstado(programa, programa.state.title)
-					try:
-						x = ProgramasPorEstado.objects.get(estado=programa.state.title)
-					except ProgramasPorEstado.DoesNotExist:
-						x = None
-					if x is None:
-						newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-					 	newIndicador.save()
-					else:
-						indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
-						indicador.cantidad = indicador.cantidad + 1
-						indicador.save()
-					### envio el email al coordinador y al profeEncargado
-				# message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-    #         	message.to = coordinadorLinea.email
-    #             message.html """"
-				# 			<html><head></head><body>
-				# 			Estimado:
+# 			      #           message.send()
+# 			      #           message = Email.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
+# 			      #       	message.to = profe.email
+# 			      #           message.html """"
+# 									# 	<html><head></head><body>
+# 									# 	Estimado:
 
-				# 			Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-				# 			Asociadas a lo definido en el programa de asignatura %s %s %s del profesor %s %s , ha sido exitosa
-				# 			por lo que el programa ha pasado al estado de Verificacion de Completitud y Coherencia.
-				# 			Saludos
-				# 			</body></html>
-				# 		"""%(programa.asignatura, programa.semestre, programa.ano, profe.first_name, profe.last_name)
-
-    #             message.send()
-    #             message = Email.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-    #         	message.to = profe.email
-    #             message.html """"
-				# 			<html><head></head><body>
-				# 			Estimado:
-
-				# 			Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-				# 			Asociadas a lo definido en el programa de asignatura %s %s %s, ha sido exitosa
-				# 			por lo que el programa ha pasado al estado de Verificacion de Completitud y Coherencia.
-				# 			Saludos
-				# 			</body></html>
-				# 		"""%(programa.asignatura, programa.semestre, programa.ano, profesor.first_name, profesor.last_name)
-
-    #             message.send()
-
-					programa.save()
-				else:
-					perdieron = 1
-					programa.noEvaluacion_toForm()
-					logEstado(programa, programa.state.title)
-					programa.to_datosAsig()
-					programa.save()
-					try:
-						x = ProgramasPorEstado.objects.get(estado=programa.state.title)
-					except ProgramasPorEstado.DoesNotExist:
-						x = None
-					if x is None:
-						newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-					 	newIndicador.save()
-					else:
-						indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
-						indicador.cantidad = indicador.cantidad + 1
-						indicador.save()
-
-					#message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-	      #       	message.to = coordinadorLinea.email
-	      #           message.html """"
-							# 	<html><head></head><body>
-							# 	Estimado:
-
-							# 	Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-							# 	Asociadas a lo definido en el programa de asignatura %s %s %s del profesor %s %s , no ha sido exitosa
-							# 	por lo que el programa ha vuelto al estado de Formulacion de Programa, para su analisis.
-							# 	Saludos
-							# 	</body></html>
-							# """%(programa.asignatura, programa.semestre, programa.ano, profe.first_name, profe.last_name)
-
-	      #           message.send()
-	      #           message = Email.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-	      #       	message.to = profe.email
-	      #           message.html """"
-							# 	<html><head></head><body>
-							# 	Estimado:
-
-							# 	Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-							# 	Asociadas a lo definido en el programa de asignatura %s %s %s, no ha sido exitosa
-							# 	por lo que el programa ha vuelto al estado de Formulacion de Programa, para su analisis.
-							# 	Saludos.
+# 									# 	Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
+# 									# 	Asociadas a lo definido en el programa de asignatura %s %s %s, no ha sido exitosa
+# 									# 	por lo que el programa ha vuelto al estado de Formulacion de Programa, para su analisis.
+# 									# 	Saludos.
 
 
 
 
-							# 	</body></html>
-							# """%(programa.asignatura, programa.semestre, programa.ano, profesor.first_name, profesor.last_name)
+# 									# 	</body></html>
+# 									# """%(programa.asignatura, programa.semestre, programa.ano, profesor.first_name, profesor.last_name)
 
-	      #           message.send()
-						
-					## PErdieorn
-		else:
-			termino = 0
-	if request.method == 'POST':
-		form = evaluacionesForm(request.POST)
-		if form.is_valid():
-			voto = form.cleaned_data['voto']
-			observacion = form.cleaned_data['observacion']
-			votante = request.user
-			evaluacion = Evaluaciones.objects.create(voto = voto, observacion=observacion, votante=votante, programa=programa)
-			evaluacion.save()
-			return HttpResponseRedirect('/evaluacionesAsociadas/'+id_programa)
-	ctx = {'form': form, 'p' : programa, 'username': request.user.username, 'votos': votos, 'estado': voteYo, 'termino':termino, 'perdieron': perdieron}
-	return render(request, 'formulacion/evaluacionAsociadaOwn.html', ctx)
+# 			      #           message.send()
+	programas = Programa.objects.filter(state='analisisEvaluacionesAsociadas')
+	estado = 5
+	obtenerProgNo = []
+	yo = User.objects.get(username = request.user.username)
+	for prog in programas:
+		if prog.profesorEncargado != request.user:
+			obtenerProgNo.append(prog)
+	finales = []
+	for p in obtenerProgNo:
+		analisism = Evaluacion.objects.get(programa=p.id)
+		try:
+			votantes = Evaluaciones.objects.filter(evaluacion = analisism)
+		except:
+			votantes = 0
+		if len(votantes)>0:
+			estado = 2
+			for v in votantes:
+				##esta haciendo mal esta consulta
+				if v.votante != yo:
+					estado =3
+					finales.append(p)
+		if len(votantes) == 0:
+			estado = 4
+			finales.append(p)
+	form = evaluacionesForm()  
+	ctx = {'username': request.user.username, 'programas': finales, 'form': form}
+	return render (request, 'formulacion/evaluacionAsociadaOther.html', ctx)
 
-def evaluacionesAsociadasOthersView(request, id_programa):
-	form = evaluacionesForm()
 
+
+def votacionEvaluacionOtroProfeView(request, id_programa):
 	programa = Programa.objects.get(id=id_programa)
-	form = evaluacionesForm()
-	profe = programa.profesorEncargado
-	profeV =request.user
-	linea = Profesor.objects.get(user = profe).linea
-	
-	try:
-		voteYo = Evaluaciones.objects.get(votante=profeV.id)
-	except:
-		voteYo = None
-	if voteYo is not None:
-		voteYo = 0
-	else:
-		voteYo = 1
-	## ver si voto el coordinador ##
-	try:
-		votoCoord = Evaluaciones.objects.get(votante=coordinadorLinea)
-	except:
-		votoCoord = 0
-	if votoCoord is None:
-		votoCoord = 0
-	else:
-		votoCoord = 1
-	
+	analisis = programa.analisism
 	if request.method == 'POST':
 		form = evaluacionesForm(request.POST)
 		if form.is_valid():
 			voto = form.cleaned_data['voto']
 			observacion = form.cleaned_data['observacion']
 			votante = request.user
-			evaluacion = Evaluaciones.objects.create(voto = voto, observacion=observacion, votante=votante, programa=programa)
-			evaluacion.save()
-			return HttpResponseRedirect('/principalPL/')
-			profesoresLinea = Profesor.objects.filter(linea=linea).count()
-			coordinadorLinea = linea.coordinador
-			votos = Evaluaciones.objects.filter(programa=programa)
-			perdieron = 0
-			termino = 0
-			estadoMiVoto = 'no'
-			if len(votos) != 0 :
-				numVotos = Evaluaciones.objects.filter(programa=programa).count()
-				if numVotos == (profesoresLinea + 1):
-					## todos votaron
-					termino = 1
-					votosSi = votos.filter(voto='Si').count()
-					votosNo =  votos.filter(voto='No').count()
-					if votosSi>votosNo :
+			eva = Evaluaciones.objects.create(voto = voto, observacion=observacion, votante=votante, evaluacion=analisis)
+			eva.save()
+			evaluacionesVot(analisis)
+			return redirect('/principalPL/')
 
-						## si hay evaluaciones
-						## se envia email al profe y al coordinador
-						perdieron = 0
-						programa.siEvaluacion_toVerif()
-						logEstado(programa, programa.state.title)
-						try:
-							x = ProgramasPorEstado.objects.get(estado=programa.state.title)
-						except ProgramasPorEstado.DoesNotExist:
-							x = None
-						if x is None:
-							newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-						 	newIndicador.save()
-						else:
-							indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
-							indicador.cantidad = indicador.cantidad + 1
-							indicador.save()
-						### envio el email al coordinador y al profeEncargado
-						# message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-		    #         	message.to = coordinadorLinea.email
-		    #             message.html """"
-						# 			<html><head></head><body>
-						# 			Estimado:
-
-						# 			Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-						# 			Asociadas a lo definido en el programa de asignatura %s %s %s del profesor %s %s , ha sido exitosa
-						# 			por lo que el programa ha pasado al estado de Verificacion de Completitud y Coherencia.
-						# 			Saludos
-						# 			</body></html>
-						# 		"""%(programa.asignatura, programa.semestre, programa.ano, profe.first_name, profe.last_name)
-
-		    #             message.send()
-		    #             message = Email.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-		    #         	message.to = profe.email
-		    #             message.html """"
-						# 			<html><head></head><body>
-						# 			Estimado:
-
-						# 			Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-						# 			Asociadas a lo definido en el programa de asignatura %s %s %s, ha sido exitosa
-						# 			por lo que el programa ha pasado al estado de Verificacion de Completitud y Coherencia.
-						# 			Saludos
-						# 			</body></html>
-						# 		"""%(programa.asignatura, programa.semestre, programa.ano, profesor.first_name, profesor.last_name)
-
-		    #             message.send()
-						programa.save()
-
-					if votosSi<votosNo:
-						perdieron = 1
-						programa.noEvaluacion_toForm()
-						logEstado(programa, programa.state.title)
-						programa.to_datosAsig()
-						programa.save()
-						try:
-							x = ProgramasPorEstado.objects.get(estado=programa.state.title)
-						except ProgramasPorEstado.DoesNotExist:
-							x = None
-						if x is None:
-							newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-						 	newIndicador.save()
-						else:
-							indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
-							indicador.cantidad = indicador.cantidad + 1
-							indicador.save()
-
-						#message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-		      #       	message.to = coordinadorLinea.email
-		      #           message.html """"
-								# 	<html><head></head><body>
-								# 	Estimado:
-
-								# 	Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-								# 	Asociadas a lo definido en el programa de asignatura %s %s %s del profesor %s %s , no ha sido exitosa
-								# 	por lo que el programa ha vuelto al estado de Formulacion de Programa, para su analisis.
-								# 	Saludos
-								# 	</body></html>
-								# """%(programa.asignatura, programa.semestre, programa.ano, profe.first_name, profe.last_name)
-
-		      #           message.send()
-		      #           message = Email.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-		      #       	message.to = profe.email
-		      #           message.html """"
-								# 	<html><head></head><body>
-								# 	Estimado:
-
-								# 	Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-								# 	Asociadas a lo definido en el programa de asignatura %s %s %s, no ha sido exitosa
-								# 	por lo que el programa ha vuelto al estado de Formulacion de Programa, para su analisis.
-								# 	Saludos.
+####### FIN ###########
 
 
-
-
-								# 	</body></html>
-								# """%(programa.asignatura, programa.semestre, programa.ano, profesor.first_name, profesor.last_name)
-
-		      #           message.send()
-					if votosNo==votosSi:
-						## veo el voto del coordinador
-						votoDelCoord = Evaluaciones.objects.filter(programa = id_programa).get(votante = coordinadorLinea)
-						if votoDelCoord == 'Si':
-							perdieron = 0
-							programa.siEvaluacion_toVerif()
-							logEstado(programa, programa.state.title)
-							try:
-								x = ProgramasPorEstado.objects.get(estado=programa.state.title)
-							except ProgramasPorEstado.DoesNotExist:
-								x = None
-							if x is None:
-								newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-							 	newIndicador.save()
-							else:
-								indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
-								indicador.cantidad = indicador.cantidad + 1
-								indicador.save()
-							### envio el email al coordinador y al profeEncargado
-						# message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-		    #         	message.to = coordinadorLinea.email
-		    #             message.html """"
-						# 			<html><head></head><body>
-						# 			Estimado:
-
-						# 			Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-						# 			Asociadas a lo definido en el programa de asignatura %s %s %s del profesor %s %s , ha sido exitosa
-						# 			por lo que el programa ha pasado al estado de Verificacion de Completitud y Coherencia.
-						# 			Saludos
-						# 			</body></html>
-						# 		"""%(programa.asignatura, programa.semestre, programa.ano, profe.first_name, profe.last_name)
-
-		    #             message.send()
-		    #             message = Email.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-		    #         	message.to = profe.email
-		    #             message.html """"
-						# 			<html><head></head><body>
-						# 			Estimado:
-
-						# 			Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-						# 			Asociadas a lo definido en el programa de asignatura %s %s %s, ha sido exitosa
-						# 			por lo que el programa ha pasado al estado de Verificacion de Completitud y Coherencia.
-						# 			Saludos
-						# 			</body></html>
-						# 		"""%(programa.asignatura, programa.semestre, programa.ano, profesor.first_name, profesor.last_name)
-
-		    #             message.send()
-
-							programa.save()
-						else:
-							perdieron = 1
-							programa.noEvaluacion_toForm()
-							logEstado(programa, programa.state.title)
-							programa.to_datosAsig()
-							programa.save()
-							try:
-								x = ProgramasPorEstado.objects.get(estado=programa.state.title)
-							except ProgramasPorEstado.DoesNotExist:
-								x = None
-							if x is None:
-								newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-							 	newIndicador.save()
-							else:
-								indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
-								indicador.cantidad = indicador.cantidad + 1
-								indicador.save()
-
-							#message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-			      #       	message.to = coordinadorLinea.email
-			      #           message.html """"
-									# 	<html><head></head><body>
-									# 	Estimado:
-
-									# 	Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-									# 	Asociadas a lo definido en el programa de asignatura %s %s %s del profesor %s %s , no ha sido exitosa
-									# 	por lo que el programa ha vuelto al estado de Formulacion de Programa, para su analisis.
-									# 	Saludos
-									# 	</body></html>
-									# """%(programa.asignatura, programa.semestre, programa.ano, profe.first_name, profe.last_name)
-
-			      #           message.send()
-			      #           message = Email.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-			      #       	message.to = profe.email
-			      #           message.html """"
-									# 	<html><head></head><body>
-									# 	Estimado:
-
-									# 	Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-									# 	Asociadas a lo definido en el programa de asignatura %s %s %s, no ha sido exitosa
-									# 	por lo que el programa ha vuelto al estado de Formulacion de Programa, para su analisis.
-									# 	Saludos.
-
-
-
-
-									# 	</body></html>
-									# """%(programa.asignatura, programa.semestre, programa.ano, profesor.first_name, profesor.last_name)
-
-			      #           message.send()
-								
-							## PErdieorn
-				else:
-					termino = 0
-
-
-
-	ctx = {'form': form, 'p' : programa, 'username': request.user.username, 'votos': votos, 'estado': voteYo, 'termino':termino, 'perdieron': perdieron}
-
-	return render(request, 'formulacion/evaluacionAsociadaOther.html', ctx)
 
 def definicionCompletitudCoherencia_view(request, id_programa):
 	programa = Programa.objects.get(id=id_programa)
@@ -833,6 +564,10 @@ def intermedioAdmRecView (request, id_programa):
 	rec = RecursosApren.objects.get(programa=programa)
 	if programa.state != 'definicionAspectosFinales':
 		programa.state = 'definicionAspectosFinales'
+		programa.save()
+	if adm.estado == 'Finalizado' and rec.estado=='Finalizado':
+		programa.to_defAspectos()
+		programa.to_aprobPrograma()
 		programa.save()
 	ctx = {'p': programa, 'username': username, 'estadoAdm': adm.estado, 'estadoRec': rec.estado}
 	return render(request, 'formulacion/aspectosFinales.html', ctx)
@@ -917,263 +652,12 @@ def recursosAprend_view(request, id_programa):
 	ctx = {'form': form, 'p' : programa, 'form': form, 'username': request.user.username}
 	return render(request, 'formulacion/recursosAprendizaje.html', ctx)
 
-def preAnalisisView(request, id_programa):
+
+
+##### FastTrack por el coordinador ###
+def fastTrackDecisionView(request, id_programa, decision):
 	programa = Programa.objects.get(id=id_programa)
-	programa.to_aprobPrograma()
-	logEstado(programa, programa.state.title)
-	programa.fechaUltimaModificacion = datetime.now()
-	programa.save()
-	form = analisisLineaForm()
-	profe = programa.profesorEncargado
-	linea = Profesor.objects.get(user = profe).linea
-	coordinadorLinea = linea.coordinador
-	profesoresLinea = Profesor.objects.filter(linea=linea).count()
-	votos = Analisis.objects.filter(programa=programa)
-	perdieron = 0
-	termino = 0
-	estadoMiVoto = 'no'
-	try:
-		voteYo = Analisis.objects.filter(programa=programa).get(votante=profe)
-	except:
-		voteYo = None
-	if voteYo is not None:
-		voteYo = 1
-	else:
-		voteYo = 0
-	## ver si voto el coordinador ##
-	try:
-		votoCoord = Analisis.objects.get(votante=coordinadorLinea)
-	except:
-		votoCoord = 0
-	if votoCoord is None:
-		votoCoord = 1
-	else:
-		votoCoord = 0
-
-	if len(votos) != 0 :
-		numVotos = Analisis.objects.filter(programa=programa).count()
-		
-		if numVotos == (profesoresLinea + 1):
-			## todos votaron
-			termino = 1
-			votosSi = votos.filter(voto='Si').count()
-			votosNo =  votos.filter(voto='No').count()
-			if votosSi>votosNo :
-
-				## si hay evaluaciones
-				## se envia email al profe y al coordinador
-				perdieron = 0
-				programa.siAprob_toFT()
-				logEstado(programa, programa.state.title)
-				try:
-					x = ProgramasPorEstado.objects.get(estado=programa.state.title)
-				except ProgramasPorEstado.DoesNotExist:
-					x = None
-				if x is None:
-					newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-				 	newIndicador.save()
-				else:
-					indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
-					indicador.cantidad = indicador.cantidad + 1
-					indicador.save()
-				### envio el email al coordinador y al profeEncargado
-				# message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-    #         	message.to = coordinadorLinea.email
-    #             message.html """"
-				# 			<html><head></head><body>
-				# 			Estimado:
-
-				# 			Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-				# 			Asociadas a lo definido en el programa de asignatura %s %s %s del profesor %s %s , ha sido exitosa
-				# 			por lo que el programa ha pasado al estado de Verificacion de Completitud y Coherencia.
-				# 			Saludos
-				# 			</body></html>
-				# 		"""%(programa.asignatura, programa.semestre, programa.ano, profe.first_name, profe.last_name)
-
-    #             message.send()
-    #             message = Email.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-    #         	message.to = profe.email
-    #             message.html """"
-				# 			<html><head></head><body>
-				# 			Estimado:
-
-				# 			Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-				# 			Asociadas a lo definido en el programa de asignatura %s %s %s, ha sido exitosa
-				# 			por lo que el programa ha pasado al estado de Verificacion de Completitud y Coherencia.
-				# 			Saludos
-				# 			</body></html>
-				# 		"""%(programa.asignatura, programa.semestre, programa.ano, profesor.first_name, profesor.last_name)
-
-    #             message.send()
-				programa.save()
-
-			if votosSi<votosNo:
-				perdieron = 1
-				programa.noAprob_toForm()
-				logEstado(programa, programa.state.title)
-				programa.to_datosAsig()
-				programa.save()
-				try:
-					x = ProgramasPorEstado.objects.get(estado=programa.state.title)
-				except ProgramasPorEstado.DoesNotExist:
-					x = None
-				if x is None:
-					newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-				 	newIndicador.save()
-				else:
-					indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
-					indicador.cantidad = indicador.cantidad + 1
-					indicador.save()
-
-				#message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-      #       	message.to = coordinadorLinea.email
-      #           message.html """"
-						# 	<html><head></head><body>
-						# 	Estimado:
-
-						# 	Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-						# 	Asociadas a lo definido en el programa de asignatura %s %s %s del profesor %s %s , no ha sido exitosa
-						# 	por lo que el programa ha vuelto al estado de Formulacion de Programa, para su analisis.
-						# 	Saludos
-						# 	</body></html>
-						# """%(programa.asignatura, programa.semestre, programa.ano, profe.first_name, profe.last_name)
-
-      #           message.send()
-      #           message = Email.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-      #       	message.to = profe.email
-      #           message.html """"
-						# 	<html><head></head><body>
-						# 	Estimado:
-
-						# 	Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-						# 	Asociadas a lo definido en el programa de asignatura %s %s %s, no ha sido exitosa
-						# 	por lo que el programa ha vuelto al estado de Formulacion de Programa, para su analisis.
-						# 	Saludos.
-
-
-
-
-						# 	</body></html>
-						# """%(programa.asignatura, programa.semestre, programa.ano, profesor.first_name, profesor.last_name)
-
-      #           message.send()
-			if votosNo==votosSi:
-				## veo el voto del coordinador
-				votoDelCoord = Analisis.objects.filter(programa = id_programa).get(votante = coordinadorLinea)
-				if votoDelCoord == 'Si':
-					perdieron = 0
-					programa.siAprob_toFT()
-					logEstado(programa, programa.state.title)
-					try:
-						x = ProgramasPorEstado.objects.get(estado=programa.state.title)
-					except ProgramasPorEstado.DoesNotExist:
-						x = None
-					if x is None:
-						newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-					 	newIndicador.save()
-					else:
-						indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
-						indicador.cantidad = indicador.cantidad + 1
-						indicador.save()
-					### envio el email al coordinador y al profeEncargado
-				# message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-    #         	message.to = coordinadorLinea.email
-    #             message.html """"
-				# 			<html><head></head><body>
-				# 			Estimado:
-
-				# 			Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-				# 			Asociadas a lo definido en el programa de asignatura %s %s %s del profesor %s %s , ha sido exitosa
-				# 			por lo que el programa ha pasado al estado de Verificacion de Completitud y Coherencia.
-				# 			Saludos
-				# 			</body></html>
-				# 		"""%(programa.asignatura, programa.semestre, programa.ano, profe.first_name, profe.last_name)
-
-    #             message.send()
-    #             message = Email.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-    #         	message.to = profe.email
-    #             message.html """"
-				# 			<html><head></head><body>
-				# 			Estimado:
-
-				# 			Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-				# 			Asociadas a lo definido en el programa de asignatura %s %s %s, ha sido exitosa
-				# 			por lo que el programa ha pasado al estado de Verificacion de Completitud y Coherencia.
-				# 			Saludos
-				# 			</body></html>
-				# 		"""%(programa.asignatura, programa.semestre, programa.ano, profesor.first_name, profesor.last_name)
-
-    #             message.send()
-
-					programa.save()
-				else:
-					perdieron = 1
-					programa.noAprob_toForm()
-					logEstado(programa, programa.state.title)
-					programa.to_datosAsig()
-					programa.save()
-					try:
-						x = ProgramasPorEstado.objects.get(estado=programa.state.title)
-					except ProgramasPorEstado.DoesNotExist:
-						x = None
-					if x is None:
-						newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-					 	newIndicador.save()
-					else:
-						indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
-						indicador.cantidad = indicador.cantidad + 1
-						indicador.save()
-
-					#message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-	      #       	message.to = coordinadorLinea.email
-	      #           message.html """"
-							# 	<html><head></head><body>
-							# 	Estimado:
-
-							# 	Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-							# 	Asociadas a lo definido en el programa de asignatura %s %s %s del profesor %s %s , no ha sido exitosa
-							# 	por lo que el programa ha vuelto al estado de Formulacion de Programa, para su analisis.
-							# 	Saludos
-							# 	</body></html>
-							# """%(programa.asignatura, programa.semestre, programa.ano, profe.first_name, profe.last_name)
-
-	      #           message.send()
-	      #           message = Email.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",subject="Votacion Evaluaciones Asociadas")
-	      #       	message.to = profe.email
-	      #           message.html """"
-							# 	<html><head></head><body>
-							# 	Estimado:
-
-							# 	Le informamos que el resultado de la votacion realizado sobre la existencia de Evaluaciones 
-							# 	Asociadas a lo definido en el programa de asignatura %s %s %s, no ha sido exitosa
-							# 	por lo que el programa ha vuelto al estado de Formulacion de Programa, para su analisis.
-							# 	Saludos.
-
-
-
-
-							# 	</body></html>
-							# """%(programa.asignatura, programa.semestre, programa.ano, profesor.first_name, profesor.last_name)
-
-	      #           message.send()
-						
-		else:
-			termino = 0
-	if request.method == 'POST':
-		form = analisisLineaForm(request.POST)
-		if form.is_valid():
-			voto = form.cleaned_data['voto']
-			observacion = form.cleaned_data['observacion']
-			votante = request.user
-			evaluacion = Analisis.objects.create(voto = voto, observacion=observacion, votante=votante, programa=programa)
-			evaluacion.save()
-			return HttpResponseRedirect('/preAnalisis/'+id_programa)
-	ctx = {'form': form, 'p' : programa, 'username': request.user.username, 'votos': votos, 'estado': voteYo, 'termino':termino, 'perdieron': perdieron}
-	return render(request, 'formulacion/analisisProgramaOwn.html', ctx)
-
-
-def fastTrackView(request, id_programa, decision):
-	programa = Programa.objects.get(id=id_programa)
+	m = 0
 	if decision == 'yes':        
 		try:
 			x = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -1186,7 +670,7 @@ def fastTrackView(request, id_programa, decision):
 			x.cantidad = x.cantidad - 1
 			x.save()
 			programa.siFT_toAprobJC()
-			logEstado(p, p.state.title)
+			logEstado(programa, programa.state.title)
 			programa.save()
 			try:
 				y = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -1206,11 +690,11 @@ def fastTrackView(request, id_programa, decision):
 		if m is None:
 			newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
 			newIndicador.save()
-        else:
+        if m is not None:
             m.cantidad = m.cantidad - 1
             m.save()
             programa.noFT_toAnalisisJC()
-            logEstado(p, p.state.title)
+            logEstado(programa, programa.state.title)
             programa.save()
             try:
                 n = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -1223,6 +707,213 @@ def fastTrackView(request, id_programa, decision):
                 n.cantidad = y.cantidad + 1
                 n.save()
             return HttpResponseRedirect('/programasPorAnalizarLinea/')
+
+### FUNCION DE ANALISIS ###
+def analisisVot(evaluacion):
+	profe = evaluacion.programa.profesorEncargado
+	termino = 0
+	bandera = None
+	programa = evaluacion.programa
+	votos = Analisis.objects.filter(analisis =evaluacion)
+	numVotos = len(votos)
+	linea = Profesor.objects.get(user = profe).linea
+	coordinadorLinea = linea.coordinador
+	profesoresLinea = Profesor.objects.filter(linea=linea).count()
+	##### Termino la votacion #######
+	if (numVotos == (profesoresLinea+1 )):
+		termino = 1
+		#### conteo de votos ###
+		votosSi = votos.filter(voto='Si').count()
+		votosNo =  votos.filter(voto='No').count()
+		################# Resultados ###########
+		if votosSi>votosNo :
+			programa.siAprob_toFT()
+			logEstado(programa, programa.state.title)
+			try:
+				x = ProgramasPorEstado.objects.get(estado=programa.state.title)
+			except ProgramasPorEstado.DoesNotExist:
+				x = None
+			if x is None:
+				newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+			 	newIndicador.save()
+			else:
+				indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
+				indicador.cantidad = indicador.cantidad + 1
+				indicador.save()
+			programa.save()
+			bandera = True
+		if votosSi<votosNo:
+			bandera = True
+			programa.noAprob_toForm()
+			logEstado(programa, programa.state.title)
+			programa.to_datosAsig()
+			programa.save()
+			try:
+				x = ProgramasPorEstado.objects.get(estado=programa.state.title)
+			except ProgramasPorEstado.DoesNotExist:
+				x = None
+			if x is None:
+				newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+			 	newIndicador.save()
+			else:
+				indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
+				indicador.cantidad = indicador.cantidad + 1
+				indicador.save()
+		if votosNo==votosSi:
+			## veo el voto del coordinador
+			votoDelCoord = Analisis.objects.filter(evaluacion=evaluacion).get(votante = coordinadorLinea)
+			if votoDelCoord == 'Si':
+				perdieron = 0
+				programa.siAprob_toFT()
+				logEstado(programa, programa.state.title)
+				try:
+					x = ProgramasPorEstado.objects.get(estado=programa.state.title)
+				except ProgramasPorEstado.DoesNotExist:
+					x = None
+				if x is None:
+					newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+				 	newIndicador.save()
+				else:
+					indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
+					indicador.cantidad = indicador.cantidad + 1
+					indicador.save()
+				programa.save()
+				bandera = True
+			else:
+				bandera = False
+				perdieron = 1
+				programa.noAprob_toForm()
+				logEstado(programa, programa.state.title)
+				programa.to_datosAsig()
+				programa.save()
+				try:
+					x = ProgramasPorEstado.objects.get(estado=programa.state.title)
+				except ProgramasPorEstado.DoesNotExist:
+					x = None
+				if x is None:
+					newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+				 	newIndicador.save()
+				else:
+					indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
+					indicador.cantidad = indicador.cantidad + 1
+					indicador.save()
+	else:
+		termino = 0
+	return bandera
+
+
+#### Votacion propia de aprobacion del programa ####
+def votacionAnalisisProfeView(request, id_programa):
+	form = analisisLineaForm()
+	programa = Programa.objects.get(id=id_programa)
+	profe = programa.profesorEncargado
+	linea = Profesor.objects.get(user = profe).linea
+	coordinadorLinea = linea.coordinador
+	profesoresLinea = Profesor.objects.filter(linea=linea).count()
+	evaluacion = AnalisisM.objects.get(programa=programa)
+	### ver si voto el profe $$
+	if evaluacion.votoProfe == True:
+		estado = 1
+	else:
+		estado = 0
+	if evaluacion.votoEvalCord == True:
+		cord = 1
+	else:
+		cord = 0
+	votos = Analisis.objects.filter(analisis =evaluacion)
+	nvotos = Analisis.objects.filter(analisis =evaluacion).count()
+
+	if (nvotos == profesoresLinea + 1):
+		bandera = evaluacionesVot(evaluacion)
+
+	if estado == 0:
+		if request.method == 'POST':
+			form = analisisLineaForm(request.POST)
+			if form.is_valid():
+				voto = form.cleaned_data['voto']
+				observacion = form.cleaned_data['observacion']
+				votante = request.user
+				eva = Analisis.objects.create(voto = voto, observacion=observacion, votante=votante, analisis=evaluacion)
+				eva.save()
+				evaluacion.votoProfe = True
+				evaluacion.save()
+				return redirect('/principalPL/')
+	ctx = {'form': form, 'p' : programa, 'votos': votos, 'username': request.user.username, 'estado':estado, 'numvotos': nvotos}
+	return render(request, 'formulacion/analisisProgramaOwn.html', ctx)
+
+######### Votacion de los otros profes aprobacion ######
+def votacionAnalisisOtroProfeView(request):
+	### obtengo todos los programas qe estan en ese estado
+	programas = Programa.objects.filter(state='aprobacionLinea')
+	estado = 5
+	obtenerProgNo = []
+	yo = User.objects.get(username = request.user.username)
+
+	## obtengo los programas de ese estado que no son mios
+	for prog in programas:
+		if prog.profesorEncargado != request.user:
+			obtenerProgNo.append(prog)
+	finales = []
+	for p in obtenerProgNo:
+		analisism = AnalisisM.objects.get(programa=p.id)
+		try:
+			votantes = Analisis.objects.filter(analisis = analisism)
+		except:
+			votantes = 0
+		if len(votantes)>0:
+			estado = 2
+			for v in votantes:
+				##esta haciendo mal esta consulta
+				if v.votante != yo:
+					estado =3
+					finales.append(p)
+		if len(votantes) == 0:
+			estado = 4
+			finales.append(p)
+	form = analisisLineaForm()  
+	ctx = {'username': request.user.username, 'programas': finales, 'form': form, 'temp':len(votantes)}
+	return render (request, 'formulacion/analisisProgramaOther.html', ctx)
+
+
+def votacionOtroProfeView(request, id_programa):
+	programa = Programa.objects.get(id=id_programa)
+	analisis = programa.analisism
+	if request.method == 'POST':
+		form = analisisLineaForm(request.POST)
+		if form.is_valid():
+			voto = form.cleaned_data['voto']
+			observacion = form.cleaned_data['observacion']
+			votante = request.user
+			eva = Analisis.objects.create(voto = voto, observacion=observacion, votante=votante, analisis=analisis)
+			eva.save()
+			analisisVot(analisis)
+			return redirect('/principalPL/')
+
+
+
+# 	def votacionesEvaluacionView(request):
+#     evaluaciones = Evaluacion.objects.filter(votoEvalCord=False)
+#     form = evaluacionesForm()
+#     ctx = {'username': request.user.username, 'programas': evaluaciones, 'form': form}
+#     return render (request, 'coordLinea/votaciones.html', ctx)
+# ############ votacion evaluaciones asociadas ########
+# def votacion (request, id_evaluacion):
+#     evaluacion = Evaluacion.objects.get(id=id_evaluacion)
+#     if request.method == 'POST':
+#         form = evaluacionesForm(request.POST)
+#         if form.is_valid():
+#             voto = form.cleaned_data['voto']
+#             observacion = form.cleaned_data['observacion']
+#             votante = request.user
+#             evaluac = Evaluaciones.objects.create(voto = voto, observacion=observacion, votante=votante, evaluacion= evaluacion)
+#             evaluac.save()
+#             evaluacion.votoEvalCord = True
+#             evaluacion.save()
+#             return HttpResponseRedirect('/votacionesEvaluacionLinea/')
+
+
+
+
 
 
 
@@ -1249,11 +940,10 @@ def buscarEstado(request, id_programa, estado):
 	 	return HttpResponseRedirect('/recursosAprend/'+id_programa)
 	if (estado ==  'definicionAspectosFinales' ):
 	 	return HttpResponseRedirect('/intermedioAdmRec/'+id_programa)
-	 	
-	# if (estado == 'aprobacionLinea' ):
-	# 	return HttpResponseRedirect('/aprobacionLinea/'+id_programa)
-	# if (estado == 'fastTrack' ):
-	# 	return HttpResponseRedirect('/fastTrack/'+id_programa)
+	if (estado == 'aprobacionLinea' ):
+	 	return HttpResponseRedirect('/votacionAnalisisProfe/'+id_programa)
+	if (estado == 'fastTrack' ):
+		return HttpResponseRedirect('/fastTrack/'+id_programa)
 	# if (estado == 'definicionClaseClase' ):
 	# 	return HttpResponseRedirect('/definicionClaseClase/'+id_programa)
 	# if (estado == 'analisisProgramaJC' ):

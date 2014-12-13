@@ -34,7 +34,7 @@
                 <li class="dropdown">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuracion<span class="caret"></span></a>
                   <ul class="dropdown-menu" role="menu">
-                    <li><a href="/miperfil/">Mi Perfil</a></li>
+                    <li><a href="/miperfilProfesor/">Mi Perfil</a></li>
                   </ul>
                 </li>
               </ul>     
@@ -47,14 +47,15 @@
 
 
     <div class="row">
-        
+       
         <div class="panel panel-primary">        
             <div class="panel-heading">
                 <h3 class="panel-title">Programas</h3>
             </div>
             <div class="panel-body">
-                <li role="presentation"><a class="programas"href="#">Programas Aprobados</a><span class="badge por-aprobar">{{aprobar}}</span></li>
-                <li role="presentation"><a class="programas"href="#">Programas por aprobar por la línea</a><span class="badge por-analizar">{{analizar}}</span></li> 
+                <li role="presentation"><a class="programas"href="#">Mis Programas Aprobados</a><span class="badge">{{aprobados}}</span></li>
+                <li role="presentation"><a class="programas"href="/votacionAnalisisOtroProfe/"{{linea.id}}>Programas Pre-análisis Jefe Carrera </a><span class="badge">{{porAnalizar}}</span></li>
+                <li role="presentation"><a class="programas"href="/votacionesEvaluacionOtroProfeLinea/"{{linea.id}}>Votaciones Existencia de Evaluaciones </a><span class="badge">{{evaluaciones}}</span></li>
                 <br></br>
                 <button type="button" class="btn btn-success" data-toggle="modal" data-target="#myModal">
                         Crear Nuevo Programa
@@ -68,7 +69,7 @@
                         <h4 class="modal-title" id="myModalLabel">Agregar nuevo programa</h4>
                       </div>
                       <div class="modal-body">
-                            <form action="/principalPL/" method="POST">
+                        <form action="/principalPL/" method="POST">
                                 {%csrf_token%}
                                 {{form|as_bootstrap}}
                                  <button type="submit" class="btn btn-success"><strong>Guardar</strong></button>
@@ -96,16 +97,18 @@
                             <th>Última Modificación</th>
                             <th>Drive</th>
                             <th>Workflow</th>
+                            <th>Eliminar</th>
                         </tr>
                     </thead>
                     <tbody>
                         {%for p in programas%}
                         <tr>
-                            <td>{{p.asignatura}}</td></a>
+                            <td>{{p.asignatura.nombreAsig}}</td></a>
                             <td>{{p.state.title}}</td>
                             <td>{{p.fechaUltimaModificacion}}</td></a>
                             <td><a href="{{p.url}}"><span class="glyphicon glyphicon-cloud"></span></a></td>
                             <td><a href="/buscarEstado/{{p.id}}/{{p.state}}"><span class="glyphicon glyphicon-edit"></span></a></td>
+                            <td><a href="/eliminarPrograma/{{p.id}}/"><span class="glyphicon glyphicon-remove"></span></a></td>
                         </tr>
                         {%endfor%}
                     </tbody>
@@ -128,10 +131,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {%for p in programas%}
+                        {%for p in otros%}
                         <tr>
-                            <td>{{p.asignatura}}</td>
-                            <td>{{p.profesorEncargado.first_name}} {{p.profesorEncargado.last_name}}</td>
+                            <td>{{p.asignatura.nombreAsig}}</td>
+                            <td>{{p.profesorEncargado}}</td>
                             <td>{{p.state.title}}</td>
                             <td>{{p.fechaUltimaModificacion}}</td>
                         </tr>

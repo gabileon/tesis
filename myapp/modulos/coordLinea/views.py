@@ -7,11 +7,11 @@ from django.http import HttpResponse
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from myapp.modulos.presentacion.models import UserProfile
 from myapp.modulos.presentacion.forms import cambiarDatosForm
-from myapp.modulos.formulacion.models import Log, Profesor, Programa, MyWorkflow,  ClaseClase, Linea, Asignatura, Recurso
+from myapp.modulos.formulacion.models import Log, Evaluacion, Evaluaciones, Analisis, Log, Profesor, Programa, MyWorkflow,  ClaseClase, Linea, Asignatura, Recurso
 from myapp.modulos.presentacion.forms import ImageUploadForm
 from myapp.modulos.jefeCarrera.models import Evento, ReporteIndic
 from myapp.modulos.coordLinea.forms import CoordinadorForm
-from myapp.modulos.formulacion.forms import LineasForm, UploadFileForm, analizarForm
+from myapp.modulos.formulacion.forms import LineasForm, UploadFileForm, analizarForm, evaluacionesForm, analisisLineaForm
 from myapp.modulos.jefeCarrera.forms import changePasswordForm, AgregarEventoCordForm, AgregarEventoForm,  agregarAsignaturaForm, agregarProfesoresForm
 from datetime import datetime
 from django.shortcuts import get_object_or_404
@@ -34,7 +34,22 @@ from apiclient.http import MediaFileUpload
 
 FILENAME = 'hola.txt'
 
+
+def fastTrackView(request):
+    programas = Programa.objects.filter(state='fastTrack')
+    username = request.user.username
+    ctx = {'username': username, 'programas': programas}
+    return render (request, 'coordLinea/progPorAnalizarFT.html', ctx)
+
+
+
 # Create your views here.
+def logEstado (programa, state):
+    l= Log()
+    l.programa = programa
+    l.state = state
+    l.fecha = datetime.now()
+    l.save()    
 
 CLIENT_SECRETS = os.path.join(os.path.dirname(__file__), 'client_secrets.json')
 FLOW = flow_from_clientsecrets(
@@ -65,16 +80,50 @@ def cambiarRolView(request, id_user, rol):
         return HttpResponseRedirect('/principal_cl/')
 
 def principalCLView(request):
+    
     programa = Programa.objects.all().order_by('-fechaUltimaModificacion')
     programasAprobados= Programa.objects.filter(state='fin').count()
-    programasPorAnalizar = Programa.objects.filter(state='fastTrack').count()
+    programasPorAnalizar = Programa.objects.filter(state='aprobacionLinea')
+    fast = Programa.objects.filter(state='fastTrack').count()
+    todos = Evaluacion.objects.all()
+    analisis = []
+    votaciones = []
+    for t in todos:
+        if t.votoEvalCord == False:
+            votaciones.append(t)
+    num = len(votaciones)   
+
+    for p in programasPorAnalizar:
+        if p.analisism.votoEvalCord==False:
+            analisis.append(p)
+    numAnalisis = len(analisis)
     username = request.user.username
     userTemp = User.objects.get(username=request.user.username)
     profile = UserProfile.objects.get(user=userTemp)
     linea = Linea.objects.get(id=profile.cordLinea_id)
     # programasAprobados= Programa.objects.filter(state='fin').count().filter(linea=linea)
-    ctx = {'user': userTemp, 'username' : username, 'programas':programa, 'porAnalizar': programasPorAnalizar, 'aprobados' : programasAprobados, 'profile': profile, 'linea':linea}
+    ctx = {'user': userTemp, 'username' : username, 'programas':programa, 'fast': fast, 'votaciones': num, 'porAnalizar': numAnalisis, 'aprobados' : programasAprobados, 'profile': profile, 'linea':linea}
     return render(request, 'coordLinea/vistaCL.html', ctx)
+
+def votacionesEvaluacionView(request):
+    evaluaciones = Evaluacion.objects.filter(votoEvalCord=False)
+    form = evaluacionesForm()
+    ctx = {'username': request.user.username, 'programas': evaluaciones, 'form': form}
+    return render (request, 'coordLinea/votaciones.html', ctx)
+############ votacion evaluaciones asociadas ########
+def votacion (request, id_evaluacion):
+    evaluacion = Evaluacion.objects.get(id=id_evaluacion)
+    if request.method == 'POST':
+        form = evaluacionesForm(request.POST)
+        if form.is_valid():
+            voto = form.cleaned_data['voto']
+            observacion = form.cleaned_data['observacion']
+            votante = request.user
+            evaluac = Evaluaciones.objects.create(voto = voto, observacion=observacion, votante=votante, evaluacion= evaluacion)
+            evaluac.save()
+            evaluacion.votoEvalCord = True
+            evaluacion.save()
+            return HttpResponseRedirect('/votacionesEvaluacionLinea/')
 
 def changePasswordCordView(request, id_user):
     u = User.objects.get(id=id_user)
@@ -392,11 +441,134 @@ def aprobadosCordViews(request):
     username = request.user.username
     ctx = {'username': username, 'programas': programas}
     return render (request, 'coordLinea/progAprobados.html', ctx)
+
+###################### Fast Track #############################
 def analizarCordViews (request):
     programas = Programa.objects.filter(state="fastTrack")
     username = request.user.username
     ctx = {'username': username, 'programas': programas}
-    return render (request, 'coordLinea/progPorAnalizar.html', ctx)
+    return render (request, 'coordLinea/progPorAnalizarFT.html', ctx)
+
+################# AProbacion Linea ########################
+
+def preAnalisisCordView(request):
+    programas = Programa.objects.filter(state="aprobacionLinea")
+    analisis = []
+    for p in programas:
+        if p.analisism.votoEvalCord==False:
+            analisis.append(p)
+    username = request.user.username
+    form = analisisLineaForm() 
+    ctx = {'username': username, 'programas': analisis, 'form': form}
+    return render (request, 'coordLinea/votacionesAnalisis.html', ctx)
+
+############# FORM Y PROCESO DE VOTACION ANALISIS DEL COORDINADOR ############
+def analisisVot(evaluacion):
+    profe = evaluacion.programa.profesorEncargado
+    termino = 0
+    bandera = None
+    programa = evaluacion.programa
+    votos = Analisis.objects.filter(analisis =evaluacion)
+    numVotos = len(votos)
+    linea = Profesor.objects.get(user = profe).linea
+    coordinadorLinea = linea.coordinador
+    profesoresLinea = Profesor.objects.filter(linea=linea).count()
+    ##### Termino la votacion #######
+    if (numVotos == (profesoresLinea+1 )):
+        termino = 1
+        #### conteo de votos ###
+        votosSi = votos.filter(voto='Si').count()
+        votosNo =  votos.filter(voto='No').count()
+        ################# Resultados ###########
+        if votosSi>votosNo :
+            programa.siAprob_toFT()
+            logEstado(programa, programa.state.title)
+            try:
+                x = ProgramasPorEstado.objects.get(estado=programa.state.title)
+            except ProgramasPorEstado.DoesNotExist:
+                x = None
+            if x is None:
+                newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                newIndicador.save()
+            else:
+                indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                indicador.cantidad = indicador.cantidad + 1
+                indicador.save()
+            programa.save()
+            bandera = True
+        if votosSi<votosNo:
+            bandera = True
+            programa.noAprob_toForm()
+            logEstado(programa, programa.state.title)
+            programa.to_datosAsig()
+            programa.save()
+            try:
+                x = ProgramasPorEstado.objects.get(estado=programa.state.title)
+            except ProgramasPorEstado.DoesNotExist:
+                x = None
+            if x is None:
+                newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                newIndicador.save()
+            else:
+                indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                indicador.cantidad = indicador.cantidad + 1
+                indicador.save()
+        if votosNo==votosSi:
+            ## veo el voto del coordinador
+            votoDelCoord = Analisis.objects.filter(evaluacion=evaluacion).get(votante = coordinadorLinea)
+            if votoDelCoord == 'Si':
+                perdieron = 0
+                programa.siAprob_toFT()
+                logEstado(programa, programa.state.title)
+                try:
+                    x = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                except ProgramasPorEstado.DoesNotExist:
+                    x = None
+                if x is None:
+                    newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                    newIndicador.save()
+                else:
+                    indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                    indicador.cantidad = indicador.cantidad + 1
+                    indicador.save()
+                programa.save()
+                bandera = True
+            else:
+                bandera = False
+                perdieron = 1
+                programa.noAprob_toForm()
+                logEstado(programa, programa.state.title)
+                programa.to_datosAsig()
+                programa.save()
+                try:
+                    x = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                except ProgramasPorEstado.DoesNotExist:
+                    x = None
+                if x is None:
+                    newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                    newIndicador.save()
+                else:
+                    indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                    indicador.cantidad = indicador.cantidad + 1
+                    indicador.save()
+    else:
+        termino = 0
+    return bandera
+def votacionCordAnalisis (request, id_programa):
+    programa = Programa.objects.get(id=id_programa)
+    analisis = programa.analisism
+    if request.method == 'POST':
+        form = analisisLineaForm(request.POST)
+        if form.is_valid():
+            voto = form.cleaned_data['voto']
+            observacion = form.cleaned_data['observacion']
+            votante = request.user
+            eva = Analisis.objects.create(voto = voto, observacion=observacion, votante=votante, analisis=analisis)
+            eva.save()
+            analisis.votoEvalCord = True
+            analisis.save()
+            analisisVot(analisis)
+            return redirect('/programasPorAnalizarLinea/')
 
 
 def logCordView(request, id_programa):
