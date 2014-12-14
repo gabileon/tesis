@@ -50,3 +50,30 @@ indexes:
   - name: profesorEncargado_id
   - name: fechaUltimaModificacion
     direction: desc
+
+- kind: formulacion_programa
+  properties:
+  - name: state
+  - name: profesorEncargado_id
+
+- kind: jefeCarrera_evento
+  properties:
+  - name: anfitrion_id
+  - name: start
+
+- kind: jefeCarrera_evento
+  properties:
+  - name: anfitrion_id
+  - name: start
+    direction: desc
+
+- kind: jefeCarrera_evento
+  properties:
+  - name: tipoEvento
+  - name: start
+
+- kind: jefeCarrera_evento
+  properties:
+  - name: tipoEvento
+  - name: start
+    direction: desc

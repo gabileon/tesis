@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 import datetime, random, sha
 from myapp.modulos.formulacion.forms import crearProgramaForm
 from myapp.modulos.presentacion.forms import ImageUploadForm
-from myapp.modulos.formulacion.models import Recurso, Analisis, AnalisisM, Log, Asignatura, Programa, MyWorkflow,  ClaseClase, Completitud
+from myapp.modulos.formulacion.models import Evaluacion, Recurso, Analisis, AnalisisM, Log, Asignatura, Programa, MyWorkflow,  ClaseClase, Completitud
 from myapp.modulos.jefeCarrera.models import Evento
 from myapp.modulos.indicadores.models import ProgramasPorEstado
 from django.http import HttpResponse
@@ -11,7 +11,7 @@ from myapp.modulos.presentacion.models import CredentialsModel
 from myapp import settings
 from django.contrib.auth.models import User
 from myapp.modulos.presentacion.models import UserProfile
-from datetime import datetime
+from datetime import datetime, timedelta
 from myapp.modulos.presentacion.forms import cambiarDatosForm
 from oauth2client import xsrfutil
 from oauth2client.client import flow_from_clientsecrets
@@ -21,6 +21,7 @@ import httplib2
 import os
 from apiclient import errors
 from myapp.modulos.jefeCarrera.forms import changePasswordForm
+from django.db.models import Q
 
 
 CLIENT_SECRETS = os.path.join(os.path.dirname(__file__), 'client_secrets.json')
@@ -56,7 +57,7 @@ def cambiarDatosProfeView(request):
 				user.last_name = last_name
 				user.set_password(password)
 				user.save()
-				profile.fechaPrimerAcceso = datetime.now()
+				profile.fechaPrimerAcceso = datetime.now()- timedelta(hours=3)
 				profile.save()
 				redirect ('/miperfilProfesor/')
 		ctx = {'form': form, 'username': request.user.username}
@@ -91,60 +92,46 @@ def principalPLView(request):
 		profile = UserProfile.objects.get(user=yo)
 		if profile.fechaPrimerAcceso is None:
 			return redirect('/cambiarDatosProfe/')
-
 		programasApro = Programa.objects.filter(state='fin').filter(profesorEncargado=request.user).count()
-		programas = Programa.objects.filter(state='aprobacionLinea')
+		programas = Programa.objects.filter(state='aprobacionLinea').filter(~Q(profesorEncargado=yo))
 		obtenerProgNo = []
-		programasEval = Programa.objects.filter(state='analisisEvaluacionesAsociadas')
+		programasEval = Programa.objects.filter(state='analisisEvaluacionesAsociadas').filter(~Q(profesorEncargado=yo))
 		estado = 5
-		obtenerProgEvalNo = []
-		for prog in programasEval:
-			if prog.profesorEncargado != request.user:
-				obtenerProgEvalNo.append(prog)
-		finalesEval = []
-		for p in obtenerProgNo:
+
+		######### Evaluacion #############
+
+		finales = []
+		for p in programasEval:
 			analisism = Evaluacion.objects.get(programa=p.id)
 			try:
-				votantesEval = Evaluaciones.objects.filter(evaluacion = analisism)
+				votantes = Evaluaciones.objects.filter(evaluacion = analisism).filter(~Q(votante=request.user))
 			except:
-				votantesEval = 0
-			if len(votantesEval)>0:
-				estado = 2
-				for v in votantesEval:
-					##esta haciendo mal esta consulta
-					if v.votante != yo:
-						estado =3
-						finalesEval.append(p)
-			if len(votantesEval) == 0:
-				estado = 4
-				finalesEval.append(p)
-		finEval = len(finalesEval)
+				votantes = 0
+			if votantes !=0:
+				finales.append(p)
+		if len(finales) == 0:
+			finales = programasEval
 
+		evaluaciones = len(finales)
 
-		## obtengo los programas de ese estado que no son mios
-		for prog in programas:
-			try:
-				if prog.profesorEncargado != request.user:
-					obtenerProgNo.append(prog)
-			except:
-				fin = 0
-		finales = []
-		estado = 1
-		votantes= []
-		for p in obtenerProgNo:
+		######### ANALISIS #############
+
+		analisisA = []
+		for p in programas:
 			analisism = AnalisisM.objects.get(programa=p.id)
 			try:
-				votantes = Analisis.objects.filter(analisis = analisism)
+				votantes = Analisis.objects.filter(analisis = analisism).filter(~Q(votante=request.user))
 			except:
-				fin = len(obtenerProgNo)
-			if len(votantes)>0:
-				estado = 2
-				for v in votantes:
-					##esta haciendo mal esta consulta
-					if v.votante != yo:
-						estado =3
-						finales.append(p)
-		fin = len(finales)
+				votantes = 0
+			if votantes !=0:
+				analisisA.append(p)
+		if len(finales) == 0:
+			analisisA = programas
+
+		analisisNum = len(analisisA)
+
+
+
 		form = crearProgramaForm()
 
 		username = request.user.username
@@ -173,7 +160,7 @@ def principalPLView(request):
 				p.asignatura = asignaturaM
 				p.semestre = semestre
 				p.ano = ano
-				p.fechaUltimaModificacion = datetime.now()
+				p.fechaUltimaModificacion = datetime.now() - timedelta(hours=3)
 				p.profesorEncargado = request.user
 				titulo = "Programa " + asignaturaM.nombreAsig + " " + semestre + " " + ano
 				
@@ -220,7 +207,7 @@ def principalPLView(request):
 		else:
 			form = crearProgramaForm()
 					#GEt
-		ctx = { 'evaluaciones': finEval, 'yo': yo, 'username' : username,'estado': estado, 'finales' : fin, 'form': form, 'programas': programas, 'porAnalizar': fin, 'otros': otrosProgramas, 'aprobados': programasApro}
+		ctx = { 'evaluaciones': evaluaciones, 'yo': yo, 'username' : username,'estado': estado, 'form': form, 'programas': programas, 'porAnalizar': analisisNum, 'otros': otrosProgramas, 'aprobados': programasApro}
 		return render(request, 'profLinea/principalPL.html', ctx)
 	else:
 		return redirect('/errorLogin/')
@@ -231,7 +218,7 @@ def logEstado (programa, state):
 	l= Log()
 	l.programa = programa
 	l.state = state
-	l.fecha = datetime.now()
+	l.fecha = datetime.now() - timedelta(hours=3)
 	l.save()	
 
 def eliminarProgramaView(request, id_programa):
@@ -270,11 +257,12 @@ def repositorioView(request):
 		return redirect('/errorLogin/')
 
 def fechasView(request):
+	hoy = datetime.now()
 	yo = User.objects.get(username=request.user.username)
 	userTemp = User.objects.get(username=request.user.username)
 	perfilTemp = UserProfile.objects.get(user=userTemp.id)
 	if perfilTemp.rol_actual == 'PL':
-		eventos = Evento.objects.all().filter(tipoEvento = 'profesor')
+		eventos = Evento.objects.all().filter(tipoEvento = 'profesor').filter(start__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
 		username = request.user.username
 		ctx = {'eventos': eventos, 'username': username, 'yo': yo}
 		return render(request, 'profLinea/eventosProfe.html', ctx)

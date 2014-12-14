@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load bootstrap_tags %}
+
+{% block title %}
+    <h2> {{programa.state.title}}</h2>
+{%endblock%}
+{% block content %}
+<img src="/media/img/analisisJC.jpg">
+<br>
+    <p>Actualmente el programa está siendo analizado por su Jefe de Carrera. Cuando este delibere, si no encuentra indicaciones para al estado de aprobación. En el caso contrario, se creará un Reporte de Indicaciones, en el cual el Jefe de Carrera señalarás las indicaciones pertinentes para que el programa
+    pueda mejorar. A su vez, el programa volverá al primer estado de definiciones, para poder corregir las 
+    indicaciones pertinentes. </p>
+{% endblock %}
+{%block drive%}
+<li>Documento en Drive  <td><a href="{{programa.url}}"> <span class="glyphicon glyphicon-cloud"></span></a></td></li>
+{%endblock%}
+{%block recursosJefe%}
+<h4>No hay recursos para este estado.</h4>
+{%endblock%}
+      
+
+{%block estado%}
+    <li class="activo">Definiciones Generales</li>
+{%endblock%}
+

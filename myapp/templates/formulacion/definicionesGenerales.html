@@ -16,9 +16,24 @@
 <li>Documento en Drive  <td><a href="{{p.url}}"> <span class="glyphicon glyphicon-cloud"></span></a></td></li>
 {%endblock%}
 {%block recursosJefe%}
-  {%for r in recursos%}
-          <li><a href="/files/serve/{{r.recurso}}">{{r.titulo_recurso}}</a></li>
-          {%endfor%}
+<br>
+<table class="table-recursos table-striped">
+<thead>
+                        <tr>
+                            <th>Nombre Recurso</th>
+                            <th>Archivo</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                         {%for r in recursos%}
+                        <tr>
+                            <td>{{r.titulo_recurso}}</td></a>
+                           <td><a href="/files/serve/{{e.recurso}}"><span class="glyphicon glyphicon-paperclip"></a></span></td>
+                        </tr>
+                        {%endfor%}
+                    </tbody>
+</table>
 {%endblock%}
   {%block defEstado%}
  <button type="button"   class="btn btn-info" data-toggle="modal" data-target="#myModal">

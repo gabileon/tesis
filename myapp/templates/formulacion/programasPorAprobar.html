@@ -57,7 +57,7 @@ $(document).ready(function(){
                 </li>
               </ul>     
               <ul>
-                  <p class="bienvenido">Bienvenido <strong>{{username}}</strong> <a href="/logout/"><span class="glyphicon glyphicon-log-out"></span></a></p></p>p>
+                  <p class="bienvenido">Bienvenido <strong>{{username}}</strong> <a href="/logout/"><span class="glyphicon glyphicon-log-out"></span></a></p></p>
               </ul>
             </div><!--/.nav-collapse -->
           </div>
@@ -91,7 +91,7 @@ $(document).ready(function(){
                             <td>{{p.profesorEncargado}}</td>
                             <td><a class="glyphicon glyphicon-file" href="{{p.url}}"></a></td></span>
 
-                            <td><button type="button" class="btn btn-default" data-container="body" data-toggle="popover" data-placement="right"  data-content="Para aprobar el programa debes marcar tu opción en la siguiente columna"><span class="glyphicon glyphicon-edit"></span> Información</button>
+                            <td>
                               <form>
                                 <a href="/aprobacionPrograma/{{p.id}}/yes">  <span class="glyphicon glyphicon-ok"></span> </a>    <a href="/aprobacionPrograma/{{p.id}}/no">     <span class="glyphicon glyphicon-remove"></span> </a>
                               </form>

@@ -21,6 +21,13 @@ urlpatterns = patterns('myapp.modulos.formulacion.views',
     url(r'^evaluacionesAsociadas/(?P<id_programa>.*)/$', 'evaluacionesAsociadasView'),
     url(r'^votacionesEvaluacionOtroProfeLinea/$', 'evaluacionesAsociadasOthersView' ),
     url(r'^votacionesEvaluacionOtroProfe/(?P<id_programa>.*)/$', 'votacionEvaluacionOtroProfeView' ),
+    url(r'^analisisProgramaJC/(?P<id_programa>.*)/$', 'analisisProgramaJCView' ),
+    url(r'^fastTrackOwn/(?P<id_programa>.*)/$', 'fastTrackOwnView' ),
+    url(r'^aprobacionProgramaJC/(?P<id_programa>.*)/$', 'aprobacionProgramaJCView' ),
+
+
+
+
 
     
     

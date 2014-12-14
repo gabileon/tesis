@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load bootstrap_tags %}
+
+{% block title %}
+    <h2> {{programa.state.title}}</h2>
+{%endblock%}
+{% block content %}
+<img src="/media/img/aprobado.png">
+<br>
+    <p>Actualmente el programa está siendo aprobado por su Jefe de Carrera. Cuando este delibere, tanto usted como su Coordinador de Línea, conocerán el resultado via email. En el caso que el Jefe de Carrera decida no aprobar su programa, este volverá al estado de Definiciones Generales, para poder arreglar los detalles
+    a corregir. </p>
+{% endblock %}
+{%block drive%}
+<li>Documento en Drive  <td><a href="{{programa.url}}"> <span class="glyphicon glyphicon-cloud"></span></a></td></li>
+{%endblock%}
+{%block recursosJefe%}
+<h4>No hay recursos para este estado.</h4>
+{%endblock%}
+      
+
+{%block estado%}
+    <li class="activo">Definiciones Generales</li>
+{%endblock%}
+

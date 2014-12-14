@@ -31,6 +31,7 @@ class AgregarEventoCordForm(forms.ModelForm):
     start = forms.DateTimeField(widget=DateTimeWidget(usel10n=True, bootstrap_version=3), label="Fecha y hora de inicio:")
     end = forms.DateTimeField(widget=DateTimeWidget(usel10n=True, bootstrap_version=3), label="Fecha y hora de termino:")
     tipoEvento = forms.ChoiceField(widget=forms.RadioSelect, choices=TIPOS2)
+    
 class AgregarEventoForm(forms.ModelForm):
 
     TIPOS = (

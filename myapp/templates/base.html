@@ -14,6 +14,7 @@
         <link rel="stylesheet/less" href="/media/less/style.less">
         <script type="text/javascript" src="/media/js/less-1.4.1.min.js"></script>
             <script src="//oss.maxcdn.com/bootbox/4.2.0/bootbox.min.js"></script>
+            <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
     </head>
     <body>
         <nav class="navbar navbar-default navbar-static-top" role="navigation">
@@ -31,7 +32,7 @@
               <ul class="nav navbar-nav">
                 <li class="active"><a href="/principalPL/">Programas</a></li>
                 <li><a href="/crearFechas/">Eventos</a></li>
-                <li><a href="/recursosProfe/">Recursos de Aprendizaje</a></li>
+                <li><a href="/recursosProfe/">Recursos de Formulación</a></li>
                 <li class="dropdown">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuracion<span class="caret"></span></a>
                   <ul class="dropdown-menu" role="menu">
@@ -48,44 +49,41 @@
         </nav>
 
  <div class="row">
-  <div class="col-md-10 col-md-push-2">
-{% block title %}<h2> {{p.state.title}}</h2>{% endblock %}
 
-{% block content %}
-<div class="col-lg-4">j</div>
+  <div class="col-md-5 col-md-push-2">
+    {% block title %}<h2> {{p.state.title}}</h2>{% endblock %}
 
-<div class="col-lg-4">
-{% block foto %}      
+    {% block content %}
+
+
+    {% block foto %}      
+    {% endblock%}
+    {% block parrafo %}
+        <p> Actualmente te encuentras en el estado de Definición de Resultados de Aprendizaje. Los Resultados deben permitir observar un desempeño global verificable que integre elementos conceptuales, procedimentales y actitudinales. Debe resultar viable de alcanzar respecto de su posición en la malla curricular y el creditaje asignado. Además debe plantearse en coherencia con la contribución que puede estar realizando la asignatura al perfil de egreso de la carrera. </p>
 {% endblock%}
-{% block parrafo %}
-    <p> Actualmente te encuentras en el estado de Definición de Resultados de Aprendizaje. Los Resultados deben permitir observar un desempeño global verificable que integre elementos conceptuales, procedimentales y actitudinales. Debe resultar viable de alcanzar respecto de su posición en la malla curricular y el creditaje asignado. Además debe plantearse en coherencia con la contribución que puede estar realizando la asignatura al perfil de egreso de la carrera. </p>
-  </div>
 {% endblock%}
-<div class="col-lg-4">lklkñl</div>
 
-{% endblock %}
-
-{%block drive%}
   
 
-  
+  {%block drive%}
+   
 <li>Documento en Drive  <td><a href="{{p.url}}"> <span class="glyphicon glyphicon-cloud"></span></a></td></li>
-
 {%endblock%}
-
-
-          <h4>Recursos por el Jefe de Carrera</h4>
-          {%block recursosJefe%}
-          {%endblock%}
-          <h4>Recursos por el Coordinador</h4>
-          {%block recursosLinea%}
-          {%endblock%}
-
-<div>
   {%block defEstado%}
   {%endblock%}
+  </div>
+
+
+
+
+<div class="col-md-5 col-md-push-2">
+ 
+          <h3 class="recursos ">Recursos para la Formulación </h3>
+          {%block recursosJefe%}
+          {%endblock%}
 </div>
-</div>
+
+
 
   <div class="col-md-2 col-md-pull-10">
  
@@ -106,9 +104,11 @@
     <li class="disabled">Aprobación Programa por Jefe de Carrera</li>
     {%endblock%}
   </div>
+
+
+
 </div>
-{%block js%}
-{%endblock%}
+
 </body>    
 </html>
 

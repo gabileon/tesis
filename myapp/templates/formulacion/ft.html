@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load bootstrap_tags %}
+
+{% block title %}
+    <h2> {{programa.state.title}}</h2>
+{%endblock%}
+{% block content %}
+<img class= "ft"src="/media/img/ft.jpg">
+    <p> Actualmente tu programa se encuentra en el estado de Fast Track. Estado en el cual el Coordinador de su línea decidirá, dado el contexto y la hsitoria de su programa, si pasa a un estado de Fast Track, es decir, continua al estado de Aprobación, sin pasar por el del Análisis del Jefe de Carrera. 
+     
+</p>
+{% endblock %}
+{%block drive%}
+<li>Documento en Drive  <td><a href="{{programa.url}}"> <span class="glyphicon glyphicon-cloud"></span></a></td></li>
+{%endblock%}
+{%block recursosJefe%}
+<h4>No hay recursos para este estado.</h4>
+{%endblock%}
+      
+
+{%block estado%}
+    <li class="activo">Definiciones Generales</li>
+{%endblock%}
+

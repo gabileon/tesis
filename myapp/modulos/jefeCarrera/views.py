@@ -56,6 +56,7 @@ FLOW = flow_from_clientsecrets(
 def RolView(request, id_user):
     user = User.objects.get(id=id_user)
     perfil = UserProfile.objects.get(user=user.id)
+    ### Si tiene un unico rol, entra directo
     return render(request, 'presentacion/cambiarRol.html', {'user':user, 'perfil':perfil, 'username':request.user.username, 'rol': perfil.rol_actual})
 
 def cambiarRolView(request, id_user, rol):
@@ -66,8 +67,6 @@ def cambiarRolView(request, id_user, rol):
         perfil.save()
         if perfil.fechaPrimerAcceso is None:
             return redirect('/cambiarDatosProfe/')
-        else:
-            return HttpResponseRedirect('/principal_cl/')
         return HttpResponseRedirect('/principalPL/')
     if rol == 'JC':
         perfil.rol_actual = 'JC'
@@ -95,7 +94,6 @@ def principalView(request):
         return render(request, 'jefeCarrera/vistaJC.html', ctx)
     else:
         return redirect ('/errorLogin/')
-    
 
 def changePasswordView(request, id_user):
     u = User.objects.get(id=id_user)
@@ -164,7 +162,6 @@ def lineasView(request):
     else:
         return redirect ('/errorLogin/')
 
-
 def perfilLineaView(request, id_linea):
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
@@ -228,7 +225,7 @@ def perfilLineaView(request, id_linea):
         return render(request, 'jefeCarrera/perfilLineaConf.html', ctx)
     else:
         return redirect ('/errorLogin/')
-
+### ojo
 def editarLineaView(request, id_linea):
     # linea = Linea.objects.get(id=id_linea)
     # if request.method == "POST":
@@ -253,7 +250,6 @@ def removeCordinadorLineaView(request, id_linea):
         return HttpResponseRedirect('/perfilLinea/'+id_linea)   
     else:
         return redirect ('/errorLogin/')
-    # return HttpResponse('deleted')
 
 def addAsignaturaView(request, id_linea):
     userTemp = User.objects.get(username=request.user.username)
@@ -280,9 +276,10 @@ def addAsignaturaView(request, id_linea):
 def crearFechas(request):
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    hoy = datetime.now()
     if perfilTemp.rol_actual == 'JC':
-        eventos = Evento.objects.filter(anfitrion=request.user)
-        eventosInvitados = Evento.objects.filter(tipoEvento='jefe')
+        eventos = Evento.objects.filter(anfitrion=request.user).order_by('-start').filter(start__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
+        eventosInvitados = Evento.objects.filter(tipoEvento='jefe').order_by('-start').filter(start__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
         try:
             storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
             credential = storage.get()
@@ -331,7 +328,7 @@ def crearFechas(request):
 
                     event.update({'attendees': emails})
                     created_event = service.events().insert(calendarId='primary', body=event).execute()
-                    nuevoEvento = Evento.objects.create(summary= summary, location = location, start =inicio, end=fin, 
+                    nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, 
                     descripcion=descripcion, id_calendar=created_event['id'], tipoEvento=tipoEvento, anfitrion=request.user, invitados =invitados)
                     nuevoEvento.save()
 
@@ -403,18 +400,24 @@ def editEventosView (request, id_evento):
      
                         'start': {
                             'dateTime': '%s'%(inicio),
-                            'timeZone': 'America/Santiago'
+                           
                           },
                         'end': {
                             'dateTime': '%s'%(fin),
-                            'timeZone': 'America/Santiago'
+                            
                           }
                                         }                                 
-                    event['attendees']= [{'email': 'gabriela.leon@usach.cl'}]
-                    event['attendees']= [{'email': 'gabi.leon.f@usach.cl'}]
+                    invitados = []
+                    emails  = []
+                    for email in todos:
+                        x = {}
+                        x.update({'email': email.email})
+                        invitados.append(email.email)
+                        emails.append(x)
+
+                    event.update({'attendees': emails})
                     idCal = evento.id_calendar
                     updated_event = service.events().update(calendarId='primary', eventId=idCal, body=event).execute()
-                    
                     evento.summary= summary 
                     evento.location = location
                     evento.start =start
@@ -429,17 +432,13 @@ def editEventosView (request, id_evento):
                     coordinador = linea.coordinador.email
                     event = {
                         'summary': '%s'%(summary),
-     
                         'start': {
                             'dateTime': '%s'%(inicio),
-                            'timeZone': 'America/Santiago'
                           },
                         'end': {
                             'dateTime': '%s'%(fin),
-                            'timeZone': 'America/Santiago'
                           }}
                     event['attendees'] =  [{'email': coordinador}]
-                    idCal = evento.id_calendar
                     event = service.events().get(calendarId='primary', eventId=idCal).execute()
                     updated_event = service.events().update(calendarId='primary', eventId=eventt['id'], body=event).execute()
                     evento.summary= summary 
@@ -447,7 +446,7 @@ def editEventosView (request, id_evento):
                     evento.start =start
                     evento.end=end
                     evento.descripcion=descripcion 
-                    evento.attendees=emails
+                    evento.attendees=coordinador
                     evento.tipoEvento = tipoEvento
                     evento.save()
             return redirect('/crearFechas/')
@@ -490,7 +489,6 @@ def recursosView(request):
         if request.method == 'POST':
             form = UploadFileForm(request.POST, request.FILES)
             if form.is_valid():
-                # handle_uploaded_file(request.FILES['file'])
                 ###### el nombre dle recurso no debe tener espacios
                 recurso = form.cleaned_data['recurso']            
                 titulo_recurso = form.cleaned_data['title']
@@ -851,6 +849,6 @@ def logEstado (programa, state):
     l= Log()
     l.programa = programa
     l.state = state
-    l.fecha = datetime.now()
+    l.fecha = datetime.now() - timedelta(hours=3)
     l.save()    
             

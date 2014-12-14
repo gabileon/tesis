@@ -13,7 +13,7 @@ from myapp.modulos.jefeCarrera.models import Evento, ReporteIndic
 from myapp.modulos.coordLinea.forms import CoordinadorForm
 from myapp.modulos.formulacion.forms import LineasForm, UploadFileForm, analizarForm, evaluacionesForm, analisisLineaForm
 from myapp.modulos.jefeCarrera.forms import changePasswordForm, AgregarEventoCordForm, AgregarEventoForm,  agregarAsignaturaForm, agregarProfesoresForm
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.shortcuts import get_object_or_404
 from django.core.mail import EmailMultiAlternatives
 from myapp.modulos.presentacion.models import CredentialsModel
@@ -48,7 +48,7 @@ def logEstado (programa, state):
     l= Log()
     l.programa = programa
     l.state = state
-    l.fecha = datetime.now()
+    l.fecha = datetime.now() - timedelta(hours=3)
     l.save()    
 
 CLIENT_SECRETS = os.path.join(os.path.dirname(__file__), 'client_secrets.json')
@@ -109,24 +109,22 @@ def principalCLView(request):
         programasAprobados= Programa.objects.filter(state='fin').count()
         programasPorAnalizar = Programa.objects.filter(state='aprobacionLinea')
         fast = Programa.objects.filter(state='fastTrack').count()
-        todos = Evaluacion.objects.all()
+        todos = Programa.objects.filter(state='analisisEvaluacionesAsociadas')
         analisis = []
         votaciones = []
-        for t in todos:
-            if t.votoEvalCord == False:
-                votaciones.append(t)
-        num = len(votaciones)   
-
         for p in programasPorAnalizar:
             if p.analisism.votoEvalCord==False:
                 analisis.append(p)
         numAnalisis = len(analisis)
+        for p in todos:
+            if p.analisism.votoEvalCord==False:
+                votaciones.append(p)
+        numEval = len(votaciones)
         username = request.user.username
         userTemp = User.objects.get(username=request.user.username)
         profile = UserProfile.objects.get(user=userTemp)
         linea = Linea.objects.get(id=profile.cordLinea_id)
-        # programasAprobados= Programa.objects.filter(state='fin').count().filter(linea=linea)
-        ctx = {'user': userTemp, 'username' : username, 'programas':programa, 'fast': fast, 'votaciones': num, 'porAnalizar': numAnalisis, 'aprobados' : programasAprobados, 'profile': profile, 'linea':linea}
+        ctx = {'user': userTemp, 'username' : username, 'programas':programa, 'fast': fast, 'votaciones': numEval, 'porAnalizar': numAnalisis, 'aprobados' : programasAprobados, 'profile': profile, 'linea':linea}
         return render(request, 'coordLinea/vistaCL.html', ctx)
     else:
         return redirect ('/errorLogin/')
@@ -157,9 +155,105 @@ def votacion (request, id_evaluacion):
                 evaluac.save()
                 evaluacion.votoEvalCord = True
                 evaluacion.save()
+                evaluacionesVot(evaluacion)
                 return HttpResponseRedirect('/votacionesEvaluacionLinea/')
     else:
         return redirect ('/errorLogin/')
+
+
+def evaluacionesVot(evaluacion):
+    profe = evaluacion.programa.profesorEncargado
+    termino = 0
+    bandera = None
+    programa = evaluacion.programa
+    votos = Evaluaciones.objects.filter(evaluacion =evaluacion)
+    numVotos = len(votos)
+    linea = Profesor.objects.get(user = profe).linea
+    coordinadorLinea = linea.coordinador
+    profesoresLinea = Profesor.objects.filter(linea=linea).count()
+    ##### Termino la votacion #######
+    if (numVotos == (profesoresLinea+1 )):
+        termino = 1
+        #### conteo de votos ###
+        votosSi = votos.filter(voto='Si').count()
+        votosNo =  votos.filter(voto='No').count()
+        ################# Resultados ###########
+        if votosSi>votosNo :
+            programa.siEvaluacion_toVerif()
+            logEstado(programa, programa.state.title)
+            try:
+                x = ProgramasPorEstado.objects.get(estado=programa.state.title)
+            except ProgramasPorEstado.DoesNotExist:
+                x = None
+            if x is None:
+                newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                newIndicador.save()
+            else:
+                indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                indicador.cantidad = indicador.cantidad + 1
+                indicador.save()
+            programa.save()
+            bandera = True
+        if votosSi<votosNo:
+            bandera = True
+            programa.noEvaluacion_toForm()
+            programa.contador= programa.contador + 1
+            logEstado(programa, programa.state.title)
+            programa.to_datosAsig()
+            programa.save()
+            try:
+                x = ProgramasPorEstado.objects.get(estado=programa.state.title)
+            except ProgramasPorEstado.DoesNotExist:
+                x = None
+            if x is None:
+                newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                newIndicador.save()
+            else:
+                indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                indicador.cantidad = indicador.cantidad + 1
+                indicador.save()
+        if votosNo==votosSi:
+            ## veo el voto del coordinador
+            votoDelCoord = Evaluaciones.objects.filter(evaluacion=evaluacion).get(votante = coordinadorLinea)
+            if votoDelCoord == 'Si':
+                perdieron = 0
+                programa.siEvaluacion_toVerif()
+                logEstado(programa, programa.state.title)
+                try:
+                    x = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                except ProgramasPorEstado.DoesNotExist:
+                    x = None
+                if x is None:
+                    newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                    newIndicador.save()
+                else:
+                    indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                    indicador.cantidad = indicador.cantidad + 1
+                    indicador.save()
+                programa.save()
+                bandera = True
+            else:
+                bandera = False
+                perdieron = 1
+                programa.noEvaluacion_toForm()
+                programa.contador= programa.contador + 1
+                logEstado(programa, programa.state.title)
+                programa.to_datosAsig()
+                programa.save()
+                try:
+                    x = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                except ProgramasPorEstado.DoesNotExist:
+                    x = None
+                if x is None:
+                    newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                    newIndicador.save()
+                else:
+                    indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                    indicador.cantidad = indicador.cantidad + 1
+                    indicador.save()
+    else:
+        termino = 0
+    return bandera
 
 def changePasswordCordView(request, id_user):
     userTemp = User.objects.get(username=request.user.username)
@@ -230,13 +324,14 @@ def miperfilCordView(request):
         return redirect ('/errorLogin/')
 
 def crearFechasCoord(request):
+    hoy = datetime.now()
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
     if perfilTemp.rol_actual == 'CL':
         userTemp = User.objects.get(username=request.user.username)
         profile = UserProfile.objects.get(user=userTemp)
         linea = Linea.objects.get(id=profile.cordLinea_id)
-        eventos = Evento.objects.filter(anfitrion=request.user)
+        eventos = Evento.objects.filter(anfitrion=request.user).filter(start__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
         todos = Evento.objects.all()
         try:
             storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
@@ -457,7 +552,7 @@ def recursosCordView(request):
                 titulo_recurso = form.cleaned_data['title']
                 descripcion = form.cleaned_data['descripcion']
                 estado = form.cleaned_data['estado']
-                fechaUltimaModificacion = datetime.now()
+                fechaUltimaModificacion = datetime.now() - timedelta(hours=3)
                 newRecurso = Recurso.objects.create(recurso = recurso, creador=request.user, titulo_recurso=titulo_recurso, descripcion_recurso=descripcion, estado=estado, fechaUltimaModificacion=fechaUltimaModificacion)
                 newRecurso.save()
                 return HttpResponseRedirect('/recursosCord/')
@@ -506,7 +601,7 @@ def editRecursosView(request, id_recurso):
                 titulo_recurso = form.cleaned_data['title']
                 descripcion = form.cleaned_data['descripcion']
                 estado = form.cleaned_data['estado']
-                fechaUltimaModificacion = datetime.now()
+                fechaUltimaModificacion = datetime.now() -timedelta(hours=3)
 
                 Recursos.recurso = recurso            
                 Recursos.titulo_recurso = titulo_recurso
