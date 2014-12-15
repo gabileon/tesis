@@ -33,7 +33,7 @@
                 <li><a href="/crearFechas/">Eventos</a></li>
                 <li><a href="/reportesIndicacion/">Reportes de Indicación</a></li>
                 <li  class="active" class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuracion<span class="caret"></span></a>
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuración<span class="caret"></span></a>
                   <ul class="dropdown-menu" role="menu">
                     <li><a href="/miperfil/">Mi Perfil</a></li>
                     <li class="active"><a href="/lineas/">Líneas de Asignatura</a></li>
@@ -95,7 +95,7 @@
                          
                         <li><h5 class="asignaturas"><strong>Asignaturas de la línea</h5></strong></li>
                         {%for a in asignaturas%}
-                        <p>- {{a.nombreAsig}}</p>
+                        <p>- {{a.nombreAsig}}  <a class="borrar" href="/removeAsignatura/{{a.id}}/{{linea.id}}"><span class="glyphicon glyphicon-remove"></a></p>
                         {%endfor%}
                         
                         <p><a class="asignatura" href="/addAsignatura/{{linea.id}}/"><button type="button" class="btn btn-primary">
@@ -106,7 +106,8 @@
                         
                       
                          {%for p in profesores%}
-                         <a href="/otroPerfil/{{p.user.id}}"><p>- {{p.user.email}}</p></a>
+                         <a href="/otroPerfil/{{p.user.id}}"><p>- {{p.user.email}}</a>
+                         <a class="borrar" href="/removeProfe/{{p.user.id}}/{{linea.id}}"><span class="glyphicon glyphicon-remove"></a></p>
                          {%endfor%}
 
                          <a href="/agregarProf/{{linea.id}}/"><button type="button" class="btn btn-primary">

@@ -53,38 +53,34 @@
           <h3 class="panel-title">Eventos</h3>
         </div>  
         <div class="panel-body">
-          <p>A continuación se presentan todos los eventos a los cuales has sido invitado, ya sea por el Jefe de Carrera
-            o por el Coordinador. Se indica fecha y hora, lugar donde se reunirán y el anfitrión de la invitación.
-            Recuerda, que para tener mayor descripción de los eventos, puedes visualizarlos en <a href="https://www.google.com/calendar/">Google Calendar</a>.</p>
+           {%if programas%}
+          <p>A continuación se presentan todos los programas que has realizado y que han sido aprobados por el 
+            Jefe de Carrera.</a></p>
 <br><br>
-          {%if eventos%}
+         
           <table class="table">
             <thead>
               <tr>
-                <th>Título</th>
-                <th>Ubicacion</th>
-                <th>Fecha Inicio</th>
-                <th>Fecha Final</th>
+                <th>Asignatura Semestre</th>
+                <th>Fecha Ultima Modificacion</th>
+                <th>Documento en Drive</th>
               </tr>
             </thead>
             <tbody>
-                        {%for e in eventos%}
+                        {%for e in programas%}
                         <tr>
-                            <td>{{e.summary}}</td>
-                            <td>{{e.location}}</td>
-                            <td>{{e.tipoEvento}}</td>
-                            <td>{{e.start}}</td>
-                            <td>{{e.end}}</td>
+                            <td>{{e.asignatura.nombreAsig}}</td>
+                            <td>{{e.fechaUltimaModificacion}}</td>
+                            <td><a href="{{e.url}}"><span class="glyphicon glyphicon-paperclip"></a></span></td>
                         </tr>
                         {%endfor%}
-
+         
                     </tbody>
                 </table>  
         {%else%}
-         <p><strong>No hay eventos </strong></p>
+         <p><strong>Aun no hay programas aprobados.</strong></p>
         {%endif%}
-
-       
+   
 
 
             </div>

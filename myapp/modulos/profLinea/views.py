@@ -130,13 +130,13 @@ def principalPLView(request):
 
 		analisisNum = len(analisisA)
 
-
-
+		############################
 		form = crearProgramaForm()
 
 		username = request.user.username
 		programas = Programa.objects.filter(profesorEncargado=request.user.id).order_by('-fechaUltimaModificacion')
-		otrosProgramas = Programa.objects.all()
+		otrosProgramas = Programa.objects.filter(~Q(profesorEncargado=request.user))
+
 		try:
 			storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
 			credential = storage.get()
@@ -167,7 +167,7 @@ def principalPLView(request):
 				if (perfilTemp.carpetaProgramas == "NO CREADA"):
 					### CREAMOS UNA CARPETA ###
 					body = {
-						'title': 'Programas de Asignatura -'+request.user.first_name + " " + request.user.last_name,
+						'title': 'Programas de Asignatura - '+request.user.first_name + " " + request.user.last_name,
 						'mimeType': "application/vnd.google-apps.folder"
 					}
 					### se crea carpeta ###
@@ -175,6 +175,7 @@ def principalPLView(request):
 					folder = drive_service.files().insert(body = body).execute()
 					id_folder = folder.get('id')
 					perfilTemp.carpetaProgramas = id_folder
+					perfilTemp.save()
 
 				body = {
 					'title':'%s'%(titulo),
@@ -207,11 +208,17 @@ def principalPLView(request):
 		else:
 			form = crearProgramaForm()
 					#GEt
-		ctx = { 'evaluaciones': evaluaciones, 'yo': yo, 'username' : username,'estado': estado, 'form': form, 'programas': programas, 'porAnalizar': analisisNum, 'otros': otrosProgramas, 'aprobados': programasApro}
+		ctx = { 'userTemp': userTemp, 'evaluaciones': evaluaciones, 'yo': yo, 'username' : username,'estado': estado, 'form': form, 'programas': programas, 'porAnalizar': analisisNum, 'otros': otrosProgramas, 'aprobados': programasApro}
 		return render(request, 'profLinea/principalPL.html', ctx)
 	else:
 		return redirect('/errorLogin/')
 
+def misProgramasAprobadosView(request, id_user):
+	try:
+		programas = Programa.objects.filter(profesorEncargado=id_user)
+	except:
+		programas = []
+	return render(request, 'profLinea/misProgramas.html', {'username': request.user.username, 'programas': programas})
 
 def logEstado (programa, state):
 
@@ -263,8 +270,15 @@ def fechasView(request):
 	perfilTemp = UserProfile.objects.get(user=userTemp.id)
 	if perfilTemp.rol_actual == 'PL':
 		eventos = Evento.objects.all().filter(tipoEvento = 'profesor').filter(start__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
+		eventosGenerales = Evento.objects.all().filter(tipoEvento = 'general').filter(start__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
+		
+		todos =  []
+		for e in eventos:
+			todos.append(e)
+			for d in eventosGenerales:
+				todos.append(d)
 		username = request.user.username
-		ctx = {'eventos': eventos, 'username': username, 'yo': yo}
+		ctx = {'eventos': todos, 'username': username, 'yo': yo}
 		return render(request, 'profLinea/eventosProfe.html', ctx)
 	else:
 		return redirect('/errorLogin/')

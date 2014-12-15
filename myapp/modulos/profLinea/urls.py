@@ -8,6 +8,7 @@ urlpatterns = patterns('myapp.modulos.profLinea.views',
    	url(r'^cambiarDatosProfe/$', 'cambiarDatosProfeView' ),
    	url(r'^miperfilProfesor/$', 'miperfilProfesorView' ),
    	url(r'^changePasswordProf/(?P<id_user>.*)/$', 'changePasswordProfView' ), 
+   	url(r'^misProgramas/(?P<id_user>.*)/$', 'misProgramasAprobadosView' ), 
 
   	
 )

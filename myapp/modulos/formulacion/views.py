@@ -21,7 +21,7 @@ def logEstado (programa, state):
     l= Log()
     l.programa = programa
     l.state = state
-    l.fecha = datetime.now()
+    l.fecha = datetime.now() - timedelta(hours=3)
     l.save() 
 
 
@@ -42,7 +42,7 @@ def defGenerales(request, id_programa):
 	 		y.cantidad = y.cantidad - 1
 	 		y.save()
 	 		programa.to_defGeneral()
-	 		programa.fechaUltimaModificacion = datetime.utcnow()
+	 		programa.fechaUltimaModificacion = datetime.now() - timedelta(hours=3)
 	 		logEstado(programa, programa.state.title)
 	 		programa.save()
 	 		try:
@@ -59,7 +59,7 @@ def defGenerales(request, id_programa):
 		 	 	# SE INTENTA OBTENER CADA UNO DE LAS PARTES #
 		 	 	### SE RESETEAN#
 		 	try:
-		 		ob = RDA.objects,get(programa = programa)
+		 		ob = RDA.objects.get(programa = programa)
 		 		rd = Estrategias.objects.get(programa=programa)
 		 		con = Constribucion.objects.get(programa=programa)
 		 		clase = ClaseClase.objects.get(programa=programa)
@@ -68,18 +68,19 @@ def defGenerales(request, id_programa):
 		 		recursos = RecursosApren.objects.get(programa=programa)
 		 		evaluacion = Evaluacion.objects.get(programa=programa)
 		 		analisis = AnalisisM.objects.get(programa=programa)
-		 		rda.estado = "Sin Iniciar"
-				estra.estado = "Sin Iniciar"
+		 		ob.estado = "Sin Iniciar"
+		 		rd.estado = "Sin Iniciar"
+		 		con.estado = "Sin Iniciar"
+				compl.estado = "Sin Iniciar"
 				clase.estado = "Sin Iniciar"
-				constribucion.estado = "Sin Iniciar"
 				adm.estado = "Sin Iniciar"
 				recursos.estado = "Sin Iniciar"
 	 			evaluacion.votoEvalCord = False
-	 			evaluacion.votoProf = False
+	 			evaluacion.votoProfe = False
 	 			Evaluaciones.objects.filter(evaluacion=evaluacion).delete()
 	 			evaluacion.save()
 	 			analisis.votoEvalCord = False
-	 			analisis.votoProf = False
+	 			analisis.votoProfe = False
 	 			Analisis.objects.filter(analisis=analisis).delete()
 	 			analisis.save()
 		 	except:
@@ -113,7 +114,7 @@ def defGenerales(request, id_programa):
   			analisis.save()
   			return HttpResponseRedirect('/definiciones/'+id_programa)
  		else:
- 			programa.fechaUltimaModificacion = datetime.utcnow()-timedelta(hours=3)
+ 			programa.fechaUltimaModificacion = datetime.now()-timedelta(hours=3)
 	 		programa.save()
  			return HttpResponseRedirect('/principalPL/')
  	ctx = {'url': url, 'p': programa, 'form':form, 'recursos': recursos, 'username': request.user.username}
@@ -453,7 +454,7 @@ def evaluacionesAsociadasOthersView(request):
 	if len(finales) == 0:
 		finales = programasEval
 	form = evaluacionesForm()  
-	ctx = {'username': request.user.username, 'programas': finales, 'form': form, 'temp':votantes, 'yo': estado}
+	ctx = {'username': request.user.username, 'programas': finales, 'form': form,  'yo': estado}
 	return render (request, 'formulacion/evaluacionAsociadaOther.html', ctx)
 
 
@@ -498,7 +499,7 @@ def definicionCompletitudCoherencia_view(request, id_programa):
 		choice = request.POST['optionsRadios']
 		if choice=='option2':
 	 		programa.verificacion_toAspectosFinal()
-	 		programa.fechaUltimaModificacion = datetime.now()
+	 		programa.fechaUltimaModificacion = datetime.now() - timedelta(hours=3)
 	 		logEstado(programa, programa.state.title)
 	 		definicion.estado = "Finalizado"
 	 		definicion.save()
@@ -508,7 +509,7 @@ def definicionCompletitudCoherencia_view(request, id_programa):
 	           ## guardamos el producto 
 			definicion.estado = "Modificando"
 	 		definicion.save()
-			programa.fechaUltimaModificacion = datetime.now()
+			programa.fechaUltimaModificacion = datetime.now()  - timedelta(hours=3)
 			programa.save()	
 			return HttpResponseRedirect('/principalPL/')
 	ctx = {'form': form, 'p' : programa, 'form': form, 'username': request.user.username}

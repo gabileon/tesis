@@ -21,7 +21,7 @@ class Linea(models.Model):
 class Asignatura(models.Model):
     nombreAsig = models.CharField(max_length=20)
     plan = models.CharField(max_length=5)
-    linea = models.ForeignKey(Linea)
+    linea = models.ForeignKey(Linea, null=True)
 
 
 class MyWorkflow(xwf_models.Workflow):
@@ -168,7 +168,7 @@ class Recurso(models.Model):
 
 class Profesor (models.Model):
     user =  models.OneToOneField(User, null=True)
-    linea = models.ForeignKey(Linea)
+    linea = models.ForeignKey(Linea, null=True)
 
 
  

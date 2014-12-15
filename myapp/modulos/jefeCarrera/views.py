@@ -1,7 +1,5 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, render_to_response, get_object_or_404
 import datetime, random, sha
-from datetime import timedelta
-from django.shortcuts import render_to_response, get_object_or_404
 from django.core.mail import send_mail
 from django.contrib.auth.models import User
 from django.http import HttpResponse
@@ -13,8 +11,7 @@ from myapp.modulos.jefeCarrera.models import Evento, ReporteIndic
 from myapp.modulos.coordLinea.forms import CoordinadorForm
 from myapp.modulos.formulacion.forms import LineasForm, UploadFileForm, analizarForm
 from myapp.modulos.jefeCarrera.forms import changePasswordForm, AgregarEventoForm,  agregarAsignaturaForm, agregarProfesoresForm
-from datetime import datetime
-from django.shortcuts import get_object_or_404
+from datetime import datetime, timedelta
 from django.core.mail import EmailMultiAlternatives
 from myapp.modulos.presentacion.models import CredentialsModel
 from apiclient.discovery import build
@@ -31,6 +28,7 @@ from google.appengine.api import mail
 from myapp.modulos.indicadores.models import ProgramasPorEstado
 from apiclient.discovery import build
 from apiclient.http import MediaFileUpload
+
 
 FILENAME = 'hola.txt'
 
@@ -98,6 +96,7 @@ def principalView(request):
 def changePasswordView(request, id_user):
     u = User.objects.get(id=id_user)
     form = changePasswordForm()
+    username = u.username
     if request.method == "POST":
         form = changePasswordForm(request.POST)
         if form.is_valid():
@@ -107,14 +106,14 @@ def changePasswordView(request, id_user):
                 u.set_password(password)
                 u.save()
                 return HttpResponseRedirect("/miperfil/")
-    ctx = {'form':form, 'user':u}
+    ctx = {'form':form, 'user':u, 'username': username}
     return render(request, 'presentacion/changePassword.html', ctx)
 
 def miperfilView(request):
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
     if perfilTemp.rol_actual == 'JC':
-        ctx = {'user': userTemp, 'perfil': perfilTemp}
+        ctx = {'user': userTemp, 'perfil': perfilTemp, 'username': request.user.username}
         if request.method == 'POST':
             form = ImageUploadForm(request.POST, request.FILES)
             if form.is_valid():
@@ -157,7 +156,7 @@ def lineasView(request):
                 linea.carpeta = id_folder
                 linea.save()
                 return HttpResponseRedirect("/lineas/")
-        ctx = {'form':form, 'linea':linea}
+        ctx = {'form':form, 'linea':linea, 'username': request.user.username}
         return render(request, 'jefeCarrera/lineaConf.html', ctx)
     else:
         return redirect ('/errorLogin/')
@@ -192,11 +191,12 @@ def perfilLineaView(request, id_linea):
                     linea.save()
                     userProfile.save()
                     ## se envia email al nuevo coordinador ##
-                    # message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",
-                    #      subject="Notificacion")
+                    message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",
+                          subject="Notificacion")
 
-                    # message.to = coordinador
-                    # html_content = " Estimado:<br><br><br> ha sido designado como Coordinador de la linea" +linea.nombreLinea + ". Para la realizacion de esta funcion se necesitara que usted acceda a http://programas-diinf.appspot.com/login con su username y password"+username[0]". Al ingresar debera actualizar sus datos. Saludos"
+                    message.to = coordinador
+                    # html_content = " Estimado:<br><br><br> ha sido designado como Coordinador de la linea" 
+                    # +linea.nombreLinea + ". Para la realizacion de esta funcion se necesitara que usted acceda a http://programas-diinf.appspot.com/login con su username y password"+username[0]". Al ingresar debera actualizar sus datos. Saludos"
                     # message.send()
 
                 # Comprobar si existe el coordinador en el sistema
@@ -213,38 +213,26 @@ def perfilLineaView(request, id_linea):
 
                     message.to = coordinador
                     # message.html " Estimado:<br><br><br> ha sido designado como Coordinador de la linea" 
-                    # +linea.nombreLinea + ". Al ingresar a http://programas-diinf.appspot.com/login tendra acceso a entrar al rol del Coordinador de Linea. Saludos."
+                    #  +linea.nombreLinea + ". Al ingresar a http://programas-diinf.appspot.com/login tendra acceso a entrar al rol del Coordinador de Linea. Saludos."
                     # message.send()
-                    # message.send()
-                    
+                                        
 
             return HttpResponseRedirect('/perfilLinea/'+id_linea)   
         else:
             form = CoordinadorForm()
-        ctx = {'form':form, 'linea':linea, 'estado':estado, 'asignaturas' : asignaturas, 'linea':linea, 'profesores': profesores}
+        ctx = {'form':form, 'linea':linea, 'estado':estado, 'username': request.user.username, 'asignaturas' : asignaturas, 'linea':linea, 'profesores': profesores}
         return render(request, 'jefeCarrera/perfilLineaConf.html', ctx)
     else:
         return redirect ('/errorLogin/')
-### ojo
-def editarLineaView(request, id_linea):
-    # linea = Linea.objects.get(id=id_linea)
-    # if request.method == "POST":
-    #     form = LineasForm(request.POST, instance=post)
-    #     if form.is_valid():
-    #         linea = form.save(commit=False)
-    #         post.author = request.user
-    #         post.save()
-    #         return redirect('blog.views.post_detail', pk=post.pk)
-    # else:
-    #     form = PostForm(instance=post)
-    # return render(request, 'blog/post_edit.html', {'form': form})
-        pass
 
 def removeCordinadorLineaView(request, id_linea):
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
     if perfilTemp.rol_actual == 'JC':
         linea = Linea.objects.get(id=id_linea)
+        cordinador = linea.coordinador
+        cordinador.userprofile.rol_CL = "hola"
+        cordinador.save()
         linea.coordinador = None
         linea.save()
         return HttpResponseRedirect('/perfilLinea/'+id_linea)   
@@ -262,16 +250,32 @@ def addAsignaturaView(request, id_linea):
             if form.is_valid():
                 asignatura = form.cleaned_data['nombreAsignatura']
                 plan = form.cleaned_data['plan']
-                nuevaAsig = Asignatura.objects.create(nombreAsig=asignatura, plan = plan, linea=linea)
-                nuevaAsig.save()
+                try:
+                    asig = Asignatura.objects.get(nombreAsig=asignatura)
+                except:
+                    asig = None
+                if asig is not None:
+                    asig.linea = linea
+                    asig.save()
+                else:
+                    nuevaAsig = Asignatura.objects.create(nombreAsig=asignatura, plan = plan, linea=linea)
+                    nuevaAsig.save()
                 return HttpResponseRedirect('/perfilLinea/'+id_linea)
         else:
             form = agregarAsignaturaForm()
             
-        ctx ={'form' :form, 'linea':linea}
+        ctx ={'form' :form, 'linea':linea, 'username': request.user.username}
         return render(request, 'jefeCarrera/addAsignatura.html', ctx)
     else:
         return redirect ('/errorLogin/')
+
+def removeAsignaturaView(request, id_asignatura, id_linea):
+    asignatura = Asignatura.objects.get(id=id_asignatura)
+    asignatura.linea = None
+    asignatura.save()
+    return HttpResponseRedirect('/perfilLinea/'+id_linea)
+    
+
 
 def crearFechas(request):
     userTemp = User.objects.get(username=request.user.username)
@@ -450,7 +454,7 @@ def editEventosView (request, id_evento):
                     evento.tipoEvento = tipoEvento
                     evento.save()
             return redirect('/crearFechas/')
-        return render(request, 'jefeCarrera/editEvents.html', {'form':form, 'evento': evento})
+        return render(request, 'jefeCarrera/editEvents.html', {'form':form, 'evento': evento, 'username':request.user.username})
     else:
         return redirect ('/errorLogin/')
 
@@ -494,7 +498,7 @@ def recursosView(request):
                 titulo_recurso = form.cleaned_data['title']
                 descripcion = form.cleaned_data['descripcion']
                 estado = form.cleaned_data['estado']
-                fechaUltimaModificacion = datetime.now()
+                fechaUltimaModificacion = datetime.now() - timedelta(hours=3)
                 newRecurso = Recurso.objects.create(recurso = recurso, titulo_recurso=titulo_recurso, creador=request.user, descripcion_recurso=descripcion, estado=estado, fechaUltimaModificacion=fechaUltimaModificacion)
                 newRecurso.save()
                 return HttpResponseRedirect('/recursos/')
@@ -516,39 +520,30 @@ def deleteRecursoView(request, id_recurso):
         return redirect ('/errorLogin/')
 
 def editRecursosView(request, id_recurso):
-    # recurs = Recurso.objects.get(id=id_recurso)
-    # if request.method == 'GET':
-    #     form = UploadFileForm(initial={
-    #             'recurso' : recurs.recurso,
-    #             'title' : recurs.titulo_recurso,
-    #             'descripcion' : recurs.descripcion_recurso,
-    #             'estado' : recurs.estado})
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
     if perfilTemp.rol_actual == 'JC':
-        Recursos = Recurso.objects.get(id=id_recurso)
+        recursos = Recurso.objects.get(id=id_recurso)
         if request.method == 'GET':
             form = UploadFileForm(initial={
-                'recurso' : Recursos.recurso,
-                'title' : Recursos.titulo_recurso,
-                'descripcion' : Recursos.descripcion_recurso,
-                'estado' : Recursos.estado})
+                'recurso' : recursos.recurso,
+                'title' : recursos.titulo_recurso,
+                'descripcion' : recursos.descripcion_recurso,
+                'estado' : recursos.estado})
         if request.method == 'POST':
             form = UploadFileForm(request.POST, request.FILES)
             if form.is_valid():
-                # Recursos = Recurso.objects.get(id=id_recurso)
-                # Recursos.delete()
                 recurso = form.cleaned_data['recurso']            
                 titulo_recurso = form.cleaned_data['title']
                 descripcion = form.cleaned_data['descripcion']
                 estado = form.cleaned_data['estado']
-                fechaUltimaModificacion = datetime.now()
-                Recursos.recurso = recurso            
-                Recursos.titulo_recurso = titulo_recurso
-                Recursos.descripcion = descripcion
-                Recursos.estado = estado
-                Recursos.fechaUltimaModificacion = fechaUltimaModificacion
-                Recursos.save()
+                fechaUltimaModificacion = datetime.now() - timedelta(hours=3)
+                recursos.recurso = recurso            
+                recursos.titulo_recurso = titulo_recurso
+                recursos.descripcion_recurso = descripcion
+                recursos.estado = estado
+                recursos.fechaUltimaModificacion = fechaUltimaModificacion
+                recursos.save()
             return redirect('/recursos/')
         return render(request, 'jefeCarrera/editRecursos.html', {'form': form})
     else:
@@ -581,12 +576,9 @@ def reportesIndicacionView(request):
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
     if perfilTemp.rol_actual == 'JC':
         reportes = ReporteIndic.objects.all()
-        return render(request, 'jefeCarrera/reportesIndicaciones.html', {'reportes':reportes})
+        return render(request, 'jefeCarrera/reportesIndicaciones.html', {'reportes':reportes, 'username': request.user.username})
     else:
         return redirect ('/errorLogin/')
-
-def logPrograma ( request, id_programa):
-    pass
 
 def analisisProgramaView(request, id_programa, decision):
     userTemp = User.objects.get(username=request.user.username)
@@ -725,7 +717,6 @@ def analisisProgramaView(request, id_programa, decision):
     else:
         return redirect ('/errorLogin/')
 
-
 def porAprobarView(request):
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
@@ -792,7 +783,6 @@ def aprobacionProgramaView(request, id_programa, decision):
         return HttpResponseRedirect('/programasPorAprobar/')
     else:
         return redirect ('/errorLogin/')
-
     
 def addProfesoresView(request, id_linea):
     userTemp = User.objects.get(username=request.user.username)
@@ -803,7 +793,6 @@ def addProfesoresView(request, id_linea):
         if request.method == 'POST':
             form = agregarProfesoresForm(request.POST)
             if form.is_valid():
-                # handle_uploaded_file(request.FILES['file'])
                 email = form.cleaned_data['email']
                 try:
                    x = User.objects.get(email=email)
@@ -823,6 +812,8 @@ def addProfesoresView(request, id_linea):
                     profe.save()
                     newUser.save()
                 else:
+                    x.userprofile.rol_PL = "PL"
+                    x.userprofile.save()
                     try:
                         y = Profesor.objects.get(user=x)
                     except Profesor.DoesNotExist:
@@ -834,16 +825,32 @@ def addProfesoresView(request, id_linea):
                             profile.rol_PL= "PL"
                         profe.save()
                         profile.save()
-                        
+                    else:
+                        y.linea = linea
+                        y.save()                        
                 return HttpResponseRedirect('/perfilLinea/'+id_linea)
         asignaturas = Asignatura.objects.filter(linea=linea)
         profesores = Profesor.objects.filter(linea=linea)
 
-        ctx = {'form':form, 'linea':linea, 'asignaturas':asignaturas, 'profesores':profesores}
+        ctx = {'form':form, 'linea':linea, 'asignaturas':asignaturas, 'profesores':profesores, 'username': request.user.username}
         return render(request, 'jefeCarrera/addProf.html', ctx)
     else:
         return redirect ('/errorLogin/')
 
+def removeProfesorLineaView(request, id_user, id_linea):
+    userTemp = User.objects.get(username=request.user.username)
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    profesor = Profesor.objects.get(user=id_user)
+
+    if perfilTemp.rol_actual == 'JC':
+        profesor.linea = None
+        userProf = User.objects.get(id=id_user)
+        userProf.userprofile.rol_PL = ""
+        userProf.userprofile.save()
+        profesor.save()
+        return HttpResponseRedirect('/perfilLinea/'+id_linea)   
+    else:
+        return redirect ('/errorLogin/')
 
 def logEstado (programa, state):
     l= Log()

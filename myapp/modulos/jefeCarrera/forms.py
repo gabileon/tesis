@@ -1,6 +1,7 @@
 from django import forms
 from datetimewidget.widgets import DateTimeWidget, DateWidget, TimeWidget 
 from myapp.modulos.jefeCarrera.models import Evento
+from django.core.exceptions import ValidationError
 
 class ImageUploadForm(forms.Form):
 	image = forms.ImageField()
@@ -9,10 +10,6 @@ class StringListField(forms.CharField):
     def prepare_value(self, value):
         return ', '.join(str(value))
  
-    # def to_python(self, value):
-    #     if not value:
-    #         return []
-    #     return [item.strip() for item in value.split(',')]
 
 class AgregarEventoCordForm(forms.ModelForm):
 
@@ -50,13 +47,14 @@ class AgregarEventoForm(forms.ModelForm):
     end = forms.DateTimeField(widget=DateTimeWidget(usel10n=True, bootstrap_version=3), label="Fecha y hora de termino:")
     tipoEvento = forms.ChoiceField(widget=forms.RadioSelect, choices=TIPOS)
 
+
 class agregarAsignaturaForm(forms.Form):
-    nombreAsignatura = forms.CharField(widget = forms.TextInput())
+    nombreAsignatura = forms.CharField(widget = forms.TextInput(), label= "Ingresa el Nombre de la Asignatura")
     MY_CHOICES = (
-        ('2001', '2001'),
-        ('2012', '2012'),
+        ('2001', ' 2001'),
+        ('2012', ' 2012'),
     )
-    plan = forms.ChoiceField(widget=forms.RadioSelect, choices=MY_CHOICES)
+    plan = forms.ChoiceField(widget=forms.RadioSelect, choices=MY_CHOICES, label="Selecciona el plan que pertenece")
    
 
 class agregarProfesoresForm(forms.Form):
@@ -64,8 +62,10 @@ class agregarProfesoresForm(forms.Form):
 
     def clean_email(self):
 
-        if (self.cleaned_data.get('email', '')
-            .endswith('usach.cl')):
+
+        email = self.cleaned_data.get('email')
+        dominio =  email.split('@')[1]
+        if (dominio != 'usach.cl'):
 
             raise ValidationError("Debes Ingresar un email del dominio USACH.")
 

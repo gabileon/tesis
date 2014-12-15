@@ -197,7 +197,6 @@ def evaluacionesVot(evaluacion):
         if votosSi<votosNo:
             bandera = True
             programa.noEvaluacion_toForm()
-            programa.contador= programa.contador + 1
             logEstado(programa, programa.state.title)
             programa.to_datosAsig()
             programa.save()
@@ -236,7 +235,6 @@ def evaluacionesVot(evaluacion):
                 bandera = False
                 perdieron = 1
                 programa.noEvaluacion_toForm()
-                programa.contador= programa.contador + 1
                 logEstado(programa, programa.state.title)
                 programa.to_datosAsig()
                 programa.save()
