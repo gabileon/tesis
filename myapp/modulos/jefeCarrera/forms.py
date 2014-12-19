@@ -27,9 +27,16 @@ class AgregarEventoCordForm(forms.ModelForm):
     descripcion = forms.CharField(widget=forms.Textarea, label= "Descripcion: ")
     start = forms.DateTimeField(widget=DateTimeWidget(usel10n=True, bootstrap_version=3), label="Fecha y hora de inicio:")
     end = forms.DateTimeField(widget=DateTimeWidget(usel10n=True, bootstrap_version=3), label="Fecha y hora de termino:")
-    tipoEvento = forms.ChoiceField(widget=forms.RadioSelect, choices=TIPOS2)
+    tipoEvento = forms.ChoiceField(required=True, widget=forms.RadioSelect, choices=TIPOS2, label="Seleccione Tipo de Evento")
     
-class AgregarEventoForm(forms.ModelForm):
+    def clean_end(self):
+        start = self.cleaned_data.get('start')
+        end = self.cleaned_data.get('end')
+        if (start>end):
+            raise forms.ValidationError("La Fecha de Termino debe ser despues de la fecha de inicio")
+        return self.cleaned_data.get('end', '')
+
+class AgregarEventoForm(forms.Form):
 
     TIPOS = (
         ('general', 'Tipo General'),
@@ -40,13 +47,19 @@ class AgregarEventoForm(forms.ModelForm):
         model = Evento
         fields = ['summary', 'location', 'descripcion', 'start', 'end']
 
-    summary = forms.CharField(widget = forms.TextInput(), label="Titulo del Evento:")
-    location = forms.CharField(widget = forms.TextInput(), label="Ubicacion del Evento:")
+    summary = forms.CharField(widget = forms.TextInput(), label="Titulo del Evento: ")
+    location = forms.CharField(widget = forms.TextInput(), label="Ubicacion del Evento: ")
     descripcion = forms.CharField(widget=forms.Textarea, label= "Descripcion: ")
     start = forms.DateTimeField(widget=DateTimeWidget(usel10n=True, bootstrap_version=3), label="Fecha y hora de inicio:")
     end = forms.DateTimeField(widget=DateTimeWidget(usel10n=True, bootstrap_version=3), label="Fecha y hora de termino:")
-    tipoEvento = forms.ChoiceField(widget=forms.RadioSelect, choices=TIPOS)
+    tipoEvento = forms.ChoiceField(widget=forms.RadioSelect, choices=TIPOS, label="Seleccione Tipo de Evento", required=True)
 
+    def clean_end(self):
+        start = self.cleaned_data.get('start')
+        end = self.cleaned_data.get('end')
+        if (start>end):
+            raise forms.ValidationError("La Fecha de Termino debe ser despues de la fecha de inicio")
+        return self.cleaned_data.get('end', '')
 
 class agregarAsignaturaForm(forms.Form):
     nombreAsignatura = forms.CharField(widget = forms.TextInput(), label= "Ingresa el Nombre de la Asignatura")
@@ -61,8 +74,6 @@ class agregarProfesoresForm(forms.Form):
     email = forms.EmailField(label="Correo Electronico", widget=forms.TextInput())
 
     def clean_email(self):
-
-
         email = self.cleaned_data.get('email')
         dominio =  email.split('@')[1]
         if (dominio != 'usach.cl'):

@@ -17,6 +17,7 @@ class Evento(models.Model):
 	anfitrion = models.OneToOneField(User, null=True)
 	invitados = ListField()
 
+
 class ReporteIndic(models.Model):
 	programa = models.OneToOneField(Programa)
 	fechaModificacion = models.DateField()

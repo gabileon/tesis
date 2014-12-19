@@ -56,6 +56,7 @@
                 <h3 class="panel-title">Programas</h3>
             </div>
             <div class="panel-body">
+                <p>En esta tabla se encuentran los programas que ya han sido aprobados, los que están por aprobar o los que deben ser analizados para ser aprobados</p>
                 <li role="presentation"><a class="programas"href="/programasAprobados/">Programas Aprobados </a><span class="badge aprobados">{{aprobados}}</span></li>
                 <li role="presentation"><a class="programas"href="/programasPorAprobar/">Programas por Aprobar </a><span class="badge por-aprobar">{{aprobar}}</span></li>
                 <li role="presentation"><a class="programas"href="/programasPorAnalizar/">Programas por Analizar </a><span class="badge por-analizar">{{analizar}}</span></li> 
@@ -64,6 +65,7 @@
         <div class="panel panel-default">
   <!-- Default panel contents -->
             <div class="panel-heading">Últimas Modificaciones</div>
+            <p class="table"> Los últimos movimientos realizados por los profesores en la línea de proyectos.</p>
   <!-- Table -->
                 <table class="table">
                     <thead>
@@ -72,6 +74,7 @@
                             <th>Asignatura</th>
                             <th>Estado</th>
                             <th>Última Modificación</th>
+                            <th>Log</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -80,6 +83,7 @@
                             <td>{{p.asignatura.nombreAsig}}</td>
                             <td>{{p.state.title}}</td>
                             <td>{{p.fechaUltimaModificacion}}</td>
+                             <td><a href="/logJC/{{p.id}}"><span class="glyphicon glyphicon-list-alt"></span></a></td>
                         </tr>
                         {%endfor%}
                     </tbody>

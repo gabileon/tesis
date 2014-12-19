@@ -47,7 +47,8 @@
           </div>
         </nav>
     <div class="row">
-        <br></br>
+            <p class="explicacion">En esta sección podrás ver todos los programas que han sido aprobado en la línea de proyectos.
+            Puedes ver su log para poder ver la historia del programa.</p>
 
         <div class="panel panel-primary">        
             <div class="panel-heading">
@@ -63,6 +64,7 @@
                             <th>Fecha Finalización</th>
                             <th>Profesor Encargado</th>
                             <th>Documento</th>
+                            <th>Log</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -72,6 +74,7 @@
                             <td>{{p.fechaUltimaModificacion}}</td>
                             <td>{{p.profesorEncargado}}</td>
                             <td><a class="glyphicon glyphicon-file" href="{{p.url}}"></a></td></span>
+                            <td><a href="/logCord/{{p.id}}"><span class="glyphicon glyphicon-list-alt"></span></a></td>
                         </tr>
                         {%endfor%}
                     </tbody>

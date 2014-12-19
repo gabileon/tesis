@@ -141,8 +141,9 @@ def definicionConstribucion(request, id_programa):
 	if request.method == "GET":
 		form = estadoForm()
 		programa.to_defCons()
-		logEstado(programa, programa.state.title)
 		programa.save()
+		logEstado(programa, programa.state.title)
+		
 		if (constribucion.estado is not None):
 			try:
 				x = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -184,8 +185,9 @@ def definicionRdA(request, id_programa):
 	if request.method == "GET":
 		form = estadoForm()
 		programa.to_defRdA()
-		logEstado(programa, programa.state.title)
 		programa.save()
+		logEstado(programa, programa.state.title)
+		
 		if definicion.estado is not None:	
 			try:
 				x = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -227,8 +229,9 @@ def definicionEstra(request, id_programa):
 	if request.method == "GET":
 		form = estadoForm()
 		programa.to_defEstrategias()
-		logEstado(programa, programa.state.title)
 		programa.save()	
+		logEstado(programa, programa.state.title)
+		
 		if definicion.estado is not None:
 			try:
 				x = ProgramasPorEstado.objects.get(estado=programa.state.title)

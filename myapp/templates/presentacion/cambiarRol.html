@@ -104,14 +104,16 @@
                 <h3 class="panel-title">Roles</h3>
             </div>
             <div class="panel-body">
+              <p> Dado que cada rol tiene sus propias funcionalidades, acá puedes cambiarte al rol que desees iniciar </p>
+              <br>
             {%if perfil.rol_PL == 'PL'%}
             <tr>
-            <td><a href="/cambiarRol/{{user.id}}/PL"><button type="button" class="btn btn-primary">   Cambiar a rol Profesor<span class="glyphicon glyphicon-log-in">
+            <td><a href="/cambiarRol/{{user.id}}/PL"><button type="button" class="btn btn-primary">   Cambiar a rol Profesor <span class="glyphicon glyphicon-log-in">
                         
                           </span></button></a></td>
             {%endif%}
             {%if perfil.rol_CL == 'CL'%}
-            <td><a href="/cambiarRol/{{user.id}}/CL"><button type="button" class="btn btn-primary"> Cambiar a rol Coordinador de Linea<span class="glyphicon glyphicon-log-in">
+            <td><a href="/cambiarRol/{{user.id}}/CL"><button type="button" class="btn btn-primary"> Cambiar a rol Coordinador de Linea <span class="glyphicon glyphicon-log-in">
                           
                           </button></span></a></td>
             {%endif%}

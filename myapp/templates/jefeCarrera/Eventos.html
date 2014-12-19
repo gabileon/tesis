@@ -21,7 +21,7 @@
   <link href="/media/static/css/datetimepicker.css" type="text/css" media="all" rel="stylesheet" />
 <script type="text/javascript" src="/media/static/js/bootstrap-datetimepicker.js"></script>
 <script type="text/javascript" src="/media/static/js/locales/bootstrap-datetimepicker.es.js"></script>
-<script type="text/javascript" src="/media/static/js/bootstrap-datetimepicker.js "></script>
+
  
     </head>
     <body>
@@ -60,6 +60,8 @@
         </nav>
 
     <div class="row">  
+      <p class="explicacion">Estás en la sección de Eventos, en dónde podrás ver a los eventos a los que has sido invitados. 
+        Por otro lado, también podrás crear eventos, presiona Agregar Evento.</p>
       <div class="panel panel-primary">        
         <div class="panel-heading">
           <h3 class="panel-title">Eventos</h3>
@@ -102,7 +104,11 @@
                 <button type="button" class="btn btn-info" data-toggle="modal" data-target="#myModal">
                           Agregar Evento
                           </button>
+                          {%if status%}
+                          <br>
+                          <div class="alert alert-danger" role="alert">{{status}}</div>
                         <!-- Modal -->
+                        {%endif%}
                         <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                           <div class="modal-dialog">
                             <div class="modal-content">

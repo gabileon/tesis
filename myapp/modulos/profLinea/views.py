@@ -271,14 +271,8 @@ def fechasView(request):
 	if perfilTemp.rol_actual == 'PL':
 		eventos = Evento.objects.all().filter(tipoEvento = 'profesor').filter(start__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
 		eventosGenerales = Evento.objects.all().filter(tipoEvento = 'general').filter(start__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
-		
-		todos =  []
-		for e in eventos:
-			todos.append(e)
-			for d in eventosGenerales:
-				todos.append(d)
 		username = request.user.username
-		ctx = {'eventos': todos, 'username': username, 'yo': yo}
+		ctx = {'eventos': eventos, 'eventosGenerales': eventosGenerales, 'username': username, 'yo': yo}
 		return render(request, 'profLinea/eventosProfe.html', ctx)
 	else:
 		return redirect('/errorLogin/')

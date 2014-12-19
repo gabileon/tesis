@@ -94,6 +94,7 @@
                     <thead>
                         <tr>
                             <th>Asignatura</th>
+                            <th>Semestre</th>
                             <th>Estado</th>
                             <th>Última Modificación</th>
                             <th>Drive</th>
@@ -105,6 +106,7 @@
                         {%for p in programas%}
                         <tr>
                             <td>{{p.asignatura.nombreAsig}}</td></a>
+                            <td>{{p.semestre}}</td>
                             <td>{{p.state.title}}</td>
                             <td>{{p.fechaUltimaModificacion}}</td></a>
                             <td><a href="{{p.url}}"><span class="glyphicon glyphicon-cloud"></span></a></td>

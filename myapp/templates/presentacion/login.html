@@ -25,6 +25,9 @@
         {% csrf_token %}
         <h2 class="form-signin-heading">Inicio Sesión</h2>
         {{ form|as_bootstrap }}
+        {%if status%}
+        <div class="alert alert-danger" role="alert">{{status}}</div>
+        {%endif%}
         <label class="checkbox">
           <input type="checkbox" value="remember-me"> Recordar usuario
         </label>

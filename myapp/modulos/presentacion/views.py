@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from myapp.modulos.formulacion.models import Programa
 from myapp.modulos.presentacion.models import UserProfile, CredentialsModel
 from django.contrib.auth import authenticate, login, logout
@@ -79,16 +79,11 @@ def login_view(request):
 				user = authenticate(username=username, password=password)
 				if user is not None and user.is_active:
 					login(request, user)
-					#storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
-					#credential = storage.get()
-					#if credential is None or credential.invalid:
 					FLOW.params['state'] = xsrfutil.generate_token(settings.SECRET_KEY,request.user)
 					authorize_url = FLOW.step1_get_authorize_url()
 					return HttpResponseRedirect(authorize_url)
-					#else:
-						#return redirect('vista_principal')
 				else:
-					status = "Usuario y/o Password incorrecto"
+					status = "Usuario y/o Password Incorrecto"
 		ctx = {'form':form, 'status': status}
 		return render(request,'presentacion/login.html',ctx)
 
@@ -97,6 +92,12 @@ def errorLoginView(request):
 	profile = UserProfile.objects.get(user=user)
 	rol = profile.rol_actual
 	return render(request,'presentacion/errorLogin.html',{'rol':rol, 'username': request.user.username})
+
+def errorGoogleView(request):
+	user = User.objects.get(username=request.user.username)
+	profile = UserProfile.objects.get(user=user)
+	rol = profile.rol_actual
+	return render(request,'presentacion/errorGoogle.html',{'rol':rol, 'username': request.user.username})
 
 
 def logout_view(request):

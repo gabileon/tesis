@@ -27,6 +27,7 @@ urlpatterns = patterns('myapp.modulos.jefeCarrera.views',
 	url(r'^reportesIndicacion/$', 'reportesIndicacionView'),
 	url(r'^editFechas/(?P<id_evento>.*)/$', 'editEventosView'),
 	url(r'^editRecursos/(?P<id_recurso>.*)/$', 'editRecursosView'),
+	url(r'^logJC/(?P<id_programa>.*)/$', 'logJCView')
 	
 	
 

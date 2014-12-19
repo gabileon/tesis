@@ -275,9 +275,8 @@ def removeAsignaturaView(request, id_asignatura, id_linea):
     asignatura.save()
     return HttpResponseRedirect('/perfilLinea/'+id_linea)
     
-
-
 def crearFechas(request):
+    status = ""
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
     hoy = datetime.now()
@@ -290,10 +289,9 @@ def crearFechas(request):
             http= httplib2.Http()
             http= credential.authorize(http)
             service = build('calendar', 'v3', http=http)
+            calendar_list_entry = service.calendarList().get(calendarId='primary').execute()
         except:
-            return redirect('/logout/')
-
-        calendar_list_entry = service.calendarList().get(calendarId='primary').execute()
+            return redirect('/errorGoogle/')
         form = AgregarEventoForm()
         if request.method == 'POST':
             form = AgregarEventoForm(request.POST)
@@ -331,10 +329,13 @@ def crearFechas(request):
                         emails.append(x)
 
                     event.update({'attendees': emails})
-                    created_event = service.events().insert(calendarId='primary', body=event).execute()
-                    nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, 
-                    descripcion=descripcion, id_calendar=created_event['id'], tipoEvento=tipoEvento, anfitrion=request.user, invitados =invitados)
-                    nuevoEvento.save()
+                    try:
+                        created_event = service.events().insert(calendarId='primary', body=event).execute()
+                        nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, 
+                        descripcion=descripcion, id_calendar=created_event['id'], tipoEvento=tipoEvento, anfitrion=request.user, invitados =invitados)
+                        nuevoEvento.save()
+                    except:
+                        ('/errorGoogle/')         
 
                 if tipoEvento == 'coordinadores':
                     linea = Linea.objects.get(nombreLinea = 'Proyectos')
@@ -351,14 +352,18 @@ def crearFechas(request):
                             # 'timeZone': 'America/Santiago'
                           }}
                     event['attendees'] =  [{'email': coordinador}]
-                    created_event = service.events().insert(calendarId='primary', body=event).execute()     
-                    nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, 
-                    descripcion=descripcion,  id_calendar=created_event['id'], tipoEvento=tipoEvento , anfitrion=request.user, invitados =coordinador)
-                      
-                    nuevoEvento.save()
+                    try:
+                        created_event = service.events().insert(calendarId='primary', body=event).execute()
+                        nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, 
+                        descripcion=descripcion,  id_calendar=created_event['id'], tipoEvento=tipoEvento , anfitrion=request.user, invitados =coordinador)
+                        nuevoEvento.save()
+                    except:
+                        ('/errorGoogle/')                            
+            else:
+                status = "Completar todos los campos"
         else:
             form = AgregarEventoForm()
-        ctx = {'form':form, 'eventos': eventos, 'username': request.user.username, 'eventosInvitados': eventosInvitados}
+        ctx = {'form':form, 'eventos': eventos, 'status': status, 'username': request.user.username, 'eventosInvitados': eventosInvitados}
         return render (request, 'jefeCarrera/Eventos.html', ctx)
     else:
         return redirect ('/errorLogin/')
@@ -472,6 +477,17 @@ def deleteFechasView (request, id_evento):
     service.events().delete(calendarId='primary', eventId=evento.id_calendar).execute()
     evento.delete()
     return redirect('/crearFechas/')
+
+def logJCView(request, id_programa):
+    userTemp = User.objects.get(username=request.user.username)
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    if perfilTemp.rol_actual == 'JC':
+        log = Log.objects.filter(programa = id_programa).order_by('-fecha')
+        ctx = {'username': request.user.username, 'log': log}
+        return render (request, 'jefeCarrera/log.html', ctx)
+    else:
+        return redirect ('/errorLogin/')
+
    
 def otroPerfilView(request, id_user):
     userTemp = User.objects.get(username=request.user.username)

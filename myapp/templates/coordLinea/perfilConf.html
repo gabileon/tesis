@@ -61,14 +61,13 @@
                         </li>
                         <li class="perfil"><strong>Username: </strong>{{user.username}}</li>
                         <li class="perfil"><strong>Rol: </strong>{{perfil.rol_PL}} {{perfil.rol_JC}} {{perfil.rol_CL}}</li>
-                        <li class="perfil"><strong>Línea: </strong>{{linea.nombreLinea}}  {{profe.linea.nombreLinea}}</li>
                         <li class="perfil"><strong>Email: </strong>{{user.email}}</li>
                         <a href="/cambiarPasswordCord/{{user.id}}"><button type="button" class="btn btn-info">Cambiar Contraseña</button></a>
                     </div>
                     <div class="col-md-2 perfil"></div>
                     <div class="col-md-4">
                         <li><strong>Foto actual: </strong></li>
-                        <img src="/files/serve/{{perfil.foto}}" class="img-circle"><br></br>
+                        <img src="/files/serve/{{perfil.foto}}" class="img-circle perfil"><br></br>
                         <form action="/miperfilCord/" method="post" enctype="multipart/form-data">{% csrf_token %}
                             <p><input id="id_image" type="file" class="" name="image"></p>
                             <input type="submit" value="Guardar Foto" class="btn btn-success"/>

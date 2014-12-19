@@ -98,7 +98,6 @@ def revisarRol (request):
     else:
         return redirect ('/errorLogin/')
 
-
 def principalCLView(request):
     user = User.objects.get(username=request.user.username)
     perfil = UserProfile.objects.get(user=user.id)
@@ -159,7 +158,6 @@ def votacion (request, id_evaluacion):
                 return HttpResponseRedirect('/votacionesEvaluacionLinea/')
     else:
         return redirect ('/errorLogin/')
-
 
 def evaluacionesVot(evaluacion):
     profe = evaluacion.programa.profesorEncargado
@@ -330,7 +328,7 @@ def crearFechasCoord(request):
         profile = UserProfile.objects.get(user=userTemp)
         linea = Linea.objects.get(id=profile.cordLinea_id)
         eventos = Evento.objects.filter(anfitrion=request.user).filter(start__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
-        todos = Evento.objects.all()
+        todos = Evento.objects.all().filter(start__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
         try:
             storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
             credential = storage.get()

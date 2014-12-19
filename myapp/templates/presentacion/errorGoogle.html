@@ -1,0 +1,116 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Formulapp</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="icon" href="../../favicon.ico">
+        <script type="text/javascript" src="/media/js/jquery.js"></script>
+        <script type="text/javascript" src="/media/js/bootstrap.js"></script>
+        <link rel="stylesheet/less" href="/media/less/style.less">
+        <script type="text/javascript" src="/media/js/less-1.4.1.min.js"></script>
+        <nav class="navbar navbar-default navbar-static-top" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              <a class="navbar-brand" href="#">Project name</a>
+            </div>
+    </head>
+    <body>
+      {%if rol == 'PL'%}
+        
+            <div id="navbar" class="navbar-collapse collapse">
+              <ul class="nav navbar-nav">
+                <li   ><a href="/principalPL/">Programas</a></li>
+                <li><a href="/fechasProfe/">Eventos</a></li>
+                <li><a href="/recursosProfe/">Recursos de Aprendizaje</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuracion<span class="caret"></span></a>
+                  <ul class="dropdown-menu" role="menu">
+                    <li><a href="/miperfilProfesor/">Mi Perfil</a></li>
+                     <li><a href="/roles/{{yo.id}}">Cambiar de Rol</a></li>
+                  </ul>
+                </li>
+              </ul>     
+              <ul>
+                <p class="bienvenido">Bienvenido <strong>{{username}}</strong> <a href="/logout/"><span class="glyphicon glyphicon-log-out"></span></a></p>
+              </ul>
+            </div><!--/.nav-collapse -->
+          </div>
+        </nav>
+{%endif%}
+{%if rol == 'CL'%}
+
+            <div id="navbar" class="navbar-collapse collapse">
+              <ul class="nav navbar-nav">
+                <li   ><a href="/principal_cl/">Programas</a></li>
+                <li><a href="/crearFechasCord/">Eventos</a></li>
+                 <li><a href="/reportesIndicacionCord/">Reportes de Indicación</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuración<span class="caret"></span></a>
+                  <ul class="dropdown-menu" role="menu">
+                    <li><a href="/miperfilCord/">Mi Perfil</a></li>
+                    <li><a href="/recursosCord/">Recursos de Formulación</a></li>
+                    <li><a href="/roles/{{user.id}}">Cambiar de Rol</a></li>
+                  </ul>
+                </li>
+              </ul>     
+              <ul>
+                <p class="bienvenido">Bienvenido <strong>{{username}}</strong> <a href="/logout/"><span class="glyphicon glyphicon-log-out"></span></a></p>
+              </ul>
+            </div><!--/.nav-collapse -->
+          </div>
+        </nav>
+{%endif%}
+{%if rol == 'JC'%}
+            <div id="navbar" class="navbar-collapse collapse">
+              <ul class="nav navbar-nav">
+                <li   ><a href="/principal_jc/">Programas</a></li>
+                <li><a href="/prueba/">Indicadores</a></li>
+                <li><a href="/crearFechas/">Eventos</a></li>
+                <li><a href="/reportesIndicacion/">Reportes de Indicación</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuracion<span class="caret"></span></a>
+                  <ul class="dropdown-menu" role="menu">
+                    <li><a href="/miperfil/">Mi Perfil</a></li>
+                    <li><a href="/lineas/">Líneas de Asignatura</a></li>
+                    <li><a href="/recursos/">Recursos de Formulación</a></li>
+                    <li><a href="/roles/{{user.id}}">Cambiar de Rol</a></li>
+                  </ul>
+                </li>
+              </ul>     
+              <ul>
+                <p class="bienvenido">Bienvenido <strong>{{username}}</strong> <a href="/logout/"><span class="glyphicon glyphicon-log-out"></span></a></p>
+              </ul>
+            </div><!--/.nav-collapse -->
+          </div>
+        </nav>
+{%endif%}
+
+<br><br><br><br>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4 col-md-offset-4">
+        <p><img  class= "error" src="/media/img/errorGoogle.png"></p>
+        <h2>Ups! Lamentablemente se ha perdido la sesión con Google, porfavor vuelve a <a href="/login">iniciar sesión</a>
+          para poder seguir trabajando en lo que estabas.
+        </h2>    
+
+    </div>
+  </div> <!-- /container -->
+ 
+  
+  <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+  <script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>
+</body>
+</html>

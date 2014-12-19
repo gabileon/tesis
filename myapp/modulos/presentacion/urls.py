@@ -1,3 +1,4 @@
+
 from django.conf.urls import patterns, url
 
 urlpatterns = patterns('myapp.modulos.presentacion.views',
@@ -9,5 +10,7 @@ urlpatterns = patterns('myapp.modulos.presentacion.views',
 	url(r'^sign_up/$', 'signup_view', name='vista_signup'),
 	url(r'^oauth2callback/$', 'oauth2_view', name ='oauth_view'),
 	url(r'^errorLogin/$', 'errorLoginView'),
+	url(r'^errorGoogle/$', 'errorGoogleView'),
+
 
 )

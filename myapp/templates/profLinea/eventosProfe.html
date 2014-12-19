@@ -56,15 +56,19 @@
           <p>A continuación se presentan todos los eventos a los cuales has sido invitado, ya sea por el Jefe de Carrera
             o por el Coordinador. Se indica fecha y hora, lugar donde se reunirán y el anfitrión de la invitación.
             Recuerda, que para tener mayor descripción de los eventos, puedes visualizarlos en <a href="https://www.google.com/calendar/">Google Calendar</a>.</p>
-<br><br>
+          
+<br>
+
           {%if eventos%}
-          <table class="table">
+          <h3>Eventos de la línea</h3>
+          <table class="table table-striped">
             <thead>
               <tr>
                 <th>Título</th>
-                <th>Ubicacion</th>
+                <th>Ubicación</th>
                 <th>Fecha Inicio</th>
                 <th>Fecha Final</th>
+                <th>Descripción</th>
               </tr>
             </thead>
             <tbody>
@@ -75,6 +79,34 @@
                             <td>{{e.tipoEvento}}</td>
                             <td>{{e.start}}</td>
                             <td>{{e.end}}</td>
+                             <td>{{e.descripcion}}</td>
+                        </tr>
+                        {%endfor%}
+
+                    </tbody>
+                </table>  
+        {%else%}
+        {%endif%}
+        {%if eventosGenerales%}
+        <h3>Eventos Generales</h3>
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>Ubicacion</th>
+                <th>Fecha Inicio</th>
+                <th>Fecha Final</th>
+                <th>Descripción</th>
+              </tr>
+            </thead>
+            <tbody>
+                        {%for e in eventosGenerales%}
+                        <tr>
+                            <td>{{e.summary}}</td>
+                            <td>{{e.location}}</td>
+                            <td>{{e.start}}</td>
+                            <td>{{e.end}}</td>
+                            <td>{{e.descripcion}}</td>
                         </tr>
                         {%endfor%}
 
@@ -83,11 +115,8 @@
         {%else%}
          <p><strong>No hay eventos </strong></p>
         {%endif%}
-
-       
-
-
             </div>
+
   </div> 
 
     </body>    
