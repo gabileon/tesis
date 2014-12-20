@@ -59,7 +59,7 @@ def cambiarDatosProfeView(request):
 				user.save()
 				profile.fechaPrimerAcceso = datetime.now()- timedelta(hours=3)
 				profile.save()
-				redirect ('/miperfilProfesor/')
+				return redirect ('/miperfilProfesor/')
 		ctx = {'form': form, 'username': request.user.username}
 		return render(request, 'profLinea/cambiarDatos.html', ctx)
 	else:
@@ -246,6 +246,18 @@ def eliminarProgramaView(request, id_programa):
 		except errors.HttpError, error:
 			print 'Ocurrio un error al eliminar el archivo %s' % error
 			return redirect('/logout/')
+	
+		try:
+			programa.evaluacion.delete()
+			programa.analisism.delete()
+			programa.rda.delete()
+			programa.constribucion.delete()
+			programa.estrategias.delete()
+			programa.claseclase.delete()
+			programa.administrativo.delete()
+			programa.recursosapren.delete()
+		except:
+			pass
 		programa.delete()
 		return redirect('/principalPL/')
 	else:

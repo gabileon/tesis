@@ -473,7 +473,7 @@ def votacionEvaluacionOtroProfeView(request, id_programa):
 			votante = request.user
 			eva = Evaluaciones.objects.create(voto = voto, observacion=observacion, votante=votante, evaluacion=analisis)
 			eva.save()
-			evaluacionesVot(analisis)
+			evaluacionesVot(eva)
 			return redirect('/principalPL/')
 
 ####### FIN ###########
@@ -837,7 +837,7 @@ def votacionOtroProfeView(request, id_programa):
 			votante = request.user
 			eva = Analisis.objects.create(voto = voto, observacion=observacion, votante=votante, analisis=analisis)
 			eva.save()
-			analisisVot(analisis)
+			analisisVot(eva)
 			return redirect('/principalPL/')
 
 def fastTrackOwnView(request, id_programa):
