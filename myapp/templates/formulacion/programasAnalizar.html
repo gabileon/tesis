@@ -79,11 +79,19 @@
                             <td>{{p.fechaUltimaModificacion}}</td>
                             <td>{{p.profesorEncargado}}</td>
                             <td><a class="glyphicon glyphicon-file" href="{{p.url}}"></a></td></span>
-                            
-                              <td><form>
-                                <a href="/analisisPrograma/{{p.id}}/yes">  <span class="glyphicon glyphicon-ok"></span> </a>    <a href="/analisisPrograma/{{p.id}}/no">     <span class="glyphicon glyphicon-remove"></span> </a>
-                              </form></td>
+                  
+                              <td>
+        
+                              <form action="/analisisPrograma/{{p.id}}/" method="POST">
+                                        {%csrf_token%}
+                                        {{ form|as_bootstrap}}
+                                         
                               
+                            </td>
+                            <td>
+                              <button type="submit" class="btn btn-success"><strong>Guardar</strong></button>
+                                    </form> 
+                            </td>
                             
                         </tr>
                         {%endfor%}

@@ -12,7 +12,7 @@ urlpatterns = patterns('myapp.modulos.formulacion.views',
     url(r'^aspectosAdm/(?P<id_programa>.*)/$', 'aspectosAdm_view'),
     url(r'^recursosAprend/(?P<id_programa>.*)/$', 'recursosAprend_view'),
     url(r'^intermedioAdmRec/(?P<id_programa>.*)/$', 'intermedioAdmRecView'),
-    url(r'^fastTrackDecision/(?P<id_programa>.*)/(?P<decision>.*)/$', 'fastTrackDecisionView'),
+    url(r'^fastTrackDecision/(?P<id_programa>.*)/$', 'fastTrackDecisionView'),
     ###### analisis ####
     url(r'^votacionAnalisisProfe/(?P<id_programa>.*)/$', 'votacionAnalisisProfeView'),
     url(r'^votacionAnalisisOtroProfe/$', 'votacionAnalisisOtroProfeView'),

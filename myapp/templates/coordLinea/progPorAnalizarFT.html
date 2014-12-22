@@ -74,12 +74,16 @@
                             <td><a class="glyphicon glyphicon-file" href="{{p.url}}"></a></td></span>
 
                             <td>
-                              <form>
-                                <a href="/fastTrackDecision/{{p.id}}/yes/">  <span class="glyphicon glyphicon-ok"></span> </a>
-                            </td>
-                            <td><a href="/fastTrackDecision/{{p.id}}/no/">     <span class="glyphicon glyphicon-remove"></span> </a>
-                              </form>
+        
+                              <form action="/fastTrackDecision/{{p.id}}/" method="POST">
+                                        {%csrf_token%}
+                                        {{ form|as_bootstrap}}
+                                         
                               
+                            </td>
+                            <td>
+                              <button type="submit" class="btn btn-success"><strong>Guardar</strong></button>
+                                    </form> 
                             </td>
 
                        </tr>

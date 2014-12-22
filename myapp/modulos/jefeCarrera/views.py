@@ -10,7 +10,7 @@ from myapp.modulos.presentacion.forms import ImageUploadForm
 from myapp.modulos.jefeCarrera.models import Evento, ReporteIndic
 from myapp.modulos.coordLinea.forms import CoordinadorForm
 from myapp.modulos.formulacion.forms import LineasForm, UploadFileForm, analizarForm
-from myapp.modulos.jefeCarrera.forms import changePasswordForm, AgregarEventoForm,  agregarAsignaturaForm, agregarProfesoresForm
+from myapp.modulos.jefeCarrera.forms import indicacionProgramaForm, aprobacionProgramaForm, changePasswordForm, AgregarEventoForm,  agregarAsignaturaForm, agregarProfesoresForm
 from datetime import datetime, timedelta
 from django.core.mail import EmailMultiAlternatives
 from myapp.modulos.presentacion.models import CredentialsModel
@@ -579,10 +579,11 @@ def aprobadosViews(request):
 def porAnalizarViews(request):
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    form = indicacionProgramaForm()
     if perfilTemp.rol_actual == 'JC':
         programas = Programa.objects.filter(state="analisisProgramaJC")
         username = request.user.username
-        ctx = {'username': username, 'programas': programas}
+        ctx = {'username': username, 'programas': programas, 'form':form}
         return render (request, 'formulacion/programasAnalizar.html', ctx)
     else:
         return redirect ('/errorLogin/')
@@ -596,206 +597,203 @@ def reportesIndicacionView(request):
     else:
         return redirect ('/errorLogin/')
 
-def analisisProgramaView(request, id_programa, decision):
+def analisisProgramaView(request, id_programa):
+    try:
+        storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
+        credential = storage.get()
+        http= httplib2.Http()
+        http= credential.authorize(http)
+        drive_service = build('drive', 'v2', http=http, developerKey="hbP6_4UJIKe-m74yLd8tQDfT")
+    except:
+        return redirect('/logout/')
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
     if perfilTemp.rol_actual == 'JC':
         programa = Programa.objects.get(id=id_programa)
         id_p = programa.id
         ## Si hay indicaciones
-        if decision == 'yes':
-            # Revisa el indicador, 
-            try:
-                m = ProgramasPorEstado.objects.get(estado=programa.state.title)
-            except ProgramasPorEstado.DoesNotExist:
-                m = None
-                # Si no existe
-            if m is None:
-                #crea un nuevo indicador
-                newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-                newIndicador.save()
-                #si existe
-            else:
-                m.cantidad = m.cantidad - 1
-                m.save()
-                #programa pasa a formulacion
-                programa.siIndic_toForm()
-                logEstado(programa, programa.state.title)
-                programa.to_datosAsig()
-                logEstado(programa, programa.state.title)
-                programa.save()
-                # se ve si existe el indicador para el estado del siguiente estado
-                try:
-                    n = ProgramasPorEstado.objects.get(estado=programa.state.title)
-                except ProgramasPorEstado.DoesNotExist:
-                    n = None
-                if n is None:
-                    newIndicador2 = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-                    newIndicador2.save()
-                else:
-                    n.cantidad = n.cantidad + 1
-                    n.save()
-            ## se crea la carpeta
-            perfil = UserProfile.objects.get(user=request.user)
-            try:
-                carpeta = perfil.carpetaReportes
-            except:
-                carpeta = None
-            if carpeta is None:
-                carpeta = 'Reporte de Indicaciones'
-                reporte = ReporteIndic()
-                reporte.programa = programa
-                try:
-                    storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
-                    credential = storage.get()
-                    http= httplib2.Http()
-                    http= credential.authorize(http)
-                    drive_service = build('drive', 'v2', http=http, developerKey="hbP6_4UJIKe-m74yLd8tQDfT")
-                except:
-                    return redirect('/logout/')
-                body2 = {
-                           'title': '%s'%carpeta,
-                           'mimeType': "application/vnd.google-apps.folder"
-                       }
-                       ### se crea carpeta ###
-                folder = drive_service.files().insert(body = body2).execute()
-                id_folder = folder.get('id')
-                titulo = "Reporte de Indicaciones Programa " + programa.asignatura.nombreAsig + " " + programa.semestre + " " + programa.ano
-                body = {
-                    'title':'%s'%(titulo),
-                    'mimeType': "application/vnd.google-apps.document",
-                    'parents' : [{'id' : id_folder}]
-                }                       
-                try:
-                    file = drive_service.files().insert(body=body).execute()
-                    url = file.get('alternateLink')
-                    reporte.url = url
-                    reporte.fechaModificacion=datetime.now()
-                    reporte.carpeta = id_folder
-                    perfil.carpetaReportes = id_folder
-                    perfil.save()
-                    reporte.save()
-                except:
-                    return render(request, 'comunicacion/error.html')
-            else:
-                reporte = ReporteIndic()
-                reporte.programa = programa
-                reporte.carpeta = carpeta
-                try:
-                    storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
-                    credential = storage.get()
-                    http= httplib2.Http()
-                    http= credential.authorize(http)
-                    drive_service = build('drive', 'v2', http=http, developerKey="hbP6_4UJIKe-m74yLd8tQDfT")
-                except:
-                    return redirect('/logout/')
-                titulo = "Reporte de Indicaciones Programa " + programa.asignatura.nombreAsig + " " + programa.semestre + " " + programa.ano
-                body = {
-                    'title':'%s'%(titulo),
-                    'mimeType': "application/vnd.google-apps.document",
-                    'parents' : [{'id' : reporte.carpeta}]
-                }                       
-                try:
-                    file = drive_service.files().insert(body=body).execute()
-                    url = file.get('alternateLink')
-                    reporte.url = url
-                    reporte.fechaModificacion=datetime.now()
-                    reporte.save()
-                except:
-                    return render(request, 'comunicacion/error.html')
-            return HttpResponseRedirect('/reportesIndicacion/')
-                 
-        if decision == 'no':
-            try:
-                m = ProgramasPorEstado.objects.get(estado=programa.state.title)
-            except ProgramasPorEstado.DoesNotExist:
-                m = None
-            if m is None:
-                newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-                newIndicador.save()
-            else:
-                m.cantidad = m.cantidad - 1
-                m.save()
-                programa.noIndic_toAprobJC()
-                logEstado(programa, programa.state.title)
-                programa.save()
-                try:
-                    n = ProgramasPorEstado.objects.get(estado=programa.state.title)
-                except ProgramasPorEstado.DoesNotExist:
-                    n = None
-                if n is None:
-                    newIndicador2 = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-                    newIndicador2.save()
-                else:
-                    n.cantidad = n.cantidad + 1
-                    n.save()
-            return HttpResponseRedirect('/programasPorAnalizar/')
+        if request.method == 'GET':
+            form = indicacionProgramaForm()
+        if request.method == 'POST':
+            form = indicacionProgramaForm(request.POST)
+            if form.is_valid():
+                decision = form.cleaned_data['opcion']
+                if decision == 'Si':
+                    try:
+                        m = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                    except ProgramasPorEstado.DoesNotExist:
+                        m = None
+                            # Si no existe
+                    if m is None:
+                            #crea un nuevo indicador
+                        newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                        newIndicador.save()
+                            #si existe
+                    else:
+                        m.cantidad = m.cantidad - 1
+                        m.save()
+                    try:
+                        rep = ReporteIndic.objects.get(programa=programa)
+                    except:
+                        rep = None
+                    if rep is None:    
+                        nombre = 'Reporte de Indicaciones'
+                        reporte = ReporteIndic()
+                        reporte.programa = programa
+                        # Revisa el indicador, 
+                        perfil = UserProfile.objects.get(user=request.user)
+
+                        if (perfilTemp.carpetaReportes == "NO CREADA"):
+                                ### CREAMOS UNA CARPETA ###
+                                body2 = {
+                                       'title': '%s'%(nombre),
+                                       'mimeType': "application/vnd.google-apps.folder"
+                                }
+                             ## se crea la carpeta
+                            
+                                   ### se crea carpeta ###
+                                folder = drive_service.files().insert(body = body2).execute()
+                                id_folder = folder.get('id')
+                                perfil.carpetaReportes = id_folder
+                                perfil.save()                
+                        
+                        titulo = "Reporte de Indicaciones Programa " + programa.asignatura.nombreAsig + " " + programa.semestre + " " + programa.ano
+                        body = {
+                            'title':'%s'%(titulo),
+                           'mimeType': "application/vnd.google-apps.document",
+                           'parents' : [{'id' : perfil.carpetaReportes}]
+                           }                       
+                        
+                        file = drive_service.files().insert(body=body).execute()
+                        url = file.get('alternateLink')
+                        reporte.url = url
+                        reporte.fechaModificacion=datetime.now()
+                        reporte.save()
+                        programa.siIndic_toForm()
+                        logEstado(programa, programa.state.title)
+                        programa.to_datosAsig()
+                        logEstado(programa, programa.state.title)
+                        programa.save()
+                            # se ve si existe el indicador para el estado del siguiente estado
+                        
+                    else:
+                        programa.siIndic_toForm()
+                        logEstado(programa, programa.state.title)
+                        programa.to_datosAsig()
+                        logEstado(programa, programa.state.title)
+                        programa.save()
+                    try:
+                        n = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                    except ProgramasPorEstado.DoesNotExist:
+                        n = None
+                    if n is None:
+                        newIndicador2 = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                        newIndicador2.save()
+                    else:
+                        n.cantidad = n.cantidad + 1
+                        n.save()
+                    return HttpResponseRedirect('/reportesIndicacion/') 
+                if decision == 'No':
+                    try:
+                        m = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                    except ProgramasPorEstado.DoesNotExist:
+                        m = None
+                    if m is None:
+                        newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                        newIndicador.save()
+                    else:
+                        m.cantidad = m.cantidad - 1
+                        m.save()
+                        programa.noIndic_toAprobJC()
+                        logEstado(programa, programa.state.title)
+                        programa.save()
+                        try:
+                            n = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                        except ProgramasPorEstado.DoesNotExist:
+                            n = None
+                        if n is None:
+                            newIndicador2 = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                            newIndicador2.save()
+                        else:
+                            n.cantidad = n.cantidad + 1
+                            n.save()
+                    return HttpResponseRedirect('/programasPorAnalizar/')
     else:
         return redirect ('/errorLogin/')
 
 def porAprobarView(request):
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    form = aprobacionProgramaForm()
     if perfilTemp.rol_actual == 'JC':
         programas = Programa.objects.filter(state="aprobacionProgramaJC")
         username = request.user.username
-        ctx = {'username': username, 'programas': programas}
+        ctx = {'username': username, 'programas': programas, 'form' : form}
         return render (request, 'formulacion/programasPorAprobar.html', ctx)
     else:
         return redirect ('/errorLogin/')
 
-def aprobacionProgramaView(request, id_programa, decision):
+def aprobacionProgramaView(request, id_programa):
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
     if perfilTemp.rol_actual == 'JC':
         programa = Programa.objects.get(id=id_programa)
-        if decision == 'yes':        
-            try:
-                x = ProgramasPorEstado.objects.get(estado=programa.state.title)
-            except ProgramasPorEstado.DoesNotExist:
-                x = None
-            if x is None:
-                newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-                newIndicador.save()
-            else:
-                x.cantidad = x.cantidad - 1
-                x.save()
-                programa.siAprob_toFin()
-                logEstado(programa, programa.state.title)
-                programa.save()
-                try:
-                    y = ProgramasPorEstado.objects.get(estado=programa.state.title)
-                except ProgramasPorEstado.DoesNotExist:
-                    y = None
-                if y is None:
-                    newIndicador2 = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-                    newIndicador2.save()
-                else:
-                    y.cantidad = y.cantidad + 1
-                    y.save()
-        if decision == 'no':
-            try:
-                m = ProgramasPorEstado.objects.get(estado=programa.state.title)
-            except ProgramasPorEstado.DoesNotExist:
-                m = None
-            if m is None:
-                newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-                newIndicador.save()
-            else:
-                m.cantidad = m.cantidad - 1
-                m.save()
-                programa.noAprobJC_toForm()
-                programa.save()
-                try:
-                    n = ProgramasPorEstado.objects.get(estado=programa.state.title)
-                except ProgramasPorEstado.DoesNotExist:
-                    n = None
-                if n is None:
-                    newIndicador2 = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-                    newIndicador2.save()
-                else:
-                    n.cantidad = y.cantidad + 1
-                    n.save()
+        if request.method == 'GET':
+            form = aprobacionProgramaForm()
+        if request.method == 'POST':
+            form = aprobacionProgramaForm(request.POST)
+            if form.is_valid():
+                decision = form.cleaned_data['opcion']
+                if decision == 'Si':        
+                    try:
+                        x = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                    except ProgramasPorEstado.DoesNotExist:
+                        x = None
+                    if x is None:
+                        newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                        newIndicador.save()
+                    else:
+                        x.cantidad = x.cantidad - 1
+                        x.save()
+                        programa.siAprob_toFin()
+                        logEstado(programa, programa.state.title)
+                        programa.save()
+                        try:
+                            y = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                        except ProgramasPorEstado.DoesNotExist:
+                            y = None
+                        if y is None:
+                            newIndicador2 = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                            newIndicador2.save()
+                        else:
+                            y.cantidad = y.cantidad + 1
+                            y.save()
+                if decision == 'No':
+                    try:
+                        m = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                    except ProgramasPorEstado.DoesNotExist:
+                        m = None
+                    if m is None:
+                        newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                        newIndicador.save()
+                    else:
+                        m.cantidad = m.cantidad - 1
+                        m.save()
+                        programa.noAprobJC_toForm()
+                        logEstado(programa, programa.state.title)
+                        programa.to_datosAsig()
+                        logEstado(programa, programa.state.title)
+                        programa.save()
+                        try:
+                            n = ProgramasPorEstado.objects.get(estado=programa.state.title)
+                        except ProgramasPorEstado.DoesNotExist:
+                            n = None
+                        if n is None:
+                            newIndicador2 = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+                            newIndicador2.save()
+                        else:
+                            n.cantidad = y.cantidad + 1
+                            n.save()
         return HttpResponseRedirect('/programasPorAprobar/')
     else:
         return redirect ('/errorLogin/')

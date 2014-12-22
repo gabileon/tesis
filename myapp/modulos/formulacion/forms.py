@@ -21,7 +21,7 @@ class estadoForm(forms.Form):
         ('opt0', 'Finalizado'),
         ('opt1', 'Modificando'),
     )
-    estado = forms.ChoiceField(widget=forms.RadioSelect, choices=MY_CHOICES)
+    estado = forms.ChoiceField(widget=forms.RadioSelect, choices=MY_CHOICES, required=True)
 
 class UploadFileForm(forms.Form):
 	ESTADOS = (
@@ -53,7 +53,7 @@ class evaluacionesForm(forms.Form):
         ('Si', 'Si Existen Evaluaciones Asociadas'),
         ('No', 'No Existen Evaluaciones Asociadas'),
     )
-    voto = forms.ChoiceField(widget=forms.RadioSelect, choices=MY_CHOICES)
+    voto = forms.ChoiceField(widget=forms.RadioSelect, choices=MY_CHOICES, required=True)
     observacion = forms.CharField(widget=forms.Textarea)
 
 class analisisLineaForm(forms.Form):
@@ -61,5 +61,5 @@ class analisisLineaForm(forms.Form):
         ('Si', 'Si'),
         ('No', 'No'),
     )
-    voto = forms.ChoiceField(widget=forms.RadioSelect, choices=MY_CHOICES)
+    voto = forms.ChoiceField(widget=forms.RadioSelect, choices=MY_CHOICES,  required=True)
     observacion = forms.CharField(widget=forms.Textarea)

@@ -80,7 +80,7 @@ $(document).ready(function(){
                             <th>Fecha Última Modificación</th>
                             <th>Profesor Encargado</th>
                             <th>Documento</th>
-                            <th>Acción</th>
+                            <th>Selecciona tu decision: </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -92,10 +92,16 @@ $(document).ready(function(){
                             <td><a class="glyphicon glyphicon-file" href="{{p.url}}"></a></td></span>
 
                             <td>
-                              <form>
-                                <a href="/aprobacionPrograma/{{p.id}}/yes">  <span class="glyphicon glyphicon-ok"></span> </a>    <a href="/aprobacionPrograma/{{p.id}}/no">     <span class="glyphicon glyphicon-remove"></span> </a>
-                              </form>
+        
+                              <form action="/aprobacionPrograma/{{p.id}}/" method="POST">
+                                        {%csrf_token%}
+                                        {{ form|as_bootstrap}}
+                                         
                               
+                            </td>
+                            <td>
+                              <button type="submit" class="btn btn-success"><strong>Guardar</strong></button>
+                                    </form> 
                             </td>
 
                        </tr>

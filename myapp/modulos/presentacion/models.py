@@ -17,7 +17,7 @@ class UserProfile(models.Model):
 	foto = models.ImageField("Foto de Perfil", upload_to=url, default= 'media/img/user-default.png')
 	cordLinea = models.ForeignKey(Linea, null=True, related_name='coordinador_linea')
 	carpetaProgramas = models.CharField(max_length=250, default= "NO CREADA")
-	carpetaReportes = models.CharField(max_length=250, null=True)
+	carpetaReportes = models.CharField(max_length=250, null=True, default= "NO CREADA" )
 	fechaPrimerAcceso = models.DateTimeField(null=True)
 	def create_user_profile(sender, instance, created, **kwargs):  
 		if created:  

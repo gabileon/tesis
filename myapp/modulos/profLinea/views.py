@@ -144,7 +144,7 @@ def principalPLView(request):
 			http= credential.authorize(http)
 			drive_service = build('drive', 'v2', http=http, developerKey="hbP6_4UJIKe-m74yLd8tQDfT")
 		except:
-			return redirect('/logout/')
+			return redirect('/errorGoogle/')
 		if request.method == "POST":
 			userTemp = User.objects.get(username=request.user.username)
 			perfilTemp = UserProfile.objects.get(user=userTemp.id)
@@ -204,7 +204,7 @@ def principalPLView(request):
 			 		 	indicador.cantidad = indicador.cantidad + 1
 			 		 	indicador.save()		 		
 				except:
-		 			return redirect('/logout/')
+		 			return redirect('/errorGoogle/')
 		else:
 			form = crearProgramaForm()
 					#GEt
@@ -245,7 +245,7 @@ def eliminarProgramaView(request, id_programa):
 			service.files().delete(fileId=programa.id_file).execute()
 		except errors.HttpError, error:
 			print 'Ocurrio un error al eliminar el archivo %s' % error
-			return redirect('/logout/')
+			return redirect('/errorGoogle/')
 	
 		try:
 			programa.evaluacion.delete()

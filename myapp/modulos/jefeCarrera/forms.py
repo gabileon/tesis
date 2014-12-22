@@ -85,3 +85,27 @@ class agregarProfesoresForm(forms.Form):
 class changePasswordForm(forms.Form):
     old_password = forms.CharField(label="Password Antigua", widget=forms.PasswordInput(render_value=False))
     password = forms.CharField(label="Password Nueva", widget=forms.PasswordInput(render_value=False))
+
+class aprobacionProgramaForm(forms.Form):
+
+    MY_CHOICES = (
+        ('Si', ' Se aprueba'),
+        ('No', ' No se aprueba'),
+    )
+    opcion = forms.ChoiceField(widget=forms.RadioSelect, choices=MY_CHOICES)
+
+class indicacionProgramaForm(forms.Form):
+
+    MY_CHOICES = (
+        ('Si', ' Si tiene indicaciones que corregir'),
+        ('No', ' No tiene indicaciones'),
+    )
+    opcion = forms.ChoiceField(widget=forms.RadioSelect, choices=MY_CHOICES, label= "")
+
+class analizarFTForm(forms.Form):
+
+    MY_CHOICES = (
+        ('Si', ' Fast Track'),
+        ('No', ' No debe ir a Fast Track'),
+    )
+    opcion = forms.ChoiceField(widget=forms.RadioSelect, choices=MY_CHOICES, label= "")

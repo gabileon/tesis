@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from myapp.modulos.formulacion.models import Evaluacion, Analisis, AnalisisM, Administrativo, RecursosApren, Linea, Profesor, Evaluaciones, Log, Programa, MyWorkflow, Recurso, Constribucion, RDA, Estrategias, ClaseClase, Completitud
 from myapp.modulos.formulacion.forms import estadoForm, crearProgramaForm, evaluacionesForm, analisisLineaForm
 from myapp.modulos.presentacion.models import UserProfile, CredentialsModel
+from myapp.modulos.jefeCarrera.forms import analizarFTForm
 from myapp import settings
 from myapp.modulos.indicadores.models import ProgramasPorEstado
 from oauth2client import xsrfutil
@@ -137,13 +138,11 @@ def definicionesGeneralesAdmin(request, id_programa):
 ######  TERCCER ESTADO ######
 def definicionConstribucion(request, id_programa):
 	programa = Programa.objects.get(id=id_programa)
+	
 	constribucion = Constribucion.objects.get(programa=programa)
 	if request.method == "GET":
-		form = estadoForm()
-		programa.to_defCons()
-		programa.save()
-		logEstado(programa, programa.state.title)
 		
+		form = estadoForm()		
 		if (constribucion.estado is not None):
 			try:
 				x = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -158,6 +157,9 @@ def definicionConstribucion(request, id_programa):
 				indicador.save()	
 	if request.method == "POST":
 		form = estadoForm(request.POST)
+		programa.to_defCons()
+		programa.save()
+		logEstado(programa, programa.state.title)
 		choice = request.POST['optionsRadios']
 		if choice=='option2':
 	 		programa.to_defGeneralCons()
@@ -183,11 +185,8 @@ def definicionRdA(request, id_programa):
 	programa = Programa.objects.get(id=id_programa)
 	definicion = RDA.objects.get(programa=programa)
 	if request.method == "GET":
-		form = estadoForm()
-		programa.to_defRdA()
-		programa.save()
-		logEstado(programa, programa.state.title)
 		
+		form = estadoForm()		
 		if definicion.estado is not None:	
 			try:
 				x = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -201,6 +200,9 @@ def definicionRdA(request, id_programa):
 				indicador.cantidad = indicador.cantidad + 1
 				indicador.save()	
 	if request.method == "POST":
+		programa.to_defRdA()
+		programa.save()
+		logEstado(programa, programa.state.title)
 		form = estadoForm(request.POST)
 		choice = request.POST['optionsRadios']
 		if choice=='option2':
@@ -225,13 +227,11 @@ def definicionRdA(request, id_programa):
 
 def definicionEstra(request, id_programa):
 	programa = Programa.objects.get(id=id_programa)
+	
 	definicion = Estrategias.objects.get(programa=programa)
 	if request.method == "GET":
-		form = estadoForm()
-		programa.to_defEstrategias()
-		programa.save()	
-		logEstado(programa, programa.state.title)
 		
+		form = estadoForm()		
 		if definicion.estado is not None:
 			try:
 				x = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -245,6 +245,9 @@ def definicionEstra(request, id_programa):
 				indicador.cantidad = indicador.cantidad + 1
 				indicador.save()	
 	if request.method == "POST":
+		programa.to_defEstrategias()
+		programa.save()	
+		logEstado(programa, programa.state.title)
 		form = estadoForm(request.POST)
 		choice = request.POST['optionsRadios']
 		if choice=='option2':
@@ -267,13 +270,14 @@ def definicionEstra(request, id_programa):
 ######## CUARTO ESTADO #########
 def definicionClaseClase_view(request, id_programa):
 	programa = Programa.objects.get(id=id_programa)
+	
 	definicion = ClaseClase.objects.get(programa=programa)
 	if request.method == "GET":
-		form = estadoForm()
 		programa.to_defCons()
 		programa.to_defClase()
 		logEstado(programa, programa.state.title)
-		programa.save()	
+		programa.save()
+		form = estadoForm()
 		if definicion.estado is not None:
 			try:
 				x = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -356,9 +360,9 @@ def evaluacionesVot(evaluacion):
 	programa = evaluacion.programa
 	votos = Evaluaciones.objects.filter(evaluacion =evaluacion)
 	numVotos = len(votos)
-	linea = Profesor.objects.get(user = profe).linea
-	coordinadorLinea = linea.coordinador
-	profesoresLinea = Profesor.objects.filter(linea=linea).count()
+	lineaP = Profesor.objects.get(user = profe).linea
+	coordinadorLinea = lineaP.coordinador
+	profesoresLinea = Profesor.objects.filter(linea=lineaP).count()
 	##### Termino la votacion #######
 	if (numVotos == (profesoresLinea+1 )):
 		termino = 1
@@ -402,7 +406,7 @@ def evaluacionesVot(evaluacion):
 		if votosNo==votosSi:
 			## veo el voto del coordinador
 			votoDelCoord = Evaluaciones.objects.filter(evaluacion=evaluacion).get(votante = coordinadorLinea)
-			if votoDelCoord == 'Si':
+			if votoDelCoord.voto == 'Si':
 				perdieron = 0
 				programa.siEvaluacion_toVerif()
 				logEstado(programa, programa.state.title)
@@ -457,10 +461,8 @@ def evaluacionesAsociadasOthersView(request):
 	if len(finales) == 0:
 		finales = programasEval
 	form = evaluacionesForm()  
-	ctx = {'username': request.user.username, 'programas': finales, 'form': form,  'yo': estado}
+	ctx = {'username': request.user.username, 'programas': finales, 'form': form,  'yo': estado, 'finales':finales}
 	return render (request, 'formulacion/evaluacionAsociadaOther.html', ctx)
-
-
 
 def votacionEvaluacionOtroProfeView(request, id_programa):
 	programa = Programa.objects.get(id=id_programa)
@@ -473,7 +475,7 @@ def votacionEvaluacionOtroProfeView(request, id_programa):
 			votante = request.user
 			eva = Evaluaciones.objects.create(voto = voto, observacion=observacion, votante=votante, evaluacion=analisis)
 			eva.save()
-			evaluacionesVot(eva)
+			evaluacionesVot(analisis)
 			return redirect('/principalPL/')
 
 ####### FIN ###########
@@ -616,58 +618,63 @@ def recursosAprend_view(request, id_programa):
 
 
 ##### FastTrack por el coordinador ###
-def fastTrackDecisionView(request, id_programa, decision):
+def fastTrackDecisionView(request, id_programa):
 	programa = Programa.objects.get(id=id_programa)
-	
-	if decision == 'yes':        
-		try:
-			x = ProgramasPorEstado.objects.get(estado=programa.state.title)
-		except ProgramasPorEstado.DoesNotExist:
-			x = None
-		if x is None:
-			newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-			newIndicador.save()
-		else:
-			x.cantidad = x.cantidad - 1
-			x.save()
-			programa.siFT_toAprobJC()
-			logEstado(programa, programa.state.title)
-			programa.save()
-			try:
-				y = ProgramasPorEstado.objects.get(estado=programa.state.title)
-			except ProgramasPorEstado.DoesNotExist:
-				y = None
-			if y is None:
-				newIndicador2 = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-				newIndicador2.save()
-			else:
-				y.cantidad = y.cantidad + 1
-				y.save()
-	if decision == 'no':
-		try:
-			m = ProgramasPorEstado.objects.get(estado=programa.state.title)
-		except ProgramasPorEstado.DoesNotExist:
-			m = None
-		if m is None:
-			newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-			newIndicador.save()
-        if m is not None:
-            m.cantidad = m.cantidad - 1
-            m.save()
-            programa.noFT_toAnalisisJC()
-            logEstado(programa, programa.state.title)
-            programa.save()
-            try:
-                n = ProgramasPorEstado.objects.get(estado=programa.state.title)
-            except ProgramasPorEstado.DoesNotExist:
-                n = None
-            if n is None:
-                newIndicador2 = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-                newIndicador2.save()
-            else:
-                n.cantidad = m.cantidad + 1
-                n.save()
-            return HttpResponseRedirect('/principal_cl/')
+	if request.method == 'GET':
+		form = analizarFTForm()
+	if request.method == 'POST':
+		form = analizarFTForm(request.POST)
+		if form.is_valid():
+			decision = form.cleaned_data['opcion']
+			if decision == 'Si':
+					try:
+						x = ProgramasPorEstado.objects.get(estado=programa.state.title)
+					except ProgramasPorEstado.DoesNotExist:
+						x = None
+					if x is None:
+						newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+						newIndicador.save()
+					else:
+						x.cantidad = x.cantidad - 1
+						x.save()
+						programa.siFT_toAprobJC()
+						logEstado(programa, programa.state.title)
+						programa.save()
+						try:
+							y = ProgramasPorEstado.objects.get(estado=programa.state.title)
+						except ProgramasPorEstado.DoesNotExist:
+							y = None
+						if y is None:
+							newIndicador2 = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+							newIndicador2.save()
+						else:
+							y.cantidad = y.cantidad + 1
+							y.save()
+			if decision == 'No':
+					try:
+						m = ProgramasPorEstado.objects.get(estado=programa.state.title)
+					except ProgramasPorEstado.DoesNotExist:
+						m = None
+					if m is None:
+						newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+						newIndicador.save()
+					if m is not None:
+						m.cantidad = m.cantidad - 1
+						m.save()
+						programa.noFT_toAnalisisJC()
+						logEstado(programa, programa.state.title)
+						programa.save()
+						try:
+							n = ProgramasPorEstado.objects.get(estado=programa.state.title)
+						except ProgramasPorEstado.DoesNotExist:
+							n = None
+						if n is None:
+							newIndicador2 = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
+							newIndicador2.save()
+						else:
+							n.cantidad = m.cantidad + 1
+							n.save()
+	return HttpResponseRedirect('/principal_cl/')
 
 ### FUNCION DE ANALISIS ###
 def analisisVot(evaluacion):
@@ -677,9 +684,9 @@ def analisisVot(evaluacion):
 	programa = evaluacion.programa
 	votos = Analisis.objects.filter(analisis =evaluacion)
 	numVotos = len(votos)
-	linea = Profesor.objects.get(user = profe).linea
-	coordinadorLinea = linea.coordinador
-	profesoresLinea = Profesor.objects.filter(linea=linea).count()
+	lineaP = Profesor.objects.get(user = profe).linea
+	coordinadorLinea = lineaP.coordinador
+	profesoresLinea = Profesor.objects.filter(linea=lineaP).count()
 	##### Termino la votacion #######
 	if (numVotos == (profesoresLinea+1 )):
 		termino = 1
@@ -706,7 +713,6 @@ def analisisVot(evaluacion):
 		if votosSi<votosNo:
 			bandera = True
 			programa.noAprob_toForm()
-			programa.contador= programa.contador + 1
 			logEstado(programa, programa.state.title)
 			programa.to_datosAsig()
 			programa.save()
@@ -724,7 +730,7 @@ def analisisVot(evaluacion):
 		if votosNo==votosSi:
 			## veo el voto del coordinador
 			votoDelCoord = Analisis.objects.filter(evaluacion=evaluacion).get(votante = coordinadorLinea)
-			if votoDelCoord == 'Si':
+			if votoDelCoord.voto == 'Si':
 				perdieron = 0
 				programa.siAprob_toFT()
 				logEstado(programa, programa.state.title)
@@ -745,7 +751,6 @@ def analisisVot(evaluacion):
 				bandera = False
 				perdieron = 1
 				programa.noAprob_toForm()
-				programa.contador= programa.contador + 1
 				logEstado(programa, programa.state.title)
 				programa.to_datosAsig()
 				programa.save()
@@ -837,7 +842,7 @@ def votacionOtroProfeView(request, id_programa):
 			votante = request.user
 			eva = Analisis.objects.create(voto = voto, observacion=observacion, votante=votante, analisis=analisis)
 			eva.save()
-			analisisVot(eva)
+			analisisVot(analisis)
 			return redirect('/principalPL/')
 
 def fastTrackOwnView(request, id_programa):

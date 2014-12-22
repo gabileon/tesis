@@ -12,7 +12,7 @@ from myapp.modulos.presentacion.forms import ImageUploadForm
 from myapp.modulos.jefeCarrera.models import Evento, ReporteIndic
 from myapp.modulos.coordLinea.forms import CoordinadorForm
 from myapp.modulos.formulacion.forms import LineasForm, UploadFileForm, analizarForm, evaluacionesForm, analisisLineaForm
-from myapp.modulos.jefeCarrera.forms import changePasswordForm, AgregarEventoCordForm, AgregarEventoForm,  agregarAsignaturaForm, agregarProfesoresForm
+from myapp.modulos.jefeCarrera.forms import analizarFTForm, changePasswordForm, AgregarEventoCordForm, AgregarEventoForm,  agregarAsignaturaForm, agregarProfesoresForm
 from datetime import datetime, timedelta
 from django.shortcuts import get_object_or_404
 from django.core.mail import EmailMultiAlternatives
@@ -37,8 +37,9 @@ FILENAME = 'hola.txt'
 
 def fastTrackView(request):
     programas = Programa.objects.filter(state='fastTrack')
+    form = analizarFTForm()
     username = request.user.username
-    ctx = {'username': username, 'programas': programas}
+    ctx = {'username': username, 'programas': programas, 'form': form}
     return render (request, 'coordLinea/progPorAnalizarFT.html', ctx)
 
 
@@ -116,7 +117,7 @@ def principalCLView(request):
                 analisis.append(p)
         numAnalisis = len(analisis)
         for p in todos:
-            if p.analisism.votoEvalCord==False:
+            if p.evaluacion.votoEvalCord==False:
                 votaciones.append(p)
         numEval = len(votaciones)
         username = request.user.username
@@ -166,9 +167,9 @@ def evaluacionesVot(evaluacion):
     programa = evaluacion.programa
     votos = Evaluaciones.objects.filter(evaluacion =evaluacion)
     numVotos = len(votos)
-    linea = Profesor.objects.get(user = profe).linea
-    coordinadorLinea = linea.coordinador
-    profesoresLinea = Profesor.objects.filter(linea=linea).count()
+    lineaP = Profesor.objects.get(user = profe).linea
+    coordinadorLinea = lineaP.coordinador
+    profesoresLinea = Profesor.objects.filter(linea=lineaP).count()
     ##### Termino la votacion #######
     if (numVotos == (profesoresLinea+1 )):
         termino = 1
@@ -212,7 +213,7 @@ def evaluacionesVot(evaluacion):
         if votosNo==votosSi:
             ## veo el voto del coordinador
             votoDelCoord = Evaluaciones.objects.filter(evaluacion=evaluacion).get(votante = coordinadorLinea)
-            if votoDelCoord == 'Si':
+            if votoDelCoord.voto == 'Si':
                 perdieron = 0
                 programa.siEvaluacion_toVerif()
                 logEstado(programa, programa.state.title)
@@ -659,9 +660,9 @@ def analisisVot(evaluacion):
     programa = evaluacion.programa
     votos = Analisis.objects.filter(analisis =evaluacion)
     numVotos = len(votos)
-    linea = Profesor.objects.get(user = profe).linea
-    coordinadorLinea = linea.coordinador
-    profesoresLinea = Profesor.objects.filter(linea=linea).count()
+    lineaP = Profesor.objects.get(user = profe).linea
+    coordinadorLinea = lineaP.coordinador
+    profesoresLinea = Profesor.objects.filter(linea=lineaP).count()
     ##### Termino la votacion #######
     if (numVotos == (profesoresLinea+1 )):
         termino = 1
@@ -704,8 +705,8 @@ def analisisVot(evaluacion):
                 indicador.save()
         if votosNo==votosSi:
             ## veo el voto del coordinador
-            votoDelCoord = Analisis.objects.filter(evaluacion=evaluacion).get(votante = coordinadorLinea)
-            if votoDelCoord == 'Si':
+            votoDelCoord = Analisis.objects.filter(analisis=evaluacion).get(votante = coordinadorLinea)
+            if votoDelCoord.voto == 'Si':
                 perdieron = 0
                 programa.siAprob_toFT()
                 logEstado(programa, programa.state.title)
