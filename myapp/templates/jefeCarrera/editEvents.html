@@ -35,7 +35,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
               </button>
-              <a class="navbar-brand" href="#">Formulapp</a>
+              <a class="navbar-brand" href="/principal_jc/">Formulapp</a>
             </div>
             <div id="navbar" class="navbar-collapse collapse">
               <ul class="nav navbar-nav">
@@ -66,6 +66,14 @@
           <h3 class="panel-title">Editar Evento</h3>
         </div>  
         <div class="panel-body">
+           {%if statusCord%}
+                                        <div class="alert alert-danger" role="alert">{{statusCord}}</div>
+                                        {%endif%}
+                          {%if status%}
+                          <br>
+                          <div class="alert alert-danger" role="alert">{{status}}</div>
+                        <!-- Modal -->
+                        {%endif%}
                                     
           <form action="." method="POST">
             {%csrf_token%}

@@ -27,7 +27,7 @@ class AgregarEventoCordForm(forms.ModelForm):
     descripcion = forms.CharField(widget=forms.Textarea, label= "Descripcion: ")
     start = forms.DateTimeField(widget=DateTimeWidget(usel10n=True, bootstrap_version=3), label="Fecha y hora de inicio:")
     end = forms.DateTimeField(widget=DateTimeWidget(usel10n=True, bootstrap_version=3), label="Fecha y hora de termino:")
-    tipoEvento = forms.ChoiceField(required=True, widget=forms.RadioSelect, choices=TIPOS2, label="Seleccione Tipo de Evento")
+    tipoEvento = forms.ChoiceField(required=False, widget=forms.RadioSelect, choices=TIPOS2, label="Seleccione Tipo de Evento")
     
     def clean_end(self):
         start = self.cleaned_data.get('start')

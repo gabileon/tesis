@@ -7,7 +7,7 @@
 {% block content %}
 <img src="/media/img/aprobado.png">
 <br>
-    <p>Actualmente el programa está siendo aprobado por su Jefe de Carrera. Cuando este delibere, tanto usted como su Coordinador de Línea, conocerán el resultado via email. En el caso que el Jefe de Carrera decida no aprobar su programa, este volverá al estado de Definiciones Generales, para poder arreglar los detalles
+    <p>Actualmente el programa está siendo aprobado por su Jefe de Carrera. Cuando este delibere, su programa será aprobado y habrá acabado el proceso de formulación. En el caso que el Jefe de Carrera decida no aprobar su programa, este volverá al estado de Definiciones Generales, para poder arreglar los detalles
     a corregir. </p>
 {% endblock %}
 {%block drive%}
@@ -18,7 +18,19 @@
 {%endblock%}
       
 
-{%block estado%}
-    <li class="activo">Definiciones Generales</li>
+{%block estados%}
+    <li class="disabled">Definiciones Generales</li>
+    <li class="disabled"> Definición de Contribución al Perfil de Egreso  </li>
+    <li class="disabled">Definición Resultados de Aprendizaje</li>
+    <li class="disabled">Estrategias de Ensenanza y de Aprendizaje</li>
+    <li class="disabled">Definición de Clase a Clase</li>
+    <li class="disabled">Análisis de evaluaciones asociadas</li>
+    <li class="disabled">Verificación Coherencia y Completitud</li>
+    <li class="disabled">Definición de Aspectos Administrativos</li>
+    <li class="disabled">Definición de Recursos de Aprendizaje</li>
+    <li class="disabled">Aprobación Línea</li>
+       <li class="disabled">Fast Track</li>
+    <li class="disabled">Análisis Programa por Jefe de Carrera</li>
+    <li class="activo">Aprobación Programa por Jefe de Carrera</li>
 {%endblock%}
 

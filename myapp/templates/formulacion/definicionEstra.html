@@ -20,11 +20,37 @@
 </div>
 {%endblock%}
 {% block parrafo%}
-    <p> Actualmente te encuentras en el estado de Definición de Resultados de Aprendizaje. Los Resultados deben permitir observar un desempeño global verificable que integre elementos conceptuales, procedimentales y actitudinales. Debe resultar viable de alcanzar respecto de su posición en la malla curricular y el creditaje asignado. Además debe plantearse en coherencia con la contribución que puede estar realizando la asignatura al perfil de egreso de la carrera. </p>
+    <p>En este estado deberás señalar y describir brevemente los métodos seleccionados para asegurar que los alumnos desarrollen los aprendizajes esperados. Además, debes indicar también si es que debiesen existir estrategias o actividades cruciales para alcanzar el desarrollo del curso como por ejemplo salidas a terreno, exposición oral, lectura en inglés, entre otras. </p>
 {% endblock %}
 {% endblock %}
 {%block drive%}
 <li>Documento en Drive  <td><a href="{{p.url}}"> <span class="glyphicon glyphicon-cloud"></span></a></td></li>
+{%endblock%}
+{%block recursosJefe%}
+<br>
+{%if recursosJefe%}
+<table class="table-recursos table-striped">
+<thead>
+                        <tr>
+                            <th>Nombre Recurso</th>
+                            <th>Descripción</th>
+                            <th>Archivo</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                         {%for r in recursosJefe%}
+                        <tr>
+                            <td>{{r.titulo_recurso}}</td></a>
+                            <td>{{r.descripcion_recurso}}</td>
+                           <td><a href="/files/serve/{{r.recurso}}"><span class="glyphicon glyphicon-paperclip"></a></span></td>
+                        </tr>
+                        {%endfor%}
+                    </tbody>
+</table>
+{%else%}
+<h4>No hay recursos de formulación para este estado</h4>
+{%endif%}
 {%endblock%}
 
   {%block defEstado%}
@@ -48,12 +74,10 @@
                                 <h4 class="modal-title" id="myModalLabel">Guardar Avance</h4>
                               </div>
                               <div class="modal-body">
-                                <p>¿En qué estado se encuentra la definición de RdA?</p>
+                                <p>¿En qué estado se encuentra la definición de Estrategias de Enseñanza</p>
                                     <form id="defEstado"  class="form-horizontal" action="/definicionEstra/{{p.id}}/" method="POST">
                                     {% csrf_token %}
-                                    
-                                    <p><input type="radio" name="optionsRadios"  value="option2"> Finalizado</p>
-                                    <p><input type="radio" name="optionsRadios"  value="option1"> Aún Modificando</p>
+                                    {{form|as_bootstrap}}
                                     <button class="btn btn-success" type="submit">Guardar</button>
                                 </form>
                               </div>
@@ -66,18 +90,18 @@
                         </div>
   {%endblock%}          
 
-{%block estado%}
+{%block estados%}
      <li class="disabled">Definiciones Generales</li>
-    <li class="disabled"> Definicion de Contribución al Perfil de Egreso  </li>
+    <li class="disabled">Definición de Contribución al Perfil de Egreso  </li>
     <li class="disabled">Definición Resultados de Aprendizaje</li>
     <li class="activo">Estrategias de Ensenanza y de Aprendizaje</li>
     <li class="disabled">Definicion de Clase a Clase</li>
     <li class="disabled">Análisis de evaluaciones asociadas</li>
-    <li class="disabled">Verificacion Coherencia y Completitud</li>
-    <li class="disabled">Programación de Actividades</li>
+    <li class="disabled">Verificación Coherencia y Completitud</li>
     <li class="disabled">Definición de Aspectos Administrativos</li>
     <li class="disabled">Definición de Recursos de Aprendizaje</li>
     <li class="disabled">Aprobación Línea</li>
+       <li class="disabled">Fast Track</li>
     <li class="disabled">Análisis Programa por Jefe de Carrera</li>
     <li class="disabled">Aprobación Programa por Jefe de Carrera</li>
 {%endblock%}

@@ -15,7 +15,11 @@ urlpatterns = patterns('myapp.modulos.coordLinea.views',
 	url(r'^deleteFechasCord/(?P<id_evento>.*)/$', 'deleteFechasCordView'),
 	url(r'^cambiarPasswordCord/(?P<id_user>.*)/$', 'changePasswordCordView'),
 	url(r'^reportesIndicacionCord/$', 'reportesIndicacionCordView'),
-	url(r'^logCord/(?P<id_programa>.*)/$', 'logCordView')
+	url(r'^logCord/(?P<id_programa>.*)/$', 'logCordView'),
+	url(r'^editFechasCord/(?P<id_evento>.*)/$', 'editEventosViewCord'),
+	url(r'^recursos/deleteCord/(?P<id_recurso>.*)/$', 'deleteRecursoCordView'),
+	url(r'^editRecursosCord/(?P<id_recurso>.*)/$', 'editRecursosCordView'),
+	
 
 	
 	

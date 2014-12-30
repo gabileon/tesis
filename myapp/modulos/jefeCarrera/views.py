@@ -156,12 +156,14 @@ def lineasView(request):
                 linea.carpeta = id_folder
                 linea.save()
                 return HttpResponseRedirect("/lineas/")
-        ctx = {'form':form, 'linea':linea, 'username': request.user.username}
+            
+        ctx = {'form':form, 'linea':linea,  'username': request.user.username}
         return render(request, 'jefeCarrera/lineaConf.html', ctx)
     else:
         return redirect ('/errorLogin/')
 
 def perfilLineaView(request, id_linea):
+    status =""
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
     if perfilTemp.rol_actual == 'JC':
@@ -191,36 +193,56 @@ def perfilLineaView(request, id_linea):
                     linea.save()
                     userProfile.save()
                     ## se envia email al nuevo coordinador ##
-                    message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",
-                          subject="Notificacion")
+                    message = mail.EmailMessage(sender="Formulapp <gabi.leon.f@gmail.com>",
+                        subject="Coordinador Formulapp")
 
                     message.to = coordinador
-                    # html_content = " Estimado:<br><br><br> ha sido designado como Coordinador de la linea" 
-                    # +linea.nombreLinea + ". Para la realizacion de esta funcion se necesitara que usted acceda a http://programas-diinf.appspot.com/login con su username y password"+username[0]". Al ingresar debera actualizar sus datos. Saludos"
-                    # message.send()
+                    message.html = """
+                    <html><head></head><body>
+                    Estimado:
+
+                    Te informamos que has sido agregado como coordinador en Formulapp-
+                    Ingresa a http://programas-diinf.appspot.com/, con los siguientes datos: 
+                    Ej: nombre.apellido@usach.cl 
+                    username: nombre.apellido 
+                    password: nombre.apellido
+                    Podras cambiar tu password cuando inicies sesion por primera vez.
+                    Saludos.
+                    </body></html>
+                    """
+                    message.send()
 
                 # Comprobar si existe el coordinador en el sistema
                 else:
                     temp = User.objects.get(email=coordinador)
-                    profile = UserProfile.objects.get(user=temp.id)
+                    profile = UserProfile.objects.get(user=temp)
                     profile.rol_CL = 'CL'
                     profile.cordLinea = linea
                     profile.save()
                     linea.coordinador = temp
                     linea.save()
-                    message = mail.EmailMessage(sender="Administrador <gabi.leon.f@gmail.com>",
-                        subject="Notificacion")
+                    message = mail.EmailMessage(sender="Formulapp <gabi.leon.f@gmail.com>",
+                        subject="Coordinador Formulapp")
 
                     message.to = coordinador
-                    # message.html " Estimado:<br><br><br> ha sido designado como Coordinador de la linea" 
-                    #  +linea.nombreLinea + ". Al ingresar a http://programas-diinf.appspot.com/login tendra acceso a entrar al rol del Coordinador de Linea. Saludos."
-                    # message.send()
-                                        
+                    message.html = """
+                    <html><head></head><body>
+                    Estimado:
 
+                    Te informamos que has sido agregado como coordinador en Formulapp.
+                    Ingresa a http://programas-diinf.appspot.com/ y podras iniciar 
+                    sesion con el rol de coordinador.
+                    Saludos.
+                    </body></html>
+                    """
+                    message.send()
+            else:
+                status = "El email debe ser dominio usach"
+                                    
             return HttpResponseRedirect('/perfilLinea/'+id_linea)   
         else:
             form = CoordinadorForm()
-        ctx = {'form':form, 'linea':linea, 'estado':estado, 'username': request.user.username, 'asignaturas' : asignaturas, 'linea':linea, 'profesores': profesores}
+        ctx = {'form':form, 'linea':linea, 'estado':estado, 'status': status, 'username': request.user.username, 'asignaturas' : asignaturas, 'linea':linea, 'profesores': profesores}
         return render(request, 'jefeCarrera/perfilLineaConf.html', ctx)
     else:
         return redirect ('/errorLogin/')
@@ -231,8 +253,9 @@ def removeCordinadorLineaView(request, id_linea):
     if perfilTemp.rol_actual == 'JC':
         linea = Linea.objects.get(id=id_linea)
         cordinador = linea.coordinador
-        cordinador.userprofile.rol_CL = "hola"
-        cordinador.save()
+        cordinador.userprofile.rol_CL = ""
+        cordinador.userprofile.rol_actual = ""
+        cordinador.userprofile.save()
         linea.coordinador = None
         linea.save()
         return HttpResponseRedirect('/perfilLinea/'+id_linea)   
@@ -276,6 +299,7 @@ def removeAsignaturaView(request, id_asignatura, id_linea):
     return HttpResponseRedirect('/perfilLinea/'+id_linea)
     
 def crearFechas(request):
+    statusCord = 0
     status = ""
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
@@ -339,36 +363,44 @@ def crearFechas(request):
 
                 if tipoEvento == 'coordinadores':
                     linea = Linea.objects.get(nombreLinea = 'Proyectos')
-                    coordinador = linea.coordinador.email
-                    event = {
-                        'summary': '%s'%(summary),
-     
-                        'start': {
-                            'dateTime': '%s'%(inicio),
-                            # 'timeZone': 'America/Santiago'
-                          },
-                        'end': {
-                            'dateTime': '%s'%(fin),
-                            # 'timeZone': 'America/Santiago'
-                          }}
-                    event['attendees'] =  [{'email': coordinador}]
                     try:
-                        created_event = service.events().insert(calendarId='primary', body=event).execute()
-                        nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, 
-                        descripcion=descripcion,  id_calendar=created_event['id'], tipoEvento=tipoEvento , anfitrion=request.user, invitados =coordinador)
-                        nuevoEvento.save()
+                        coordinador = linea.coordinador.email
                     except:
-                        ('/errorGoogle/')                            
+                        coordinador = None
+                    if coordinador is not None:
+                        event = {
+                            'summary': '%s'%(summary),
+         
+                            'start': {
+                                'dateTime': '%s'%(inicio),
+                                # 'timeZone': 'America/Santiago'
+                              },
+                            'end': {
+                                'dateTime': '%s'%(fin),
+                                # 'timeZone': 'America/Santiago'
+                              }}
+                        event['attendees'] =  [{'email': coordinador}]
+                        try:
+                            created_event = service.events().insert(calendarId='primary', body=event).execute()
+                            nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, 
+                            descripcion=descripcion,  id_calendar=created_event['id'], tipoEvento=tipoEvento , anfitrion=request.user, invitados =coordinador)
+                            nuevoEvento.save()
+                        except:
+                            ('/errorGoogle/')
+                    else:
+                        statusCord = 1                    
             else:
                 status = "Completar todos los campos"
         else:
             form = AgregarEventoForm()
-        ctx = {'form':form, 'eventos': eventos, 'status': status, 'username': request.user.username, 'eventosInvitados': eventosInvitados}
+        ctx = {'form':form, 'eventos': eventos, 'status': status, 'statusCord':statusCord,'username': request.user.username, 'eventosInvitados': eventosInvitados}
         return render (request, 'jefeCarrera/Eventos.html', ctx)
     else:
         return redirect ('/errorLogin/')
 
 def editEventosView (request, id_evento):
+    status = ""
+    statusCord = ""
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
     if perfilTemp.rol_actual == 'JC':
@@ -379,7 +411,7 @@ def editEventosView (request, id_evento):
             http= credential.authorize(http)
             service = build('calendar', 'v3', http=http)
         except:
-            return redirect('/logout/')
+            return redirect('/errorGoogle/')
         evento = Evento.objects.get(id=id_evento)
         if request.method == 'GET':
             form = AgregarEventoForm(initial={
@@ -438,28 +470,39 @@ def editEventosView (request, id_evento):
                     idCal = evento.id_calendar
                     eventt = service.events().get(calendarId='primary', eventId=idCal).execute()
                     linea = Linea.objects.get(nombreLinea = 'Proyectos')
-                    coordinador = linea.coordinador.email
-                    event = {
-                        'summary': '%s'%(summary),
-                        'start': {
-                            'dateTime': '%s'%(inicio),
-                          },
-                        'end': {
-                            'dateTime': '%s'%(fin),
-                          }}
-                    event['attendees'] =  [{'email': coordinador}]
-                    event = service.events().get(calendarId='primary', eventId=idCal).execute()
-                    updated_event = service.events().update(calendarId='primary', eventId=eventt['id'], body=event).execute()
-                    evento.summary= summary 
-                    evento.location = location
-                    evento.start =start
-                    evento.end=end
-                    evento.descripcion=descripcion 
-                    evento.attendees=coordinador
-                    evento.tipoEvento = tipoEvento
-                    evento.save()
-            return redirect('/crearFechas/')
-        return render(request, 'jefeCarrera/editEvents.html', {'form':form, 'evento': evento, 'username':request.user.username})
+                    try:
+                        coordinador = linea.coordinador.email
+                    except:
+                        coordinador = None
+                    if coordinador is not None:
+                        event = {
+                            'summary': '%s'%(summary),
+                            'start': {
+                                'dateTime': '%s'%(inicio),
+                              },
+                            'end': {
+                                'dateTime': '%s'%(fin),
+                              }}
+                        event['attendees'] =  [{'email': coordinador}]
+                        event = service.events().get(calendarId='primary', eventId=idCal).execute()
+                        updated_event = service.events().update(calendarId='primary', eventId=eventt['id'], body=event).execute()
+                        evento.summary= summary 
+                        evento.location = location
+                        evento.start =start
+                        evento.end=end
+                        evento.descripcion=descripcion 
+                        evento.attendees=coordinador
+                        evento.tipoEvento = tipoEvento
+                        evento.save()
+                    else:
+                        statusCord = "Recuerda agregar un coordinador"
+                        return redirect('/editFechas/'+id_evento)  
+
+                return redirect('/crearFechas/')                  
+            else:
+                status = "Completar todos los campos"
+
+        return render(request, 'jefeCarrera/editEvents.html', {'status': status, 'statusCord':statusCord, 'form':form, 'evento': evento, 'username':request.user.username})
     else:
         return redirect ('/errorLogin/')
 
@@ -487,7 +530,6 @@ def logJCView(request, id_programa):
         return render (request, 'jefeCarrera/log.html', ctx)
     else:
         return redirect ('/errorLogin/')
-
    
 def otroPerfilView(request, id_user):
     userTemp = User.objects.get(username=request.user.username)
@@ -502,6 +544,7 @@ def otroPerfilView(request, id_user):
         return redirect ('/errorLogin/')
 
 def recursosView(request):
+    status = ""
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
     if perfilTemp.rol_actual == 'JC':
@@ -512,15 +555,17 @@ def recursosView(request):
                 ###### el nombre dle recurso no debe tener espacios
                 recurso = form.cleaned_data['recurso']            
                 titulo_recurso = form.cleaned_data['title']
-                descripcion = form.cleaned_data['descripcion']
+                descripcion_recurso = form.cleaned_data['descripcion']
                 estado = form.cleaned_data['estado']
                 fechaUltimaModificacion = datetime.now() - timedelta(hours=3)
-                newRecurso = Recurso.objects.create(recurso = recurso, titulo_recurso=titulo_recurso, creador=request.user, descripcion_recurso=descripcion, estado=estado, fechaUltimaModificacion=fechaUltimaModificacion)
+                newRecurso = Recurso.objects.create(recurso = recurso, titulo_recurso=titulo_recurso, creador=request.user, descripcion_recurso=descripcion_recurso, estado=estado, fechaUltimaModificacion=fechaUltimaModificacion)
                 newRecurso.save()
                 return HttpResponseRedirect('/recursos/')
+            else:
+                status = "No puede ser el archivo mayor a 1MB"
         else:
             form = UploadFileForm()
-        ctx = {'form': form, 'recursos': Recursos, 'username': request.user.username}
+        ctx = {'form': form, 'recursos': Recursos, 'username': request.user.username, 'status':status}
         return render(request, 'jefeCarrera/recursos.html', ctx)
     else:
         return redirect ('/errorLogin/')
@@ -536,32 +581,35 @@ def deleteRecursoView(request, id_recurso):
         return redirect ('/errorLogin/')
 
 def editRecursosView(request, id_recurso):
+    status = ""
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
     if perfilTemp.rol_actual == 'JC':
         recursos = Recurso.objects.get(id=id_recurso)
+        if request.method == 'POST':
+            form = UploadFileForm(request.POST, request.FILES)
+            if form.is_valid():
+                recursoP = form.cleaned_data['recurso']            
+                titulo_recursoP = form.cleaned_data['title']
+                descripcionP= form.cleaned_data['descripcion']
+                estadoP = form.cleaned_data['estado']
+                fechaUltimaModificacionP = datetime.now() - timedelta(hours=3)
+                recursos.recurso = recursoP          
+                recursos.titulo_recurso = titulo_recursoP
+                recursos.descripcion_recurso = descripcionP
+                recursos.estado = estadoP
+                recursos.fechaUltimaModificacion = fechaUltimaModificacionP
+                recursos.save()
+                return redirect('/recursos/')
+            else:
+                status = "Faltan datos"
         if request.method == 'GET':
             form = UploadFileForm(initial={
                 'recurso' : recursos.recurso,
                 'title' : recursos.titulo_recurso,
                 'descripcion' : recursos.descripcion_recurso,
                 'estado' : recursos.estado})
-        if request.method == 'POST':
-            form = UploadFileForm(request.POST, request.FILES)
-            if form.is_valid():
-                recurso = form.cleaned_data['recurso']            
-                titulo_recurso = form.cleaned_data['title']
-                descripcion = form.cleaned_data['descripcion']
-                estado = form.cleaned_data['estado']
-                fechaUltimaModificacion = datetime.now() - timedelta(hours=3)
-                recursos.recurso = recurso            
-                recursos.titulo_recurso = titulo_recurso
-                recursos.descripcion_recurso = descripcion
-                recursos.estado = estado
-                recursos.fechaUltimaModificacion = fechaUltimaModificacion
-                recursos.save()
-            return redirect('/recursos/')
-        return render(request, 'jefeCarrera/editRecursos.html', {'form': form})
+        return render(request, 'jefeCarrera/editRecursos.html', {'form': form, 'status':status, 'id':id_recurso, 'username':request.user.username})
     else:
         return redirect ('/errorLogin/')
 
@@ -667,11 +715,12 @@ def analisisProgramaView(request, id_programa):
                         file = drive_service.files().insert(body=body).execute()
                         url = file.get('alternateLink')
                         reporte.url = url
-                        reporte.fechaModificacion=datetime.now()
+                        reporte.fechaModificacion= datetime.now() - timedelta(hours=3)
                         reporte.save()
                         programa.siIndic_toForm()
                         logEstado(programa, programa.state.title)
                         programa.to_datosAsig()
+                        programa.fechaUltimaModificacion = datetime.now() - timedelta(hours=3)
                         logEstado(programa, programa.state.title)
                         programa.save()
                             # se ve si existe el indicador para el estado del siguiente estado
@@ -756,6 +805,7 @@ def aprobacionProgramaView(request, id_programa):
                         x.cantidad = x.cantidad - 1
                         x.save()
                         programa.siAprob_toFin()
+                        programa.fechaUltimaModificacion = datetime.now() - timedelta(hours=3)
                         logEstado(programa, programa.state.title)
                         programa.save()
                         try:
@@ -783,6 +833,7 @@ def aprobacionProgramaView(request, id_programa):
                         logEstado(programa, programa.state.title)
                         programa.to_datosAsig()
                         logEstado(programa, programa.state.title)
+                        programa.fechaUltimaModificacion = datetime.now() - timedelta(hours=3)
                         programa.save()
                         try:
                             n = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -825,7 +876,29 @@ def addProfesoresView(request, id_linea):
                     profe = Profesor.objects.create(user=newUser, linea=linea)
                     profe.save()
                     newUser.save()
+
+                    #### enviar email #####
+
+                    message = mail.EmailMessage(sender="Formulapp <gabi.leon.f@gmail.com>",
+                        subject="Profesor Formulapp")
+
+                    message.to = email
+                    message.html = """
+                    <html><head></head><body>
+                    Estimado:
+
+                    Te informamos que has sido agregado como profesor en Formulapp.
+                    Ingresa a http://programas-diinf.appspot.com/, con los siguientes datos: 
+                    Ej: nombre.apellido@usach.cl 
+                    username: nombre.apellido 
+                    password: nombre.apellido
+                    Podras cambiar tu password cuando inicies sesion por primera vez.
+                    Saludos.
+                    </body></html>
+                    """
+                    message.send()
                 else:
+                    username = email.split("@", 1)
                     x.userprofile.rol_PL = "PL"
                     x.userprofile.save()
                     try:
@@ -841,7 +914,21 @@ def addProfesoresView(request, id_linea):
                         profile.save()
                     else:
                         y.linea = linea
-                        y.save()                        
+                        y.save()  
+                    message = mail.EmailMessage(sender="Formulapp <gabi.leon.f@gmail.com>",
+                        subject="Profesor Formulapp")
+
+                    message.to = email
+                    message.html = """
+                    <html><head></head><body>
+                    Estimado:
+
+                    Te informamos que has sido agregado como profesor en Formulapp.
+                    Ingresa a http://programas-diinf.appspot.com/,e inicia con el rol de Profesor.
+                    Saludos.
+                    </body></html>
+                    """
+                    message.send()                      
                 return HttpResponseRedirect('/perfilLinea/'+id_linea)
         asignaturas = Asignatura.objects.filter(linea=linea)
         profesores = Profesor.objects.filter(linea=linea)

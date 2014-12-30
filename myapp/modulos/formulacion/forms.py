@@ -27,7 +27,6 @@ class UploadFileForm(forms.Form):
 	ESTADOS = (
 		('General', (u"General")),
 	 	('Definicion Datos Asignatura', (u"Definicion Datos Asignatura")),
-	 	('Definiciones Generales', (u"Definiciones Generales")),
 	 	('Definicion de Constribucion al Perfil de Egreso', (u"Definicion de Constribucion al Perfil de Egreso ")),
 	 	('Definicion Resultados de Aprendizaje', (u"Definicion Resultados de Aprendizaje")),
 	 	('Estrategias de Ensenanza y de Aprendizaje', (u"Estrategias de Ensenanza y de Aprendizaje")),
@@ -54,7 +53,7 @@ class evaluacionesForm(forms.Form):
         ('No', 'No Existen Evaluaciones Asociadas'),
     )
     voto = forms.ChoiceField(widget=forms.RadioSelect, choices=MY_CHOICES, required=True)
-    observacion = forms.CharField(widget=forms.Textarea)
+
 
 class analisisLineaForm(forms.Form):
     MY_CHOICES = (
@@ -62,4 +61,3 @@ class analisisLineaForm(forms.Form):
         ('No', 'No'),
     )
     voto = forms.ChoiceField(widget=forms.RadioSelect, choices=MY_CHOICES,  required=True)
-    observacion = forms.CharField(widget=forms.Textarea)

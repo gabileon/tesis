@@ -30,7 +30,32 @@
 {%block drive%}
 <li>Documento en Drive  <td><a href="{{p.url}}"> <span class="glyphicon glyphicon-cloud"></span></a></td></li>
 {%endblock%}
+{%block recursosJefe%}
+<br>
+{%if recursosJefe%}
+<table class="table-recursos table-striped">
+<thead>
+                        <tr>
+                            <th>Nombre Recurso</th>
+                            <th>Descripción</th>
+                            <th>Archivo</th>
 
+                        </tr>
+                    </thead>
+                    <tbody>
+                         {%for r in recursosJefe%}
+                        <tr>
+                            <td>{{r.titulo_recurso}}</td></a>
+                            <td>{{r.descripcion_recurso}}</td>
+                           <td><a href="/files/serve/{{r.recurso}}"><span class="glyphicon glyphicon-paperclip"></a></span></td>
+                        </tr>
+                        {%endfor%}
+                    </tbody>
+</table>
+{%else%}
+<h4>No hay recursos de formulación para este estado</h4>
+{%endif%}
+{%endblock%}
   {%block defEstado%}
   <div class="row">
   <div class="col-xs-6 col-md-4">
@@ -52,7 +77,7 @@
                                 <h4 class="modal-title" id="myModalLabel">Guardar Avance</h4>
                               </div>
                               <div class="modal-body">
-                                <p>¿En qué estado se encuentra la definición de RdA?</p>
+                                <p>¿En qué estado se encuentra la definición de Recursos de Aprendizaje?</p>
                                     <form id="defEstado"  class="form-horizontal" action="/recursosAprend/{{p.id}}/" method="POST">
                                     {% csrf_token %}
                                     
@@ -70,3 +95,17 @@
                         </div>
   {%endblock%}          
 
+{%block estados%}
+    <li class="disabled">Definiciones Generales</li>
+    <li class="disabled"> Definición de Contribución al Perfil de Egreso  </li>
+    <li class="disabled">Definición Resultados de Aprendizaje</li>
+    <li class="disabled">Estrategias de Ensenanza y de Aprendizaje</li>
+    <li class="disabled">Definición de Clase a Clase</li>
+    <li class="disabled">Análisis de evaluaciones asociadas</li>
+    <li class="disabled">Verificación Coherencia y Completitud</li>
+    <li class="disabled">Definición de Aspectos Administrativos</li>
+    <li class="activo">Definición de Recursos de Aprendizaje</li>
+    <li class="disabled">Aprobación Línea</li>
+    <li class="disabled">Análisis Programa por Jefe de Carrera</li>
+    <li class="disabled">Aprobación Programa por Jefe de Carrera</li>
+{%endblock%}

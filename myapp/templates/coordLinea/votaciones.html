@@ -25,7 +25,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
               </button>
-              <a class="navbar-brand" href="#">Formulapp</a>
+              <a class="navbar-brand" href="/principal_cl/">Formulapp</a>
             </div>
             <div id="navbar" class="navbar-collapse collapse">
               <ul class="nav navbar-nav">
@@ -48,7 +48,8 @@
           </div>
         </nav>
     <div class="row">
-       <p class="explicacion"> En esta sección debes votar por los programas que se encuentren en la tabla, con el fin de ver si existen evaluaciones asociadas a lo definido en el programa actualmente. Recuerda que para analizar el programa, puedes mirarlo en el botón url.</p>
+       <p class="explicacion"> En esta sección debes votar por los programas que se encuentren en la tabla, con el fin de ver si existen evaluaciones asociadas a lo definido en el programa actualmente. </p>
+       <p class="explicacion2"> Recuerda que para analizar el programa, puedes mirarlo en el botón url.</p>
       
 
         <div class="panel panel-primary">        
@@ -85,6 +86,7 @@
                         <h4 class="modal-title" id="myModalLabel">Análisis Evaluaciones Programa</h4>
                       </div>
                       <div class="modal-body">
+                        {{status}}
                             <form action="/votacion/{{p.id}}/" method="POST">
                                 {%csrf_token%}
                                 {{form|as_bootstrap}}
@@ -108,7 +110,7 @@
        			{%endif%}
             </div>
         </div>
-        
+        <img class="expli"src="/media/img/eval.jpg">
     </body>    
 </html>
 

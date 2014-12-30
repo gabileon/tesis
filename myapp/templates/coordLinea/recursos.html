@@ -25,7 +25,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
               </button>
-              <a class="navbar-brand" href="#">Formulapp</a>
+              <a class="navbar-brand" href="/principal_cl/">Formulapp</a>
             </div>
             <div id="navbar" class="navbar-collapse collapse">
               <ul class="nav navbar-nav">
@@ -75,8 +75,8 @@
                             <td>{{e.estado.title}}</td>
                             <td>{{e.fechaUltimaModificacion}}</td>
                             <td><a href="/files/serve/{{e.recurso}}"><span class="glyphicon glyphicon-paperclip"></a></span></td>
-                            <td><a class="glyphicon glyphicon-pencil" href="/editRecursos/{{e.id}}"></a></td></span></td> 
-                            <td><a class="borrar" href="/recursos/delete/{{e.id}}"><span class="glyphicon glyphicon-remove"></a></td>
+                            <td><a class="glyphicon glyphicon-pencil" href="/editRecursosCord/{{e.id}}"></a></td></span></td> 
+                            <td><a class="borrar" href="/recursos/deleteCord/{{e.id}}"><span class="glyphicon glyphicon-remove"></a></td>
                             
                         </tr>
                         {%endfor%}

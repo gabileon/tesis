@@ -31,6 +31,7 @@ from google.appengine.api import mail
 from myapp.modulos.indicadores.models import ProgramasPorEstado
 from apiclient.discovery import build
 from apiclient.http import MediaFileUpload
+from django.db.models import Q
 
 FILENAME = 'hola.txt'
 
@@ -141,6 +142,7 @@ def votacionesEvaluacionView(request):
         return redirect ('/errorLogin/')
 ############ votacion evaluaciones asociadas ########
 def votacion (request, id_evaluacion):
+    status = ""
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
     if perfilTemp.rol_actual == 'CL':
@@ -149,14 +151,15 @@ def votacion (request, id_evaluacion):
             form = evaluacionesForm(request.POST)
             if form.is_valid():
                 voto = form.cleaned_data['voto']
-                observacion = form.cleaned_data['observacion']
                 votante = request.user
-                evaluac = Evaluaciones.objects.create(voto = voto, observacion=observacion, votante=votante, evaluacion= evaluacion)
+                evaluac = Evaluaciones.objects.create(voto = voto,  votante=votante, evaluacion= evaluacion)
                 evaluac.save()
                 evaluacion.votoEvalCord = True
                 evaluacion.save()
                 evaluacionesVot(evaluacion)
                 return HttpResponseRedirect('/votacionesEvaluacionLinea/')
+            else:
+                status = "Ingresa todos los datos"
     else:
         return redirect ('/errorLogin/')
 
@@ -329,7 +332,8 @@ def crearFechasCoord(request):
         profile = UserProfile.objects.get(user=userTemp)
         linea = Linea.objects.get(id=profile.cordLinea_id)
         eventos = Evento.objects.filter(anfitrion=request.user).filter(start__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
-        todos = Evento.objects.all().filter(start__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
+        eventosGenerales = Evento.objects.all().filter(tipoEvento = 'general').filter(start__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
+        eventosCord = Evento.objects.all().filter(tipoEvento = 'coordinadores').filter(start__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
         try:
             storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
             credential = storage.get()
@@ -337,7 +341,7 @@ def crearFechasCoord(request):
             http= credential.authorize(http)
             service = build('calendar', 'v3', http=http)
         except:
-            return redirect('/logout/')
+            return redirect('/errorGoogle/')
 
         calendar_list_entry = service.calendarList().get(calendarId='primary').execute()
         form = AgregarEventoCordForm()
@@ -398,109 +402,125 @@ def crearFechasCoord(request):
                             # 'timeZone': 'America/Santiago'
                           }}
                     event['attendees'] =  [{'email': jefeCarrera.user.email}]
-                    created_event = service.events().insert(calendarId='primary', body=event).execute()     
-                    nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, 
-                    descripcion=descripcion,  id_calendar=created_event['id'], tipoEvento=tipoEvento , anfitrion=request.user, invitados =jefeCarrera.user.email)
+                    try:
+                        created_event = service.events().insert(calendarId='primary', body=event).execute()     
+                        nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, 
+                        descripcion=descripcion,  id_calendar=created_event['id'], tipoEvento=tipoEvento , anfitrion=request.user, invitados =jefeCarrera.user.email)
                       
-                    nuevoEvento.save()
+                        nuevoEvento.save()
+                    except:
+                        return redirect('/errorGoogle/')
         else:
             form = AgregarEventoCordForm()
-        ctx = {'form':form, 'eventos': eventos, 'username': request.user.username, 'todos': todos}    
+        ctx = {'form':form, 'eventos': eventos, 'username': request.user.username, 'todos': eventosGenerales, 'eventosCord': eventosCord}    
         return render (request, 'coordLinea/Eventos.html', ctx)
     else:
         return redirect ('/errorLogin/')
 
 
-##falta arreglar
-def editEventosView (request, id_evento):
-    revisarRol(request)
-    try:
-        storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
-        credential = storage.get()
-        http= httplib2.Http()
-        http= credential.authorize(http)
-        service = build('calendar', 'v3', http=http)
-    except:
-        return redirect('/logout/')
-    evento = Evento.objects.get(id=id_evento)
-    if request.method == 'GET':
-        form = AgregarEventoForm(initial={
-                'summary' : evento.summary,
-                'location' : evento.location,
-                'descripcion' : evento.descripcion,
-                'tipoEvento' : evento.tipoEvento,
-                'start': evento.start,
-                'end': evento.end })
-    if request.method == 'POST':
-        form = AgregarEventoForm(request.POST)
-        if form.is_valid():
-            summary = form.cleaned_data['summary']
-            location = form.cleaned_data['location']
-            descripcion = form.cleaned_data['descripcion']
-            tipoEvento = form.cleaned_data['tipoEvento']
-            start = form.cleaned_data['start']
-            start = build_rfc3339_phrase(start)
-            end = form.cleaned_data['end']
-            end = build_rfc3339_phrase(end)
-            if tipoEvento == 'general' :
-                todos = User.objects.all()
-                idCal = evento.id_calendar
-                eventt = service.events().get(calendarId='primary', eventId=idCal).execute()
-                event = {
-                    'summary': '%s'%(summary),
- 
-                    'start': {
-                        'dateTime': '%s'%(start),
-                        # 'timeZone': 'America/Santiago'
-                      },
-                    'end': {
-                        'dateTime': '%s'%(end),
-                        # 'timeZone': 'America/Santiago'
-                      }
-                                    }                                 
-                event['attendees']= [{'email': 'gabriela.leon@usach.cl'}]
-                event['attendees']= [{'email': 'gabi.leon.f@usach.cl'}]
-                idCal = evento.id_calendar
-                updated_event = service.events().update(calendarId='primary', eventId=idCal, body=event).execute()
-                
-                evento.summary= summary 
-                evento.location = location
-                evento.start =start
-                evento.end=end
-                evento.descripcion=descripcion 
-                # evento.attendees=emails
-                evento.tipoEvento = tipoEvento
-                evento.save()
-            if tipoEvento == 'coordinadores':
-                idCal = evento.id_calendar
-                eventt = service.events().get(calendarId='primary', eventId=idCal).execute()
-                linea = Linea.objects.get(nombreLinea = 'Proyectos')
-                coordinador = linea.coordinador.email
-                event = {
-                    'summary': '%s'%(summary),
- 
-                    'start': {
-                        'dateTime': '%s'%(start),
-                        # 'timeZone': 'America/Santiago'
-                      },
-                    'end': {
-                        'dateTime': '%s'%(end),
-                        # 'timeZone': 'America/Santiago'
-                      }}
-                event['attendees'] =  [{'email': coordinador}]
-                idCal = evento.id_calendar
-                event = service.events().get(calendarId='primary', eventId=idCal).execute()
-                updated_event = service.events().update(calendarId='primary', eventId=eventt['id'], body=event).execute()
-                evento.summary= summary 
-                evento.location = location
-                evento.start =start
-                evento.end=end
-                evento.descripcion=descripcion 
-                evento.attendees=emails
-                evento.tipoEvento = tipoEvento
-                evento.save()
-        return redirect('/crearFechasCord/')
-    return render(request, 'coordLinea/editEvents.html', {'form':form, 'evento': evento, 'invitados' : invitados})
+def editEventosViewCord (request, id_evento):
+    userTemp = User.objects.get(username=request.user.username)
+    profile = UserProfile.objects.get(user=userTemp)
+    linea = Linea.objects.get(id=profile.cordLinea_id)
+    status = ""
+    statusCord = ""
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    if perfilTemp.rol_actual == 'CL':
+        try:
+            storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
+            credential = storage.get()
+            http= httplib2.Http()
+            http= credential.authorize(http)
+            service = build('calendar', 'v3', http=http)
+        except:
+            return redirect('/errorGoogle/')
+        evento = Evento.objects.get(id=id_evento)
+        if request.method == 'GET':
+            form = AgregarEventoCordForm(initial={
+                    'summary' : evento.summary,
+                    'location' : evento.location,
+                    'descripcion' : evento.descripcion,
+                    'tipoEvento' : evento.tipoEvento,
+                    'start': evento.start,
+                    'end': evento.end })
+        if request.method == 'POST':
+            form = AgregarEventoCordForm(request.POST)
+            if form.is_valid():
+                summary = form.cleaned_data['summary']
+                location = form.cleaned_data['location']
+                descripcion = form.cleaned_data['descripcion']
+                tipoEvento = form.cleaned_data['tipoEvento']
+                start = form.cleaned_data['start']
+                inicio = build_rfc3339_phrase(start)
+                end = form.cleaned_data['end']
+                fin = build_rfc3339_phrase(end)
+                if tipoEvento == 'profesor' :
+                    profesores = Profesor.objects.filter(linea=linea.id)
+                    event = {
+                        'summary': '%s'%(summary),
+     
+                        'start': {
+                            'dateTime': '%s'%(inicio),
+                            # 'timeZone': 'America/Santiago'
+                          },
+                        'end': {
+                            'dateTime': '%s'%(fin),
+                            # 'timeZone': 'America/Santiago'
+                          }
+                                        }               
+                    invitados = []
+                    emails  = []
+                    for email in profesores:
+                        x = {}
+                        x.update({'email': email.user.email})
+                        invitados.append(email.user.email)
+                        emails.append(x)
+
+                    event.update({'attendees': emails})
+                    idCal = evento.id_calendar
+                    updated_event = service.events().update(calendarId='primary', eventId=idCal, body=event).execute()
+                    evento.summary= summary 
+                    evento.location = location
+                    evento.start =start
+                    evento.end=end
+                    evento.descripcion=descripcion 
+                    evento.tipoEvento = tipoEvento
+                    evento.save()
+                if tipoEvento == 'jefe':
+                    jefeCarrera = UserProfile.objects.get(rol_JC='JC')
+                    linea = Linea.objects.get(nombreLinea = 'Proyectos')
+                    # coordinador = linea.coordinador.email
+                    event = {
+                        'summary': '%s'%(summary),
+     
+                        'start': {
+                            'dateTime': '%s'%(inicio),
+                            # 'timeZone': 'America/Santiago'
+                          },
+                        'end': {
+                            'dateTime': '%s'%(fin),
+                            # 'timeZone': 'America/Santiago'
+                          }}
+                    event['attendees'] =  [{'email': jefeCarrera.user.email}]
+                    event = service.events().get(calendarId='primary', eventId=idCal).execute()
+                    updated_event = service.events().update(calendarId='primary', eventId=eventt['id'], body=event).execute()
+                    evento.summary= summary 
+                    evento.location = location
+                    evento.start =start
+                    evento.end=end
+                    evento.descripcion=descripcion 
+                    evento.attendees=coordinador
+                    evento.tipoEvento = tipoEvento
+                    evento.save()
+                return redirect('/crearFechasCord/')                  
+            else:
+                status = "Completar todos los campos"
+
+        return render(request, 'coordLinea/editEvents.html', {'status': status, 'form':form, 'evento': evento, 'username':request.user.username})
+    else:
+        return redirect ('/errorLogin/')
+
+
 
 def deleteFechasCordView (request, id_evento):
     userTemp = User.objects.get(username=request.user.username)
@@ -538,8 +558,7 @@ def recursosCordView(request):
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
     if perfilTemp.rol_actual == 'CL':
         Recursos = Recurso.objects.filter(creador=request.user)
-        jefe = UserProfile.objects.get(rol_JC='JC')
-        recursosJefe = Recurso.objects.filter(creador=jefe.user)
+        recursosJefe = Recurso.objects.all().filter(~Q(creador=request.user))
         if request.method == 'POST':
             form = UploadFileForm(request.POST, request.FILES)
             if form.is_valid():
@@ -547,7 +566,7 @@ def recursosCordView(request):
                 ###### el nombre dle recurso no debe tener espacios
                 recurso = form.cleaned_data['recurso']            
                 titulo_recurso = form.cleaned_data['title']
-                descripcion = form.cleaned_data['descripcion']
+                descripcion= form.cleaned_data['descripcion']
                 estado = form.cleaned_data['estado']
                 fechaUltimaModificacion = datetime.now() - timedelta(hours=3)
                 newRecurso = Recurso.objects.create(recurso = recurso, creador=request.user, titulo_recurso=titulo_recurso, descripcion_recurso=descripcion, estado=estado, fechaUltimaModificacion=fechaUltimaModificacion)
@@ -561,55 +580,50 @@ def recursosCordView(request):
         return redirect ('/errorLogin/')
 
 
-def deleteRecursoView(request, id_recurso):
+def deleteRecursoCordView(request, id_recurso):
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
     if perfilTemp.rol_actual == 'CL':
         Recursos = Recurso.objects.get(id=id_recurso)
         Recursos.delete()
-        return HttpResponseRedirect('/recursos/')
+        return HttpResponseRedirect('/recursosCord/')
     else:
         return redirect ('/errorLogin/')
 
-def editRecursosView(request, id_recurso):
-    # recurs = Recurso.objects.get(id=id_recurso)
-    # if request.method == 'GET':
-    #     form = UploadFileForm(initial={
-    #             'recurso' : recurs.recurso,
-    #             'title' : recurs.titulo_recurso,
-    #             'descripcion' : recurs.descripcion_recurso,
-    #             'estado' : recurs.estado})
+def editRecursosCordView(request, id_recurso):
+
+    status = ""
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
     if perfilTemp.rol_actual == 'CL':
-        Recursos = Recurso.objects.get(id=id_recurso)
-        if request.method == 'GET':
-            form = UploadFileForm(initial={
-                'recurso' : Recursos.recurso,
-                'title' : Recursos.titulo_recurso,
-                'descripcion' : Recursos.descripcion_recurso,
-                'estado' : Recursos.estado})
+        recursos = Recurso.objects.get(id=id_recurso)
         if request.method == 'POST':
             form = UploadFileForm(request.POST, request.FILES)
             if form.is_valid():
-                # Recursos = Recurso.objects.get(id=id_recurso)
-                # Recursos.delete()
-                recurso = form.cleaned_data['recurso']            
-                titulo_recurso = form.cleaned_data['title']
-                descripcion = form.cleaned_data['descripcion']
-                estado = form.cleaned_data['estado']
-                fechaUltimaModificacion = datetime.now() -timedelta(hours=3)
-
-                Recursos.recurso = recurso            
-                Recursos.titulo_recurso = titulo_recurso
-                Recursos.descripcion = descripcion
-                Recursos.estado = estado
-                Recursos.fechaUltimaModificacion = fechaUltimaModificacion
-                Recursos.save()
-            return redirect('/recursos/')
-        return render(request, 'jefeCarrera/editRecursos.html', {'form': form})
+                recursoP = form.cleaned_data['recurso']            
+                titulo_recursoP = form.cleaned_data['title']
+                descripcionP= form.cleaned_data['descripcion']
+                estadoP = form.cleaned_data['estado']
+                fechaUltimaModificacionP = datetime.now() - timedelta(hours=3)
+                recursos.recurso = recursoP          
+                recursos.titulo_recurso = titulo_recursoP
+                recursos.descripcion_recurso = descripcionP
+                recursos.estado = estadoP
+                recursos.fechaUltimaModificacion = fechaUltimaModificacionP
+                recursos.save()
+                return redirect('/recursos/')
+            else:
+                status = "Faltan datos"
+        if request.method == 'GET':
+            form = UploadFileForm(initial={
+                'recurso' : recursos.recurso,
+                'title' : recursos.titulo_recurso,
+                'descripcion' : recursos.descripcion_recurso,
+                'estado' : recursos.estado})
+        return render(request, 'coordLinea/editRecursos.html', {'form': form, 'status':status, 'id':id_recurso, 'username':request.user.username})
     else:
-        return redirect ('/errorLogin/') 
+        return redirect ('/errorLogin/')
+
 
 def aprobadosCordViews(request):
     userTemp = User.objects.get(username=request.user.username)
@@ -755,9 +769,8 @@ def votacionCordAnalisis (request, id_programa):
             form = analisisLineaForm(request.POST)
             if form.is_valid():
                 voto = form.cleaned_data['voto']
-                observacion = form.cleaned_data['observacion']
                 votante = request.user
-                eva = Analisis.objects.create(voto = voto, observacion=observacion, votante=votante, analisis=analisis)
+                eva = Analisis.objects.create(voto = voto,  votante=votante, analisis=analisis)
                 eva.save()
                 analisis.votoEvalCord = True
                 analisis.save()

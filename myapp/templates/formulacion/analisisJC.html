@@ -7,7 +7,7 @@
 {% block content %}
 <img src="/media/img/analisisJC.jpg">
 <br>
-    <p>Actualmente el programa está siendo analizado por su Jefe de Carrera. Cuando este delibere, si no encuentra indicaciones para al estado de aprobación. En el caso contrario, se creará un Reporte de Indicaciones, en el cual el Jefe de Carrera señalarás las indicaciones pertinentes para que el programa
+    <p>Actualmente el programa está siendo analizado por su Jefe de Carrera. Cuando este delibere, si no encuentra indicaciones, pasara al estado de aprobación. En el caso contrario, se creará un Reporte de Indicaciones, en el cual el Jefe de Carrera señalará las indicaciones pertinentes para que el programa
     pueda mejorar. A su vez, el programa volverá al primer estado de definiciones, para poder corregir las 
     indicaciones pertinentes. </p>
 {% endblock %}
@@ -19,7 +19,19 @@
 {%endblock%}
       
 
-{%block estado%}
-    <li class="activo">Definiciones Generales</li>
+{%block estados%}
+    <li class="disabled">Definiciones Generales</li>
+    <li class="disabled"> Definición de Contribución al Perfil de Egreso  </li>
+    <li class="disabled">Definición Resultados de Aprendizaje</li>
+    <li class="disabled">Estrategias de Ensenanza y de Aprendizaje</li>
+    <li class="disabled">Definición de Clase a Clase</li>
+    <li class="disabled">Análisis de evaluaciones asociadas</li>
+    <li class="disabled">Verificación Coherencia y Completitud</li>
+    <li class="disabled">Definición de Aspectos Administrativos</li>
+    <li class="disabled">Definición de Recursos de Aprendizaje</li>
+    <li class="disabled">Aprobación Línea</li>
+       <li class="disabled">Fast Track</li>
+    <li class="activo">Análisis Programa por Jefe de Carrera</li>
+    <li class="disabled">Aprobación Programa por Jefe de Carrera</li>
 {%endblock%}
 

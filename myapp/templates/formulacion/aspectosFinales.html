@@ -50,9 +50,8 @@
  <div class="row">
   <div class="col-md-10 col-md-push-2">
     <h2>Aspectos Finales</h2>
-    <p> Actualmente te encuentras en el último estado de la formulación, en donde debes definir los Aspectos Administrativos y los Recursos de Aprendizajes necesarios para el curso de la asignatura.
-      Cuando ambos aspectos esten finalizados, el programa pasará a la fase de análisis por el Jefe de Carrera, o si es necesario, y el coordinador de su línea lo determina así, pasará por un estado de FastTrack, pasando al estado de aprobación de inmediato.
-</p>
+    <p> Actualmente te encuentras en el último estado de la formulación, en donde debes definir los Aspectos Administrativos y los Recursos de Aprendizajes necesarios para el programa de asignatura.
+      Cuando ambos aspectos esten finalizados, deberás presionar el Botón "Enviar a mi línea", así, el programa pasará a la fase de votación a nivel de línea. Donde usted y sus compañeros de línea votarán por la aprobación del programa</p>
 <br><br>
 
 
@@ -71,6 +70,7 @@
           <p>Estado en el cual se debe señalar los recursos necesarios para que el alumno complemente lo aprendido en clases, a través de bibliografías, textos, apuntes, libros, sitios de interés, entre otros </p>
           <p>Estado actual: {{estadoRec}}</p>
           <p><a class="btn btn-default" href="/recursosAprend/{{p.id}}" role="button">Definir »</a></p>
+
         </div><!-- /.col-lg-4 -->
        
         {%if estadoAdm == 'Finalizado' and estadoRec == 'Finalizado' %}
@@ -92,6 +92,7 @@
     <li class="activo">Definición de Aspectos Administrativos</li>
     <li class="activo">Definición de Recursos de Aprendizaje</li>
     <li class="disabled">Aprobación Línea</li>
+       <li class="disabled">Fast Track</li>
     <li class="disabled">Análisis Programa por Jefe de Carrera</li>
     <li class="disabled">Aprobación Programa por Jefe de Carrera</li>
   </div>

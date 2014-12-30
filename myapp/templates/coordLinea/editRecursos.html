@@ -25,7 +25,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
               </button>
-              <a class="navbar-brand" href="#">Formulapp</a>
+              <a class="navbar-brand" href="/principal_cl/">Formulapp</a>
             </div>
             <div id="navbar" class="navbar-collapse collapse">
               <ul class="nav navbar-nav">
@@ -54,7 +54,7 @@
           <h3 class="panel-title">Editar Recursos</h3>
         </div>  
         <div class="panel-body">
-                                    
+  {%if status%}ssdfdfs{{status}}{%endif%}
           <form action="." method="POST" enctype="multipart/form-data">
             {%csrf_token%}
             {{ form|as_bootstrap}}

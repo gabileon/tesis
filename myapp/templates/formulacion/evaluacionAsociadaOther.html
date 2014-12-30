@@ -47,17 +47,15 @@
         </nav>
 
 
-     <div class="row">
-      <p>En esta sección debes votar po el programas de otro profesor si este cuenta con evaluaciones asociadas en lo definido previamnete en el programa.</p>
-        <br>
+     <div class="row"><br><br>
+      <p class="ft">En esta sección debes votar po el programa de otro profesor. El voto dependerá si este programa de asignatura cuenta con evaluaciones asociadas en lo definido previamente en el programa.
+        Para revisarlo presiona el documento y lo podrás ver en Google Drive.</p>
 
         <div class="panel panel-primary">        
             <div class="panel-heading">
                 <h3 class="panel-title">Votaciones Pendientes de Programas</h3>
             </div>
             <div class="panel-body">
-
-                <p><strong>Análisis de Evaluaciones Asociadas</strong></p>
               {%if programas%}
               <table class="table">
                     <thead>
@@ -104,11 +102,11 @@
                     </tbody>
                 </table>
                 {%else%}
-                <br>
                 <h4> No hay programas por revisar</h4>
             {%endif%}
             </div>
         </div>
+         <img class="explix"src="/media/img/eval.jpg">
 
 
  
@@ -127,6 +125,7 @@
     <li class="disabled">Definición de Aspectos Administrativos</li>
     <li class="disabled">Definición de Recursos de Aprendizaje</li>
     <li class="disabled">Aprobación Línea</li>
+    <li class="disabled">Fast Track</li>
     <li class="disabled">Análisis Programa por Jefe de Carrera</li>
     <li class="disabled">Aprobación Programa por Jefe de Carrera</li>
   </div>

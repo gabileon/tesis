@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 import datetime, random, sha
 from myapp.modulos.formulacion.forms import crearProgramaForm
 from myapp.modulos.presentacion.forms import ImageUploadForm
-from myapp.modulos.formulacion.models import Evaluacion, Recurso, Analisis, AnalisisM, Log, Asignatura, Programa, MyWorkflow,  ClaseClase, Completitud
+from myapp.modulos.formulacion.models import Evaluacion, Evaluaciones, Recurso, Analisis, AnalisisM, Log, Asignatura, Programa, MyWorkflow,  ClaseClase, Completitud
 from myapp.modulos.jefeCarrera.models import Evento
 from myapp.modulos.indicadores.models import ProgramasPorEstado
 from django.http import HttpResponse
@@ -82,8 +82,6 @@ def miperfilProfesorView(request):
 	    ctx = {'user': userTemp, 'perfil': perfilTemp, 'username': request.user.username, 'yo': yo}
 	    return render(request, 'profLinea/perfilConf.html', ctx)
 
-
-
 def principalPLView(request):
 	userTemp = User.objects.get(username=request.user.username)
 	perfilTemp = UserProfile.objects.get(user=userTemp.id)
@@ -100,35 +98,91 @@ def principalPLView(request):
 
 		######### Evaluacion #############
 
-		finales = []
-		for p in programasEval:
-			analisism = Evaluacion.objects.get(programa=p.id)
-			try:
-				votantes = Evaluaciones.objects.filter(evaluacion = analisism).filter(~Q(votante=request.user))
-			except:
-				votantes = 0
-			if votantes !=0:
-				finales.append(p)
-		if len(finales) == 0:
-			finales = programasEval
+		# finales = []
+		# for p in programasEval:
+		# 	analisism = Evaluacion.objects.get(programa=p.id)
+		# 	try:
+		# 		votantes = Evaluaciones.objects.filter(evaluacion = analisism).filter(~Q(votante=request.user))
+		# 	except:
+		# 		votantes = 0
+		# 	if votantes !=0:
+		# 		finales.append(p)
+		# if len(finales) == 0:
+		# 	finales = programasEval
 
-		evaluaciones = len(finales)
+		# evaluaciones = len(finales)
+
+		programasEval = Programa.objects.filter(state='analisisEvaluacionesAsociadas').filter(~Q(profesorEncargado=request.user))
+		estado = 5
+		yo = User.objects.get(username = request.user.username)
+		finales = []
+		votantesTemp = []
+		bandera = False
+		evaluacionTemp = None
+		for p in programasEval:
+			##3 obtemngo la evaluacion asociada de cada uno
+			evaluacionTemp = Evaluacion.objects.get(programa=p.id)
+			
+			# ontengo los votos
+			evaluacionesTemp = 	Evaluaciones.objects.filter(evaluacion=evaluacionTemp)
+			if not evaluacionesTemp:
+			
+				finales.append(p)
+				####### obtengo los votantes
+			else:
+				for e in evaluacionesTemp:
+					votantesTemp.append(e.votante)
+				for v in votantesTemp:
+					if v==yo :
+						bandera = True
+				if bandera ==False:
+				
+					finales.append(p)
+
+
 
 		######### ANALISIS #############
 
-		analisisA = []
-		for p in programas:
-			analisism = AnalisisM.objects.get(programa=p.id)
-			try:
-				votantes = Analisis.objects.filter(analisis = analisism).filter(~Q(votante=request.user))
-			except:
-				votantes = 0
-			if votantes !=0:
-				analisisA.append(p)
-		if len(finales) == 0:
-			analisisA = programas
+		# analisisA = []
+		# for p in programas:
+		# 	analisism = AnalisisM.objects.get(programa=p.id)
+		# 	try:
+		# 		votantes = Analisis.objects.filter(analisis = analisism).filter(~Q(votante=request.user))
+		# 	except:
+		# 		votantes = 0
+		# 	if votantes !=0:
+		# 		analisisA.append(p)
+		# if len(finales) == 0:
+		# 	analisisA = programas
 
-		analisisNum = len(analisisA)
+		programasEval = Programa.objects.filter(state='aprobacionLinea').filter(~Q(profesorEncargado=request.user))
+		estado = 5
+		yo = User.objects.get(username = request.user.username)
+		finales2 = []
+		votantesTemp = []
+		bandera2 = False
+		analisisTemp = None
+		for p in programasEval:
+			##3 obtemngo la evaluacion asociada de cada uno
+			analisisTemp = AnalisisM.objects.get(programa=p.id)
+			
+			# ontengo los votos
+			analisissTemp = 	Analisis.objects.filter(analisis=analisisTemp)
+			if not analisissTemp:
+		
+				finales2.append(p)
+				####### obtengo los votantes
+			else:
+				for e in analisissTemp:
+					votantesTemp.append(e.votante)
+				for v in votantesTemp:
+					if v==yo :
+						bandera2 = True
+				if bandera2 ==False:
+					finales2.append(p)
+
+
+		analisisNum = len(finales2)
 
 		############################
 		form = crearProgramaForm()
@@ -208,17 +262,18 @@ def principalPLView(request):
 		else:
 			form = crearProgramaForm()
 					#GEt
-		ctx = { 'userTemp': userTemp, 'evaluaciones': evaluaciones, 'yo': yo, 'username' : username,'estado': estado, 'form': form, 'programas': programas, 'porAnalizar': analisisNum, 'otros': otrosProgramas, 'aprobados': programasApro}
+		ctx = { 'userTemp': userTemp, 'evaluaciones': len(finales), 'yo': yo, 'username' : username,'estado': estado, 'form': form, 'programas': programas, 'porAnalizar': analisisNum, 'otros': otrosProgramas, 'aprobados': programasApro}
 		return render(request, 'profLinea/principalPL.html', ctx)
 	else:
 		return redirect('/errorLogin/')
 
 def misProgramasAprobadosView(request, id_user):
+	yo = User.objects.get(username=request.user.username)
 	try:
-		programas = Programa.objects.filter(profesorEncargado=id_user)
+		programas = Programa.objects.filter(profesorEncargado=id_user).filter(state='fin')
 	except:
 		programas = []
-	return render(request, 'profLinea/misProgramas.html', {'username': request.user.username, 'programas': programas})
+	return render(request, 'profLinea/misProgramas.html', {'username': request.user.username, 'programas': programas, 'yo':yo})
 
 def logEstado (programa, state):
 
@@ -239,12 +294,11 @@ def eliminarProgramaView(request, id_programa):
 			http= credential.authorize(http)
 			service = build('drive', 'v2', http=http, developerKey="hbP6_4UJIKe-m74yLd8tQDfT")
 		except:
-			return redirect('/logout/')
+			return redirect('/errorGoogle/')
 		programa= Programa.objects.get(id=id_programa)
 		try:
 			service.files().delete(fileId=programa.id_file).execute()
-		except errors.HttpError, error:
-			print 'Ocurrio un error al eliminar el archivo %s' % error
+		except:
 			return redirect('/errorGoogle/')
 	
 		try:
@@ -290,6 +344,7 @@ def fechasView(request):
 		return redirect('/errorLogin/')
 
 def changePasswordProfView(request, id_user):
+    yo = User.objects.get(username=request.user.username)
     u = User.objects.get(id=id_user)
     form = changePasswordForm()
     if request.method == "POST":
@@ -301,5 +356,5 @@ def changePasswordProfView(request, id_user):
                 u.set_password(password)
                 u.save()
                 return HttpResponseRedirect("/miperfilProfesor/")
-    ctx = {'form':form, 'user':u, 'username': request.user.username}
+    ctx = {'form':form, 'user':u, 'username': request.user.username, 'yo': yo}
     return render(request, 'presentacion/changePasswordProf.html', ctx)

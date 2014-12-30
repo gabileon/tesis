@@ -5,8 +5,8 @@
     <ol class="breadcrumb">
   <li><a href="/principalPL/">Programas</a></li>
   <li><a href="/definiciones/{{p.id}}">Definiciones</a></li>
-  <li class="active">Constribución al Perfil de Egreso</li>
-</ol><h2> Constribución al Perfil de Egreso</h2>
+  <li class="active">Contribución al Perfil de Egreso</li>
+</ol><h2> Contribución al Perfil de Egreso</h2>
 {%endblock%}
 {% block content %}
 {% block foto %}
@@ -21,11 +21,38 @@
 {%endblock%}
 {% block parrafo%}
 <br>
-    <p>En este estado deberas señalar y describir brevemente los métodos seleccionados para asegurar que los alumnos desarrollen los aprendizajes esperados. Además, debes indicar también si es que debiesen existir estrategias o actividades cruciales para alcanzar el desarrollo del curso como por ejemplo salidas a terreno, exposición oral, lectura en inglés, entre otras. </p>
+    <p>Actualmente te encuentras en el estado de Definición Contribución al Perfil de Egreso. En esta deberás explicitar atributos o elementos del perfil de egreso de la carrera a los que aporta la asignatura del programa que estás desarrollando. Utiliza los recursos de formulación entregados por el Jefe de Carrera, para la definición de este aspecto. </p>
+
 {% endblock %}
 {% endblock %}
 {%block drive%}
 <li>Documento en Drive  <td><a href="{{p.url}}"> <span class="glyphicon glyphicon-cloud"></span></a></td></li>
+{%endblock%}
+{%block recursosJefe%}
+<br>
+{%if recursosJefe%}
+<table class="table-recursos table-striped">
+<thead>
+                        <tr>
+                            <th>Nombre Recurso</th>
+                            <th>Descripción</th>
+                            <th>Archivo</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                         {%for r in recursosJefe%}
+                        <tr>
+                            <td>{{r.titulo_recurso}}</td></a>
+                            <td>{{r.descripcion_recurso}}</td>
+                           <td><a href="/files/serve/{{r.recurso}}"><span class="glyphicon glyphicon-paperclip"></a></span></td>
+                        </tr>
+                        {%endfor%}
+                    </tbody>
+</table>
+{%else%}
+<h4>No hay recursos de formulación para este estado</h4>
+{%endif%}
 {%endblock%}
 
   {%block defEstado%}
@@ -49,7 +76,7 @@
                                 <h4 class="modal-title" id="myModalLabel">Guardar Avance</h4>
                               </div>
                               <div class="modal-body">
-                                <p>¿En qué estado se encuentra la definición de RdA?</p>
+                                <p>¿En qué estado se encuentra la definición de Contribución al Perfil de Egreso?</p>
                                     <form id="defEstado"  class="form-horizontal" action="/definicionConstribucion/{{p.id}}/" method="POST">
                                     {% csrf_token %}
                                     
@@ -67,18 +94,18 @@
                         </div>
   {%endblock%}          
 
-{%block estado%}
+{%block estados%}
     <li class="disabled">Definiciones Generales</li>
-    <li class="activo"> Definicion de Contribución al Perfil de Egreso  </li>
+    <li class="activo"> Definición de Contribución al Perfil de Egreso  </li>
     <li class="disabled">Definición Resultados de Aprendizaje</li>
     <li class="disabled">Estrategias de Ensenanza y de Aprendizaje</li>
-    <li class="disabled">Definicion de Clase a Clase</li>
+    <li class="disabled">Definición de Clase a Clase</li>
     <li class="disabled">Análisis de evaluaciones asociadas</li>
-    <li class="disabled">Verificacion Coherencia y Completitud</li>
-    <li class="disabled">Programación de Actividades</li>
+    <li class="disabled">Verificación Coherencia y Completitud</li>
     <li class="disabled">Definición de Aspectos Administrativos</li>
     <li class="disabled">Definición de Recursos de Aprendizaje</li>
     <li class="disabled">Aprobación Línea</li>
+       <li class="disabled">Fast Track</li>
     <li class="disabled">Análisis Programa por Jefe de Carrera</li>
     <li class="disabled">Aprobación Programa por Jefe de Carrera</li>
 {%endblock%}
