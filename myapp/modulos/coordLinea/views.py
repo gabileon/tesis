@@ -152,7 +152,7 @@ def votacion (request, id_evaluacion):
             if form.is_valid():
                 voto = form.cleaned_data['voto']
                 votante = request.user
-                evaluac = Evaluaciones.objects.create(voto = voto,  votante=votante, evaluacion= evaluacion)
+                evaluac = Evaluaciones.objects.create(voto = voto,  votante=votante, evaluacion= evaluacion, cord=True)
                 evaluac.save()
                 evaluacion.votoEvalCord = True
                 evaluacion.save()
@@ -770,7 +770,7 @@ def votacionCordAnalisis (request, id_programa):
             if form.is_valid():
                 voto = form.cleaned_data['voto']
                 votante = request.user
-                eva = Analisis.objects.create(voto = voto,  votante=votante, analisis=analisis)
+                eva = Analisis.objects.create(voto = voto,  votante=votante, analisis=analisis, cord=True)
                 eva.save()
                 analisis.votoEvalCord = True
                 analisis.save()

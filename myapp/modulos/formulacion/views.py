@@ -340,7 +340,7 @@ def evaluacionesAsociadasView(request, id_programa):
 			if form.is_valid():
 				voto = form.cleaned_data['voto']
 				votante = request.user
-				eva = Evaluaciones.objects.create(voto = voto, votante=votante, evaluacion=evaluacion)
+				eva = Evaluaciones.objects.create(voto = voto, votante=votante, evaluacion=evaluacion, cord=False)
 				eva.save()
 				evaluacion.votoProfe = True
 				evaluacion.save()
@@ -408,22 +408,20 @@ def evaluacionesAsociadasOthersView(request):
 		##3 obtemngo la evaluacion asociada de cada uno
 		evaluacionTemp = Evaluacion.objects.get(programa=p.id)
 		
-		# ontengo los votos
+		# obntengo los votos
 		evaluacionesTemp = 	Evaluaciones.objects.filter(evaluacion=evaluacionTemp)
 		if not evaluacionesTemp:
-			
 			finales.append(p)
 			####### obtengo los votantes
 		else:
 			for e in evaluacionesTemp:
-				votantesTemp.append(e.votante)
-			for v in votantesTemp:
-				if v==yo :
-					bandera = True
+				if e.cord==False:
+					votantesTemp.append(e.votante)
+				for v in votantesTemp:
+					if v==yo:
+						bandera = True
 			if bandera ==False:
-			
 				finales.append(p)
-			
 		if evaluacionesTemp == 0:
 			finales.append(p)
 
@@ -443,7 +441,7 @@ def votacionEvaluacionOtroProfeView(request, id_programa):
 		if form.is_valid():
 			voto = form.cleaned_data['voto']
 			votante = request.user
-			eva = Evaluaciones.objects.create(voto = voto,  votante=votante, evaluacion=analisis)
+			eva = Evaluaciones.objects.create(voto = voto,  votante=votante, evaluacion=analisis, cord=False)
 			eva.save()
 			evaluacionesVot(analisis)
 			return redirect('/votacionesEvaluacionOtroProfeLinea/')
@@ -698,17 +696,6 @@ def analisisVot(evaluacion):
 				perdieron = 0
 				programa.siAprob_toFT()
 				logEstado(programa, programa.state.title)
-				try:
-					x = ProgramasPorEstado.objects.get(estado=programa.state.title)
-				except ProgramasPorEstado.DoesNotExist:
-					x = None
-				if x is None:
-					newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-				 	newIndicador.save()
-				else:
-					indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
-					indicador.cantidad = indicador.cantidad + 1
-					indicador.save()
 				programa.save()
 				bandera = True
 			else:
@@ -718,17 +705,6 @@ def analisisVot(evaluacion):
 				logEstado(programa, programa.state.title)
 				programa.to_datosAsig()
 				programa.save()
-				try:
-					x = ProgramasPorEstado.objects.get(estado=programa.state.title)
-				except ProgramasPorEstado.DoesNotExist:
-					x = None
-				if x is None:
-					newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-				 	newIndicador.save()
-				else:
-					indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
-					indicador.cantidad = indicador.cantidad + 1
-					indicador.save()
 	else:
 		termino = 0
 	return bandera
@@ -763,7 +739,7 @@ def votacionAnalisisProfeView(request, id_programa):
 			if form.is_valid():
 				voto = form.cleaned_data['voto']
 				votante = request.user
-				eva = Analisis.objects.create(voto = voto,  votante=votante, analisis=evaluacion)
+				eva = Analisis.objects.create(voto = voto,  votante=votante, analisis=evaluacion, cord=False)
 				eva.save()
 				evaluacion.votoProfe = True
 				evaluacion.save()
@@ -807,7 +783,8 @@ def votacionAnalisisOtroProfeView(request):
 			####### obtengo los votantes
 		else:
 			for e in evaluacionesTemp:
-				votantesTemp.append(e.votante)
+				if e.cord==False:
+					votantesTemp.append(e.votante)
 			for v in votantesTemp:
 				if v==yo :
 					bandera = True
@@ -824,14 +801,13 @@ def votacionAnalisisOtroProfeView(request):
 
 def votacionOtroProfeView(request, id_programa):
 	programa = Programa.objects.get(id=id_programa)
-	
 	analisis = programa.analisism
 	if request.method == 'POST':
 		form = analisisLineaForm(request.POST)
 		if form.is_valid():
 			voto = form.cleaned_data['voto']
 			votante = request.user
-			eva = Analisis.objects.create(voto = voto, votante=votante, analisis=analisis)
+			eva = Analisis.objects.create(voto = voto, votante=votante, analisis=analisis, cord=False)
 			eva.save()
 			analisisVot(analisis)
 			return redirect('/principalPL/')

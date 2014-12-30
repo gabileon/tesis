@@ -131,7 +131,8 @@ def principalPLView(request):
 				####### obtengo los votantes
 			else:
 				for e in evaluacionesTemp:
-					votantesTemp.append(e.votante)
+					if e.cord==False:
+						votantesTemp.append(e.votante)
 				for v in votantesTemp:
 					if v==yo :
 						bandera = True
@@ -174,7 +175,9 @@ def principalPLView(request):
 				####### obtengo los votantes
 			else:
 				for e in analisissTemp:
-					votantesTemp.append(e.votante)
+					if e.cord==False:
+						votantesTemp.append(e.votante)
+	
 				for v in votantesTemp:
 					if v==yo :
 						bandera2 = True

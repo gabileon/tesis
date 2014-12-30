@@ -142,6 +142,7 @@ class Evaluaciones(models.Model):
     votante = models.OneToOneField(User)
     observacion = models.TextField()
     evaluacion = models.OneToOneField(Evaluacion)
+    cord = models.BooleanField(default=False)
 
 class AnalisisM(models.Model):
     programa = models.OneToOneField(Programa)
@@ -153,6 +154,8 @@ class Analisis(models.Model):
     votante = models.OneToOneField(User)
     observacion = models.TextField()
     analisis = models.OneToOneField(AnalisisM)
+    cord = models.BooleanField(default=False)
+
 
 class Recurso(models.Model):
     def url(self, filename):
