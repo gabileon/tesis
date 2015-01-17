@@ -47,6 +47,12 @@ indexes:
 
 - kind: formulacion_programa
   properties:
+  - name: linea_id
+  - name: fechaUltimaModificacion
+    direction: desc
+
+- kind: formulacion_programa
+  properties:
   - name: profesorEncargado_id
   - name: fechaUltimaModificacion
     direction: desc
@@ -59,6 +65,11 @@ indexes:
 - kind: jefeCarrera_evento
   properties:
   - name: anfitrion_id
+  - name: fecha
+
+- kind: jefeCarrera_evento
+  properties:
+  - name: anfitrion_id
   - name: start
 
 - kind: jefeCarrera_evento
@@ -66,6 +77,11 @@ indexes:
   - name: anfitrion_id
   - name: start
     direction: desc
+
+- kind: jefeCarrera_evento
+  properties:
+  - name: tipoEvento
+  - name: fecha
 
 - kind: jefeCarrera_evento
   properties:

@@ -42,7 +42,15 @@ class UploadFileForm(forms.Form):
 	estado = forms.ChoiceField(choices=ESTADOS, label= "Seleccione el estado")
 	
 class LineasForm(forms.Form):
-	nombreLinea  = forms.CharField(widget=forms.TextInput(),label="Nombre de Linea de Asignatura")
+	MY_CHOICES = (
+        ('Ingenieria de Software', 'Ingenieria de Software'),
+        ('Sistemas', 'Sistemas'),
+        ('Algoritmos', 'Algoritmos'),
+        ('Economia', 'Economia'),
+        ('Base de Datos', 'Base de Datos'),
+        ('Proyectos', 'Proyectos'),
+    )
+	nombreLinea  = forms.ChoiceField(choices=MY_CHOICES, label="Nombre de Linea de Asignatura")
 
 class analizarForm(forms.Form):
 	decision = forms.CheckboxInput()

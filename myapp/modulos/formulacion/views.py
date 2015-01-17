@@ -18,11 +18,12 @@ import httplib2
 import os
 from google.appengine.api import mail
 
-def logEstado (programa, state):
+def logEstado (user, programa, state):
     l= Log()
     l.programa = programa
     l.state = state
     l.fecha = datetime.now() - timedelta(hours=3)
+    l.encargado = user
     l.save() 
 ########## PRIMER ESTADO ##############
 def defGenerales(request, id_programa):
@@ -40,7 +41,7 @@ def defGenerales(request, id_programa):
 	 		estado = programa.state.title
 	 		programa.to_defGeneral()
 	 		programa.fechaUltimaModificacion = datetime.now() - timedelta(hours=3)
-	 		logEstado(programa, programa.state.title)
+	 		logEstado(userTemp,programa, programa.state.title)
 	 		programa.save()
 	 		try:
 		 		x = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -136,6 +137,7 @@ def definicionesGeneralesAdmin(request, id_programa):
 	return render(request, 'formulacion/definiciones.html', ctx)
 ######  TERCCER ESTADO ######
 def definicionConstribucion(request, id_programa):
+	userTemp = User.objects.get(username=request.user.username)
 	programa = Programa.objects.get(id=id_programa)
 	recursosJefe = Recurso.objects.filter(estado="Definicion de Constribucion al Perfil de Egreso")
 	constribucion = Constribucion.objects.get(programa=programa)
@@ -157,12 +159,12 @@ def definicionConstribucion(request, id_programa):
 		form = estadoForm(request.POST)
 		programa.to_defCons()
 		programa.save()
-		logEstado(programa, programa.state.title)
+		logEstado(userTemp,programa, programa.state.title)
 		choice = request.POST['optionsRadios']
 		if choice=='option2':
 	 		programa.to_defGeneralCons()
 	 		programa.fechaUltimaModificacion = datetime.now()-timedelta(hours=3)
-	 		logEstado(programa, programa.state.title)
+	 		logEstado(userTemp,programa, programa.state.title)
 	 		constribucion.estado = "Finalizado"
 	 		constribucion.save()
 	 		programa.save()
@@ -179,6 +181,7 @@ def definicionConstribucion(request, id_programa):
 	ctx = {'form': form, 'p' : programa, 'form': form, 'username': request.user.username, 'recursosJefe': recursosJefe}
 	return render(request, 'formulacion/definicionConstribucion.html', ctx)
 def definicionRdA(request, id_programa):
+	userTemp =User.objects.get(username=request.user.username)
 	programa = Programa.objects.get(id=id_programa)
 	recursosJefe = Recurso.objects.filter(estado="Definicion Resultados de Aprendizaje")
 	definicion = RDA.objects.get(programa=programa)
@@ -200,13 +203,13 @@ def definicionRdA(request, id_programa):
 	if request.method == "POST":
 		programa.to_defRdA()
 		programa.save()
-		logEstado(programa, programa.state.title)
+		logEstado(userTemp, programa, programa.state.title)
 		form = estadoForm(request.POST)
 		choice = request.POST['optionsRadios']
 		if choice=='option2':
 	 		programa.to_defGeneralRdA()
 	 		programa.fechaUltimaModificacion =  datetime.now()-timedelta(hours=3)
-	 		logEstado(programa, programa.state.title)
+	 		logEstado(userTemp,programa, programa.state.title)
 	 		definicion.estado = "Finalizado"
 	 		definicion.save()
 	 		programa.save()
@@ -223,6 +226,7 @@ def definicionRdA(request, id_programa):
 	ctx = {'form': form, 'p' : programa, 'form': form, 'username': request.user.username, 'recursosJefe':recursosJefe}
 	return render(request, 'formulacion/definicionRdA.html', ctx)
 def definicionEstra(request, id_programa):
+	userTemp =User.objects.get(username=request.user.username)
 	programa = Programa.objects.get(id=id_programa)
 	recursosJefe = Recurso.objects.filter(estado="Estrategias de Ensenanza y de Aprendizaje")
 	definicion = Estrategias.objects.get(programa=programa)
@@ -244,13 +248,13 @@ def definicionEstra(request, id_programa):
 	if request.method == "POST":
 		programa.to_defEstrategias()
 		programa.save()	
-		logEstado(programa, programa.state.title)
+		logEstado(userTemp,programa, programa.state.title)
 		form = estadoForm(request.POST)
 		choice = request.POST['estado']
 		if choice=='opt0':
 	 		programa.to_defGeneralEstra()
 	 		programa.fechaUltimaModificacion =  datetime.now()-timedelta(hours=3)
-	 		logEstado(programa, programa.state.title)
+	 		logEstado(userTemp,programa, programa.state.title)
 	 		definicion.estado = "Finalizado"
 	 		definicion.save()
 	 		programa.save()
@@ -266,13 +270,14 @@ def definicionEstra(request, id_programa):
 	return render(request, 'formulacion/definicionEstra.html', ctx)
 ######## CUARTO ESTADO #########
 def definicionClaseClase_view(request, id_programa):
+	userTemp =User.objects.get(username=request.user.username)
 	programa = Programa.objects.get(id=id_programa)
 	recursosJefe = Recurso.objects.filter(estado="Definicion de Clase a Clase")
 	definicion = ClaseClase.objects.get(programa=programa)
 	if request.method == "GET":
 		programa.to_defCons()
 		programa.to_defClase()
-		logEstado(programa, programa.state.title)
+		logEstado(userTemp,programa, programa.state.title)
 		programa.save()
 		form = estadoForm()
 		if definicion.estado is not None:
@@ -293,7 +298,7 @@ def definicionClaseClase_view(request, id_programa):
 		if choice=='option2':
 	 		programa.to_analisisEval()
 	 		programa.fechaUltimaModificacion =  datetime.now()-timedelta(hours=3)
-	 		logEstado(programa, programa.state.title)
+	 		logEstado(userTemp,programa, programa.state.title)
 	 		definicion.estado = "Finalizado"
 	 		definicion.save()
 	 		programa.save()
@@ -313,9 +318,11 @@ def definicionClaseClase_view(request, id_programa):
 def evaluacionesAsociadasView(request, id_programa):
 	form = evaluacionesForm()
 	programa = Programa.objects.get(id=id_programa)
-	
+	asignatura = programa.asignatura
+	lineas = programa.asignatura.linea.id
+	linea = Linea.objects.get(id=lineas)
 	profe = programa.profesorEncargado
-	linea = Profesor.objects.get(user = profe).linea
+	# linea = Profesor.objects.get(user = profe).linea
 	coordinadorLinea = linea.coordinador
 	profesoresLinea = Profesor.objects.filter(linea=linea).count()
 	evaluacion = Evaluacion.objects.get(programa=programa)
@@ -355,11 +362,13 @@ def evaluacionesVot(evaluacion):
 	programa = evaluacion.programa
 	votos = Evaluaciones.objects.filter(evaluacion =evaluacion)
 	numVotos = len(votos)
-	lineaP = Profesor.objects.get(user = profe).linea
+	asignatura = programa.asignatura
+	lineas = programa.asignatura.linea.id
+	lineaP = Linea.objects.get(id=lineas)
 	coordinadorLinea = lineaP.coordinador
 	profesoresLinea = Profesor.objects.filter(linea=lineaP).count()
 	##### Termino la votacion #######
-	if (numVotos == (profesoresLinea+1 )):
+	if (numVotos == (profesoresLinea +1 )):
 		termino = 1
 		#### conteo de votos ###
 		votosSi = votos.filter(voto='Si').count()
@@ -367,13 +376,11 @@ def evaluacionesVot(evaluacion):
 		################# Resultados ###########
 		if votosSi>votosNo :
 			programa.siEvaluacion_toVerif()
-			logEstado(programa, programa.state.title)
 			programa.save()
 			bandera = True
 		if votosSi<votosNo:
 			bandera = True
 			programa.noEvaluacion_toForm()
-			logEstado(programa, programa.state.title)
 			programa.to_datosAsig()
 			programa.save()
 		if votosNo==votosSi:
@@ -382,14 +389,12 @@ def evaluacionesVot(evaluacion):
 			if votoDelCoord.voto == 'Si':
 				perdieron = 0
 				programa.siEvaluacion_toVerif()
-				logEstado(programa, programa.state.title)
 				programa.save()
 				bandera = True
 			else:
 				bandera = False
 				perdieron = 1
 				programa.noEvaluacion_toForm()
-				logEstado(programa, programa.state.title)
 				programa.to_datosAsig()
 				programa.save()
 	else:
@@ -453,6 +458,7 @@ def votacionEvaluacionOtroProfeView(request, id_programa):
 
 
 def definicionCompletitudCoherencia_view(request, id_programa):
+	userTemp =User.objects.get(username=request.user.username)
 	programa = Programa.objects.get(id=id_programa)
 	recursosJefe = Recurso.objects.filter(estado="Verificacion Coherencia y Completitud")
 	definicion = Completitud.objects.get(programa=programa)
@@ -476,7 +482,7 @@ def definicionCompletitudCoherencia_view(request, id_programa):
 		if choice=='option2':
 	 		programa.verificacion_toAspectosFinal()
 	 		programa.fechaUltimaModificacion = datetime.now() - timedelta(hours=3)
-	 		logEstado(programa, programa.state.title)
+	 		logEstado(userTemp, programa, programa.state.title)
 	 		definicion.estado = "Finalizado"
 	 		definicion.save()
 	 		programa.save()
@@ -492,6 +498,7 @@ def definicionCompletitudCoherencia_view(request, id_programa):
 	return render(request, 'formulacion/completitud.html', ctx)
 
 def intermedioAdmRecView (request, id_programa):
+	userTemp =User.objects.get(username=request.user.username)
 	programa = Programa.objects.get(id=id_programa)
 	recursosJefe = Recurso.objects.filter(estado=programa.state.title)
 	username=request.user.username
@@ -508,6 +515,7 @@ def intermedioAdmRecView (request, id_programa):
 	return render(request, 'formulacion/aspectosFinales.html', ctx)
 
 def aspectosAdm_view(request, id_programa):
+	userTemp =User.objects.get(username=request.user.username)
 	programa = Programa.objects.get(id=id_programa)
 	recursosJefe = Recurso.objects.filter(estado="Definicion de Aspectos Administrativos")
 	definicion = Administrativo.objects.get(programa=programa)
@@ -520,7 +528,7 @@ def aspectosAdm_view(request, id_programa):
 		if choice=='option2':
 	 		programa.to_AdmAspectos()
 	 		programa.fechaUltimaModificacion = datetime.now() - timedelta(hours=3)
-	 		logEstado(programa, programa.state.title)
+	 		logEstado(userTemp, programa, programa.state.title)
 	 		definicion.estado = "Finalizado"
 	 		definicion.save()
 	 		programa.save()
@@ -537,6 +545,7 @@ def aspectosAdm_view(request, id_programa):
 	return render(request, 'formulacion/aspecAdm.html', ctx)
 
 def recursosAprend_view(request, id_programa):
+	userTemp =User.objects.get(username=request.user.username)
 	programa = Programa.objects.get(id=id_programa)
 	recursosJefe = Recurso.objects.filter(estado="Definicion de Recursos de Aprendizaje")
 	definicion = RecursosApren.objects.get(programa=programa)
@@ -570,7 +579,7 @@ def recursosAprend_view(request, id_programa):
 			definicion.estado = "Modificando"
 	 		definicion.save()
 	 		programa.to_RecAspectos()
-	 		logEstado(programa, programa.state.title)
+	 		logEstado(userTemp,programa, programa.state.title)
 			programa.fechaUltimaModificacion = datetime.now() - timedelta(hours=3)
 			programa.save()	
 			return HttpResponseRedirect('/intermedioAdmRec/'+id_programa)
@@ -581,6 +590,7 @@ def recursosAprend_view(request, id_programa):
 
 ##### FastTrack por el coordinador ###
 def fastTrackDecisionView(request, id_programa):
+
 	programa = Programa.objects.get(id=id_programa)
 	if request.method == 'GET':
 		form = analizarFTForm()
@@ -600,7 +610,8 @@ def fastTrackDecisionView(request, id_programa):
 						x.cantidad = x.cantidad - 1
 						x.save()
 						programa.siFT_toAprobJC()
-						logEstado(programa, programa.state.title)
+						userTemp =User.objects.get(username=request.user.username)
+						logEstado(userTemp, programa, programa.state.title)
 						programa.save()
 						try:
 							y = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -624,7 +635,8 @@ def fastTrackDecisionView(request, id_programa):
 						m.cantidad = m.cantidad - 1
 						m.save()
 						programa.noFT_toAnalisisJC()
-						logEstado(programa, programa.state.title)
+						userTemp =User.objects.get(username=request.user.username)
+						logEstado(userTemp, programa, programa.state.title)
 						programa.save()
 						try:
 							n = ProgramasPorEstado.objects.get(estado=programa.state.title)
@@ -646,7 +658,9 @@ def analisisVot(evaluacion):
 	programa = evaluacion.programa
 	votos = Analisis.objects.filter(analisis =evaluacion)
 	numVotos = len(votos)
-	lineaP = Profesor.objects.get(user = profe).linea
+	asignatura = programa.asignatura
+	lineas = programa.asignatura.linea.id
+	lineaP = Linea.objects.get(id=lineas)
 	coordinadorLinea = lineaP.coordinador
 	profesoresLinea = Profesor.objects.filter(linea=lineaP).count()
 	##### Termino la votacion #######
@@ -658,51 +672,25 @@ def analisisVot(evaluacion):
 		################# Resultados ###########
 		if votosSi>votosNo :
 			programa.siAprob_toFT()
-			logEstado(programa, programa.state.title)
-			try:
-				x = ProgramasPorEstado.objects.get(estado=programa.state.title)
-			except ProgramasPorEstado.DoesNotExist:
-				x = None
-			if x is None:
-				newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-			 	newIndicador.save()
-			else:
-				indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
-				indicador.cantidad = indicador.cantidad + 1
-				indicador.save()
 			programa.save()
 			bandera = True
 		if votosSi<votosNo:
 			bandera = True
 			programa.noAprob_toForm()
-			logEstado(programa, programa.state.title)
 			programa.to_datosAsig()
 			programa.save()
-			try:
-				x = ProgramasPorEstado.objects.get(estado=programa.state.title)
-			except ProgramasPorEstado.DoesNotExist:
-				x = None
-			if x is None:
-				newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-			 	newIndicador.save()
-			else:
-				indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
-				indicador.cantidad = indicador.cantidad + 1
-				indicador.save()
 		if votosNo==votosSi:
 			## veo el voto del coordinador
 			votoDelCoord = Analisis.objects.filter(evaluacion=evaluacion).get(votante = coordinadorLinea)
 			if votoDelCoord.voto == 'Si':
 				perdieron = 0
 				programa.siAprob_toFT()
-				logEstado(programa, programa.state.title)
 				programa.save()
 				bandera = True
 			else:
 				bandera = False
 				perdieron = 1
 				programa.noAprob_toForm()
-				logEstado(programa, programa.state.title)
 				programa.to_datosAsig()
 				programa.save()
 	else:
@@ -714,7 +702,9 @@ def votacionAnalisisProfeView(request, id_programa):
 	form = analisisLineaForm()
 	programa = Programa.objects.get(id=id_programa)
 	profe = programa.profesorEncargado
-	linea = Profesor.objects.get(user = profe).linea
+	asignatura = programa.asignatura
+	lineas = programa.asignatura.linea.id
+	linea = Linea.objects.get(id=lineas)
 	coordinadorLinea = linea.coordinador
 	profesoresLinea = Profesor.objects.filter(linea=linea).count()
 	evaluacion = AnalisisM.objects.get(programa=programa)
@@ -814,16 +804,20 @@ def votacionOtroProfeView(request, id_programa):
 
 def fastTrackOwnView(request, id_programa):
 	programa = Programa.objects.get(id=id_programa)
-	return render(request, 'formulacion/ft.html', {'programa': programa, 'username': request.user.username,})
+	return render(request, 'formulacion/ft.html', {'programa': programa, 'username': request.user.username})
 
 
 def analisisProgramaJCView(request, id_programa):
 	programa = Programa.objects.get(id=id_programa)
-	return render(request, 'formulacion/analisisJC.html', {'programa': programa, 'username': request.user.username,})
+	return render(request, 'formulacion/analisisJC.html', {'programa': programa, 'username': request.user.username})
 
 def aprobacionProgramaJCView(request, id_programa):
 	programa = Programa.objects.get(id=id_programa)
-	return render(request, 'formulacion/aprobacionJC.html', {'programa': programa, 'username': request.user.username,})
+	return render(request, 'formulacion/aprobacionJC.html', {'programa': programa, 'username': request.user.username})
+
+def finView(request, id_programa):
+	programa = Programa.objects.get(id=id_programa)
+	return render(request, 'formulacion/fin.html', {'programa': programa, 'username': request.user.username})
 
 
 def buscarEstado(request, id_programa, estado):
@@ -857,6 +851,8 @@ def buscarEstado(request, id_programa, estado):
 	 	return HttpResponseRedirect('/analisisProgramaJC/'+id_programa)
 	if (estado == 'aprobacionProgramaJC'):
 		return HttpResponseRedirect('/aprobacionProgramaJC/'+id_programa)
+	if (estado == 'fin'):
+		return HttpResponseRedirect('/fin/'+id_programa)
 
 	
 

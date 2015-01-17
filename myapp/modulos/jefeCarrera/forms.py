@@ -2,6 +2,9 @@ from django import forms
 from datetimewidget.widgets import DateTimeWidget, DateWidget, TimeWidget 
 from myapp.modulos.jefeCarrera.models import Evento
 from django.core.exceptions import ValidationError
+import datetime, random, sha
+
+
 
 class ImageUploadForm(forms.Form):
 	image = forms.ImageField()
@@ -10,7 +13,6 @@ class StringListField(forms.CharField):
     def prepare_value(self, value):
         return ', '.join(str(value))
  
-
 class AgregarEventoCordForm(forms.ModelForm):
 
     TIPOS2 = (
@@ -20,21 +22,16 @@ class AgregarEventoCordForm(forms.ModelForm):
     
     class Meta:
         model = Evento
-        fields = ['summary', 'location', 'descripcion', 'start', 'end']
+        fields = ['tipoEvento']
 
-    summary = forms.CharField(widget = forms.TextInput(), label="Titulo del Evento:")
-    location = forms.CharField(widget = forms.TextInput(), label="Ubicacion del Evento:")
-    descripcion = forms.CharField(widget=forms.Textarea, label= "Descripcion: ")
-    start = forms.DateTimeField(widget=DateTimeWidget(usel10n=True, bootstrap_version=3), label="Fecha y hora de inicio:")
-    end = forms.DateTimeField(widget=DateTimeWidget(usel10n=True, bootstrap_version=3), label="Fecha y hora de termino:")
-    tipoEvento = forms.ChoiceField(required=False, widget=forms.RadioSelect, choices=TIPOS2, label="Seleccione Tipo de Evento")
-    
-    def clean_end(self):
-        start = self.cleaned_data.get('start')
-        end = self.cleaned_data.get('end')
-        if (start>end):
-            raise forms.ValidationError("La Fecha de Termino debe ser despues de la fecha de inicio")
-        return self.cleaned_data.get('end', '')
+
+    # summary = forms.CharField(widget = forms.TextInput(), label="Titulo del Evento:")
+    # location = forms.CharField(widget = forms.TextInput(), label="Ubicacion del Evento:")
+    # descripcion = forms.CharField(widget=forms.Textarea, label= "Descripcion: ")
+    #fecha = forms.DateField(label = "Seleccione Fecha:" )
+    # start = forms.TimeField(widget=TimeWidget,label="Hora Inicio:",  initial=datetime.date.today)
+    # end = forms.TimeField(widget=TimeWidget,label="Hora Fin:",  initial=datetime.date.today)
+    tipoEvento = forms.ChoiceField(required=True, widget=forms.RadioSelect, choices=TIPOS2, label="Seleccione Tipo de Evento")
 
 class AgregarEventoForm(forms.Form):
 
@@ -42,24 +39,20 @@ class AgregarEventoForm(forms.Form):
         ('general', 'Tipo General'),
         ('coordinadores', 'Solo Coordinadores'),
         )
-    
-    class Meta:
+
+     class Meta:
         model = Evento
-        fields = ['summary', 'location', 'descripcion', 'start', 'end']
+        fields = ['tipoEvento']
 
-    summary = forms.CharField(widget = forms.TextInput(), label="Titulo del Evento: ")
-    location = forms.CharField(widget = forms.TextInput(), label="Ubicacion del Evento: ")
-    descripcion = forms.CharField(widget=forms.Textarea, label= "Descripcion: ")
-    start = forms.DateTimeField(widget=DateTimeWidget(usel10n=True, bootstrap_version=3), label="Fecha y hora de inicio:")
-    end = forms.DateTimeField(widget=DateTimeWidget(usel10n=True, bootstrap_version=3), label="Fecha y hora de termino:")
-    tipoEvento = forms.ChoiceField(widget=forms.RadioSelect, choices=TIPOS, label="Seleccione Tipo de Evento", required=True)
 
-    def clean_end(self):
-        start = self.cleaned_data.get('start')
-        end = self.cleaned_data.get('end')
-        if (start>end):
-            raise forms.ValidationError("La Fecha de Termino debe ser despues de la fecha de inicio")
-        return self.cleaned_data.get('end', '')
+    # summary = forms.CharField(widget = forms.TextInput(), label="Titulo del Evento:")
+    # location = forms.CharField(widget = forms.TextInput(), label="Ubicacion del Evento:")
+    # descripcion = forms.CharField(widget=forms.Textarea, label= "Descripcion: ")
+    #fecha = forms.DateField(label = "Seleccione Fecha:" )
+    # start = forms.TimeField(widget=TimeWidget,label="Hora Inicio:",  initial=datetime.date.today)
+    # end = forms.TimeField(widget=TimeWidget,label="Hora Fin:",  initial=datetime.date.today)
+    tipoEvento = forms.ChoiceField(required=True, widget=forms.RadioSelect, choices=TIPOS, label="Seleccione Tipo de Evento")
+
 
 class agregarAsignaturaForm(forms.Form):
     nombreAsignatura = forms.CharField(widget = forms.TextInput(), label= "Ingresa el Nombre de la Asignatura")

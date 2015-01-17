@@ -17,11 +17,6 @@
         <script type="text/javascript" src="/media/js/less-1.4.1.min.js"></script>
         <script type="text/javascript" src="/media/js/less-1.4.1.min.js"></script>
 
-        <!--  {{ form.media }} -->
-  <link href="/media/static/css/datetimepicker.css" type="text/css" media="all" rel="stylesheet" />
-<script type="text/javascript" src="/media/static/js/bootstrap-datetimepicker.js"></script>
-<script type="text/javascript" src="/media/static/js/locales/bootstrap-datetimepicker.es.js"></script>
-<script type="text/javascript" src="/media/static/js/bootstrap-datetimepicker.js "></script>
     </head>
     <body>
         <nav class="navbar navbar-default navbar-static-top" role="navigation">
@@ -71,8 +66,9 @@
               <tr>
                 <th>Título</th>
                 <th>Tipo Evento</th>
-                <th>Fecha Inicio</th>
-                <th>Fecha Final</th>
+                <th>Fecha</th>
+                <th>Hora de Inicio</th>
+                <th>Hora de Término</th>
                 <th>Editar</th>
                 <th>Eliminar</th>
               </tr>
@@ -96,6 +92,7 @@
                             {%endif%}
                             {%endif%}
                             {%endif%}
+                            <td>{{e.fecha}}</td>
                             <td>{{e.start}}</td>
                             <td>{{e.end}}</td>
                             
@@ -111,6 +108,7 @@
                 <button type="button" class="btn btn-info" data-toggle="modal" data-target="#myModal">
                           Agregar Evento
                           </button>
+                          {{hoy}}
                         <!-- Modal -->
                         <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                           <div class="modal-dialog">
@@ -122,12 +120,32 @@
                               <div class="modal-body">
                                     <form action="/crearFechasCord/" method="POST">
                                         {%csrf_token%}
-                                        {{ form|as_bootstrap}}
+                                        <label for="summary">Título Evento: </label>
+                                        <input  id="summary" type="text" name="summary" class="form-control" placeholder="Ej.: Reunión de planificación">
+                                        <label for="location">Lugar del Evento: </label>
+                                        <input  id="location" type="text" name="location" class="form-control" placeholder="Ej.: Oficina 14">
+                                        <label for="descripcion">Descripción del Evento: </label>
+                                        <input  id="descripcion" type="text" name="descripcion" class="form-control" placeholder="Ej.: Reunión de planificación con la línea para agendar entregas">
+                                        <br>
+                                      <div class="col-md-4">
+                                        <label for="fecha">Fecha del Evento </label>
+                                        <span class="glyphicon glyphicon-calendar">:</span><input  id="fecha" type="date" name="fecha" class="form-control" >
+                                      </div>
+                                      <div class="col-md-4">
+                                        <label for="start">Hora de Inicio </label>
+                                        <span class="glyphicon glyphicon-time">:</span><input  id="start" type="time" name="start" class="form-control" >
+                                      </div>
+                                      <div class="col-md-4">
+                                        <label for="end">Hora de Fin </label>
+                                        <span class="glyphicon glyphicon-time">:</span><input  id="end" type="time" name="end" class="form-control" >
+                                      </div> 
+                                     {{form|as_bootstrap}}
+                                        <br>
                                          <button type="submit" class="btn btn-success"><strong>Guardar</strong></button>
                                     </form> 
                               </div>
                               <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                                <button type="button" id = "evento" class="btn btn-default" data-dismiss="modal">Cerrar</button>
                                
                               </div>
                             </div>
@@ -149,8 +167,7 @@
                 <th>Título</th>
                 <th>Anfitrion</th>
                 <th>Tipo Evento</th>
-                <th>Fecha Inicio</th>
-                <th>Fecha Final</th>
+                <th>Fecha</th>
                 <th>Descripcion</th>
 
               </tr>
@@ -176,7 +193,6 @@
                             {%endif%}
                             {%endif%}
                             <td>{{e.start}}</td>
-                            <td>{{e.end}}</td>
                             <td>{{e.descripcion}}</td>
                         </tr>
                         {%endfor%}
@@ -200,7 +216,6 @@
                             {%endif%}
                             {%endif%}
                             <td>{{e.start}}</td>
-                            <td>{{e.end}}</td>
                             <td>{{e.descripcion}}</td>
                         </tr>
                         {%endfor%}

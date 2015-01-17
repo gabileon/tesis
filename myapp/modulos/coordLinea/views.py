@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-import datetime, random, sha
+import datetime, random, sha, time
 from django.shortcuts import render_to_response, get_object_or_404
 from django.core.mail import send_mail
 from django.contrib.auth.models import User
@@ -32,6 +32,8 @@ from myapp.modulos.indicadores.models import ProgramasPorEstado
 from apiclient.discovery import build
 from apiclient.http import MediaFileUpload
 from django.db.models import Q
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 FILENAME = 'hola.txt'
 
@@ -106,11 +108,12 @@ def principalCLView(request):
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
     if perfilTemp.rol_actual == 'CL':
-        programa = Programa.objects.all().order_by('-fechaUltimaModificacion')
-        programasAprobados= Programa.objects.filter(state='fin').count()
-        programasPorAnalizar = Programa.objects.filter(state='aprobacionLinea')
-        fast = Programa.objects.filter(state='fastTrack').count()
-        todos = Programa.objects.filter(state='analisisEvaluacionesAsociadas')
+        linea = Linea.objects.get(coordinador=user)
+        programa = Programa.objects.all().order_by('-fechaUltimaModificacion').filter(linea_id=linea)
+        programasAprobados= Programa.objects.filter(state='fin').filter(linea=linea).count()
+        programasPorAnalizar = Programa.objects.filter(state='aprobacionLinea').filter(linea=linea)
+        fast = Programa.objects.filter(state='fastTrack').filter(linea=linea).count()
+        todos = Programa.objects.filter(state='analisisEvaluacionesAsociadas').filter(linea=linea)
         analisis = []
         votaciones = []
         for p in programasPorAnalizar:
@@ -170,7 +173,9 @@ def evaluacionesVot(evaluacion):
     programa = evaluacion.programa
     votos = Evaluaciones.objects.filter(evaluacion =evaluacion)
     numVotos = len(votos)
-    lineaP = Profesor.objects.get(user = profe).linea
+    asignatura = programa.asignatura
+    lineas = programa.linea.id
+    lineaP = Linea.objects.get(id=lineas)
     coordinadorLinea = lineaP.coordinador
     profesoresLinea = Profesor.objects.filter(linea=lineaP).count()
     ##### Termino la votacion #######
@@ -220,17 +225,6 @@ def evaluacionesVot(evaluacion):
                 perdieron = 0
                 programa.siEvaluacion_toVerif()
                 logEstado(programa, programa.state.title)
-                try:
-                    x = ProgramasPorEstado.objects.get(estado=programa.state.title)
-                except ProgramasPorEstado.DoesNotExist:
-                    x = None
-                if x is None:
-                    newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-                    newIndicador.save()
-                else:
-                    indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
-                    indicador.cantidad = indicador.cantidad + 1
-                    indicador.save()
                 programa.save()
                 bandera = True
             else:
@@ -240,17 +234,6 @@ def evaluacionesVot(evaluacion):
                 logEstado(programa, programa.state.title)
                 programa.to_datosAsig()
                 programa.save()
-                try:
-                    x = ProgramasPorEstado.objects.get(estado=programa.state.title)
-                except ProgramasPorEstado.DoesNotExist:
-                    x = None
-                if x is None:
-                    newIndicador = ProgramasPorEstado.objects.create(estado=programa.state.title, cantidad=1)
-                    newIndicador.save()
-                else:
-                    indicador = ProgramasPorEstado.objects.get(estado=programa.state.title)
-                    indicador.cantidad = indicador.cantidad + 1
-                    indicador.save()
     else:
         termino = 0
     return bandera
@@ -324,42 +307,59 @@ def miperfilCordView(request):
         return redirect ('/errorLogin/')
 
 def crearFechasCoord(request):
-    hoy = datetime.now()
+    try:
+        storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
+        credential = storage.get()
+        http= httplib2.Http()
+        http= credential.authorize(http)
+        service = build('calendar', 'v3', http=http)
+    except:
+        return redirect('/errorGoogle/')
+    hoy = time.strftime("%x")
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
     if perfilTemp.rol_actual == 'CL':
         userTemp = User.objects.get(username=request.user.username)
         profile = UserProfile.objects.get(user=userTemp)
         linea = Linea.objects.get(id=profile.cordLinea_id)
-        eventos = Evento.objects.filter(anfitrion=request.user).filter(start__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
-        eventosGenerales = Evento.objects.all().filter(tipoEvento = 'general').filter(start__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
-        eventosCord = Evento.objects.all().filter(tipoEvento = 'coordinadores').filter(start__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
-        try:
-            storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
-            credential = storage.get()
-            http= httplib2.Http()
-            http= credential.authorize(http)
-            service = build('calendar', 'v3', http=http)
-        except:
-            return redirect('/errorGoogle/')
-
+        eventos = Evento.objects.filter(anfitrion=request.user)
+        eventosGenerales = Evento.objects.all().filter(tipoEvento = 'general')
+        eventosCord = Evento.objects.all().filter(tipoEvento = 'coordinadores')
+        
+        # eventos = Evento.objects.filter(anfitrion=request.user).filter(fecha__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
+        # eventosGenerales = Evento.objects.all().filter(tipoEvento = 'general').filter(fecha__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
+        # eventosCord = Evento.objects.all().filter(tipoEvento = 'coordinadores').filter(fecha__range=(hoy - timedelta(days=1), hoy + timedelta(days=200)))
         calendar_list_entry = service.calendarList().get(calendarId='primary').execute()
         form = AgregarEventoCordForm()
         if request.method == 'POST':
             form = AgregarEventoCordForm(request.POST)
             if form.is_valid():
-                summary = form.cleaned_data['summary']
-                location = form.cleaned_data['location']
-                descripcion = form.cleaned_data['descripcion']
+                summary = request.POST['summary']
+                location = request.POST['location']
+                descripcion = request.POST['descripcion']
                 tipoEvento = form.cleaned_data['tipoEvento']
-                start = form.cleaned_data['start']
-                inicio = build_rfc3339_phrase(start)
-                end = form.cleaned_data['end']
-                fin = build_rfc3339_phrase(end)
+                fecha = request.POST['fecha']
+                start = request.POST['start']
+                end = request.POST['end']
+                if hoy==fecha:
+                    print hoy
+                inicio2=datetime.strptime("{} {}".format(fecha, start), "%Y-%m-%d %H:%M")
+                fin2 = datetime.strptime("{} {}".format(fecha, end), "%Y-%m-%d %H:%M")
+                print inicio2
+                inicio = build_rfc3339_phrase(inicio2)
+                fin = build_rfc3339_phrase(fin2)
+                print inicio
                 nuevoEvent = Evento()
                 temp = Evento()
+                profesores = []
                 if tipoEvento == 'profesor' :
-                    profesores = Profesor.objects.filter(linea=linea.id)
+                    ### obtngo los profes d emi linea ##
+                    todos = Profesor.objects.all()
+                    for t in todos:
+                        if linea.id in t.linea:
+                            profesores.append(t)
+                            
+                    # profesores = Profesor.objects.filter(linea=linea.id)
                     event = {
                         'summary': '%s'%(summary),
      
@@ -383,7 +383,7 @@ def crearFechasCoord(request):
                     event.update({'attendees': emails})
                     created_event = service.events().insert(calendarId='primary', body=event).execute()
                     nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, 
-                    descripcion=descripcion, id_calendar=created_event['id'], tipoEvento=tipoEvento, anfitrion=request.user, invitados =invitados)
+                    descripcion=descripcion, id_calendar=created_event['id'], fecha=fecha, tipoEvento=tipoEvento, anfitrion=request.user, invitados =invitados)
                     nuevoEvento.save()
 
                 if tipoEvento == 'jefe':
@@ -402,21 +402,19 @@ def crearFechasCoord(request):
                             # 'timeZone': 'America/Santiago'
                           }}
                     event['attendees'] =  [{'email': jefeCarrera.user.email}]
-                    try:
-                        created_event = service.events().insert(calendarId='primary', body=event).execute()     
-                        nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, 
-                        descripcion=descripcion,  id_calendar=created_event['id'], tipoEvento=tipoEvento , anfitrion=request.user, invitados =jefeCarrera.user.email)
-                      
-                        nuevoEvento.save()
-                    except:
-                        return redirect('/errorGoogle/')
+                    
+                    created_event = service.events().insert(calendarId='primary', body=event).execute()     
+                    nuevoEvento = Evento.objects.create(summary= summary, location = location, start =start, end=end, fecha=fecha,
+                    descripcion=descripcion,  id_calendar=created_event['id'], tipoEvento=tipoEvento , anfitrion=request.user, invitados =jefeCarrera.user.email)
+                    nuevoEvento.save()
+                    
+                    
         else:
             form = AgregarEventoCordForm()
-        ctx = {'form':form, 'eventos': eventos, 'username': request.user.username, 'todos': eventosGenerales, 'eventosCord': eventosCord}    
+        ctx = {'hoy': hoy, 'form':form, 'eventos': eventos, 'username': request.user.username, 'todos': eventosGenerales, 'eventosCord': eventosCord}    
         return render (request, 'coordLinea/Eventos.html', ctx)
     else:
         return redirect ('/errorLogin/')
-
 
 def editEventosViewCord (request, id_evento):
     userTemp = User.objects.get(username=request.user.username)
@@ -425,6 +423,7 @@ def editEventosViewCord (request, id_evento):
     status = ""
     statusCord = ""
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    profesores = []
     if perfilTemp.rol_actual == 'CL':
         try:
             storage = Storage(CredentialsModel, 'id_user', request.user, 'credential')
@@ -451,11 +450,15 @@ def editEventosViewCord (request, id_evento):
                 descripcion = form.cleaned_data['descripcion']
                 tipoEvento = form.cleaned_data['tipoEvento']
                 start = form.cleaned_data['start']
+                print start
                 inicio = build_rfc3339_phrase(start)
                 end = form.cleaned_data['end']
                 fin = build_rfc3339_phrase(end)
                 if tipoEvento == 'profesor' :
-                    profesores = Profesor.objects.filter(linea=linea.id)
+                    todos = Profesor.objects.all()
+                    for t in todos:
+                        if linea.id in t.linea:
+                            profesores.append(t)
                     event = {
                         'summary': '%s'%(summary),
      
@@ -520,8 +523,6 @@ def editEventosViewCord (request, id_evento):
     else:
         return redirect ('/errorLogin/')
 
-
-
 def deleteFechasCordView (request, id_evento):
     userTemp = User.objects.get(username=request.user.username)
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
@@ -558,7 +559,18 @@ def recursosCordView(request):
     perfilTemp = UserProfile.objects.get(user=userTemp.id)
     if perfilTemp.rol_actual == 'CL':
         Recursos = Recurso.objects.filter(creador=request.user)
+        
         recursosJefe = Recurso.objects.all().filter(~Q(creador=request.user))
+        paginator = Paginator(recursosJefe, 6)
+        page = request.GET.get('page')
+        try:
+            contacts = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            contacts = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            contacts = paginator.page(paginator.num_pages)
         if request.method == 'POST':
             form = UploadFileForm(request.POST, request.FILES)
             if form.is_valid():
@@ -574,11 +586,10 @@ def recursosCordView(request):
                 return HttpResponseRedirect('/recursosCord/')
         else:
             form = UploadFileForm()
-        ctx = {'form': form, 'recursos': Recursos, 'username': request.user.username, 'recursosJefe': recursosJefe}
+        ctx = {'contacts': contacts,'form': form, 'recursos': Recursos, 'username': request.user.username, 'recursosJefe': recursosJefe}
         return render(request, 'coordLinea/recursos.html', ctx)
     else:
         return redirect ('/errorLogin/')
-
 
 def deleteRecursoCordView(request, id_recurso):
     userTemp = User.objects.get(username=request.user.username)
@@ -623,7 +634,6 @@ def editRecursosCordView(request, id_recurso):
         return render(request, 'coordLinea/editRecursos.html', {'form': form, 'status':status, 'id':id_recurso, 'username':request.user.username})
     else:
         return redirect ('/errorLogin/')
-
 
 def aprobadosCordViews(request):
     userTemp = User.objects.get(username=request.user.username)
@@ -674,7 +684,9 @@ def analisisVot(evaluacion):
     programa = evaluacion.programa
     votos = Analisis.objects.filter(analisis =evaluacion)
     numVotos = len(votos)
-    lineaP = Profesor.objects.get(user = profe).linea
+    asignatura = programa.asignatura
+    lineas = programa.asignatura.linea.id
+    lineaP = Linea.objects.get(id=lineas)
     coordinadorLinea = lineaP.coordinador
     profesoresLinea = Profesor.objects.filter(linea=lineaP).count()
     ##### Termino la votacion #######

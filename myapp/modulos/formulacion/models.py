@@ -21,7 +21,7 @@ class Linea(models.Model):
 class Asignatura(models.Model):
     nombreAsig = models.CharField(max_length=20)
     plan = models.CharField(max_length=5)
-    linea = models.ForeignKey(Linea, null=True)
+    linea = models.OneToOneField(Linea, null=True)
 
 
 class MyWorkflow(xwf_models.Workflow):
@@ -97,11 +97,13 @@ class Programa(xwf_models.WorkflowEnabled, models.Model):
     url = models.URLField(blank=False, null=True)
     profesorEncargado = models.OneToOneField(User, null=True)
     id_file =  models.CharField(max_length=100)
+    linea = models.OneToOneField(Linea, null=True)
 
 class Log(models.Model):
     programa = models.OneToOneField(Programa)
     fecha = models.DateTimeField()
     state = models.CharField(max_length=20)
+    encargado = models.OneToOneField(User, null=True)
     
     
 class Constribucion(models.Model):
@@ -159,6 +161,7 @@ class Analisis(models.Model):
 
 class Recurso(models.Model):
     def url(self, filename):
+        filename = filename.replace(" ", "")
         url = "MultimediaData/Recursos/%s"%(filename)
         return url
         
@@ -171,8 +174,7 @@ class Recurso(models.Model):
 
 class Profesor (models.Model):
     user =  models.OneToOneField(User, null=True)
-    linea = models.ForeignKey(Linea, null=True)
-
+    linea = ListField(models.ForeignKey(Linea))
 
  
 

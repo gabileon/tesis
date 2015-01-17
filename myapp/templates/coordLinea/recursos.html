@@ -14,6 +14,10 @@
         <link rel="stylesheet/less" href="/media/less/style.less">
         <script type="text/javascript" src="/media/js/less-1.4.1.min.js"></script>
           <script type="text/javascript" src="/media/js/highcharts.js"></script>
+
+   <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+   <script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script> 
+   
     </head>
     <body>
         <nav class="navbar navbar-default navbar-static-top" role="navigation">
@@ -63,6 +67,7 @@
                 <th>Título</th>
                 <th>Estado</th>
                 <th>Fecha Modificación</th>
+                <th>Descripción</th>
                 <th>Archivo</th>
                 <th>Editar</th>
                 <th>Eliminar</th>
@@ -74,12 +79,14 @@
                             <td>{{e.titulo_recurso}}</td>
                             <td>{{e.estado.title}}</td>
                             <td>{{e.fechaUltimaModificacion}}</td>
+                            <td><button type="button" class="btn btn-default" data-container="body" data-toggle="popover" data-placement="top" data-content="{{e.descripcion_recurso}}">Descripción</button></td>
                             <td><a href="/files/serve/{{e.recurso}}"><span class="glyphicon glyphicon-paperclip"></a></span></td>
                             <td><a class="glyphicon glyphicon-pencil" href="/editRecursosCord/{{e.id}}"></a></td></span></td> 
                             <td><a class="borrar" href="/recursos/deleteCord/{{e.id}}"><span class="glyphicon glyphicon-remove"></a></td>
                             
                         </tr>
                         {%endfor%}
+
                     </tbody>
                 </table>  
         {%endif%}
@@ -117,25 +124,42 @@
           <h3 class="panel-title">Recursos Jefe Carrera</h3>
         </div>  
         <div class="panel-body">
-          {%if recursosJefe%}
+          {%if contacts%}
           <table class="table">
             <thead>
               <tr>
                 <th>Título</th>
                 <th>Estado</th>
                 <th>Fecha Modificación</th>
+                <th>Descripción</td>
                 <th>Archivo</th>
               </tr>
             </thead>
             <tbody>
-                        {%for e in recursosJefe%}
+                        {%for e in contacts%}
                         <tr>
                             <td>{{e.titulo_recurso}}</td>
                             <td>{{e.estado.title}}</td>
                             <td>{{e.fechaUltimaModificacion}}</td>  
-                            <td><a href="/files/serve/{{e.recurso}}"><span class="glyphicon glyphicon-paperclip"></a></span></td>                          
+                            <td><button type="button" class="btn btn-default" data-container="body" data-toggle="popover" data-placement="top" data-content="{{e.descripcion_recurso}}">Descripción</button></td>
+                            <td><a href="/files/serve/{{e.recurso}}"><span class="glyphicon glyphicon-paperclip"></a></span></td>                      
                         </tr>
                         {%endfor%}
+                         <div class="pagination">
+    <span class="step-links">
+        {% if contacts.has_previous %}
+            <a href="?page={{ contacts.previous_page_number }}">Previo</a>
+        {% endif %}
+
+        <span class="current">
+            Página {{ contacts.number }} de {{ contacts.paginator.num_pages }}.
+        </span>
+
+        {% if contacts.has_next %}
+            <a href="?page={{ contacts.next_page_number }}">Próximo</a>
+        {% endif %}
+    </span>
+</div>
                     </tbody>
                 </table>  
         
@@ -146,7 +170,13 @@
   </div>
 </div>
         
-    </body>    
+    </body>
+   <script type="text/javascript">
+$(function () {
+  $('[data-toggle="popover"]').popover()
+})
+</script>
+</script>
 </html>
 
             

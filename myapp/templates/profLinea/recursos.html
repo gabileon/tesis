@@ -54,7 +54,7 @@
         </div>  
         <div class="panel-body">
           <p>Los Recursos de Formulación que se presentan a continuación corresponden a todos los recursos que tanto el Jefe de Carrera como el Coordinador de su línea han puesto a disposición de usted para realizar la formulación de los programas.</p>
-          {%if recursos%}
+          {%if contacts%}
           <table class="table table-striped">
             <thead>
               <tr>
@@ -65,7 +65,7 @@
               </tr>
             </thead>
             <tbody>
-                        {%for e in recursos%}
+                        {%for e in contacts%}
                         <tr>
                             <td>{{e.titulo_recurso}}</td>
                             <td>{{e.estado.title}}</td>
@@ -73,6 +73,21 @@
                             <td><a href="/files/serve/{{e.recurso}}"><span class="glyphicon glyphicon-paperclip"></a></span></td>
                         </tr>
                         {%endfor%}
+                         <div class="pagination">
+    <span class="step-links">
+        {% if contacts.has_previous %}
+            <a href="?page={{ contacts.previous_page_number }}">Previo</a>
+        {% endif %}
+
+        <span class="current">
+            Página {{ contacts.number }} de {{ contacts.paginator.num_pages }}.
+        </span>
+
+        {% if contacts.has_next %}
+            <a href="?page={{ contacts.next_page_number }}">Próximo</a>
+        {% endif %}
+    </span>
+</div>
                     </tbody>
                 </table>  
         {%endif%}

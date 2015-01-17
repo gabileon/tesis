@@ -74,8 +74,7 @@
                 <th>Título</th>
                 <th>Tipo</th>
                 <th>Ubicacion</th>
-                <th>Fecha Inicio</th>
-                <th>Fecha Final</th>
+                <th>Fecha</th>
                 <th>Editar</th>
                 <th>Eliminar</th>
               </tr>
@@ -92,12 +91,13 @@
                             {%endif%}
                             <td>{{e.location}}</td>
                             <td>{{e.start}}</td>
-                            <td>{{e.end}}</td>
                             
                             <td><a class="glyphicon glyphicon-pencil" href="/editFechas/{{e.id}}"></a></td></span></td>  
                             <td><a href="/deleteFechas/{{e.id}}/"><span class="glyphicon glyphicon-remove"></span></a></td>
                         </tr>
+
                         {%endfor%}
+
                     </tbody>
                 </table>  
         {%endif%}
@@ -122,12 +122,29 @@
                               <div class="modal-body">
                                     <form action="/crearFechas/" method="POST">
                                         {%csrf_token%}
-                                        {{form|as_bootstrap}}
-                                        {%if statusCord%}
-                                        <p class="error-evento"> Recuerda agregar un coordinador para crear este tipo de eventos </p>
-                                        {%endif%}
+                                        <label for="summary">Título Evento: </label>
+                                        <input  id="summary" type="text" name="summary" class="form-control" placeholder="Ej.: Reunión de planificación">
+                                        <label for="location">Lugar del Evento: </label>
+                                        <input  id="location" type="text" name="location" class="form-control" placeholder="Ej.: Oficina 14">
+                                        <label for="descripcion">Descripción del Evento: </label>
+                                        <input  id="descripcion" type="text" name="descripcion" class="form-control" placeholder="Ej.: Reunión de planificación con la línea para agendar entregas">
+                                        <br>
+                                      <div class="col-md-4">
+                                        <label for="fecha">Fecha del Evento </label>
+                                        <span class="glyphicon glyphicon-calendar">:</span><input  id="fecha" type="date" name="fecha" class="form-control" >
+                                      </div>
+                                      <div class="col-md-4">
+                                        <label for="start">Hora de Inicio </label>
+                                        <span class="glyphicon glyphicon-time">:</span><input  id="start" type="time" name="start" class="form-control" >
+                                      </div>
+                                      <div class="col-md-4">
+                                        <label for="end">Hora de Fin </label>
+                                        <span class="glyphicon glyphicon-time">:</span><input  id="end" type="time" name="end" class="form-control" >
+                                      </div> 
+                                     {{form|as_bootstrap}}
+                                        <br>
                                          <button type="submit" class="btn btn-success"><strong>Guardar</strong></button>
-                                    </form> 
+                                    </form>  
                               </div>
                               <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
@@ -151,8 +168,7 @@
                 <th>Título</th>
                 <th>Anfitrion</th>
                 <th>Ubicacion</th>
-                <th>Fecha Inicio</th>
-                <th>Fecha Final</th>
+                <th>Fecha </th>
               </tr>
             </thead>
             <tbody>
@@ -162,10 +178,10 @@
                             <td>{{e.anfitrion.first_name}} {{e.anfitrion.last_name}}</td>
                             <td>{{e.location}}</td>
                             <td>{{e.start}}</td>
-                            <td>{{e.end}}</td>
                           
                         </tr>
                         {%endfor%}
+
                     </tbody>
                 </table>  
         {%else%}

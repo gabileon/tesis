@@ -75,11 +75,31 @@
                         <!-- Modal -->
                         {%endif%}
                                     
-          <form action="." method="POST">
-            {%csrf_token%}
-            {{ form|as_bootstrap}}
-            <button type="submit" class="btn btn-success"><strong>Guardar</strong></button>
-          </form> 
+          <form action="/crearFechas/" method="POST">
+                                        {%csrf_token%}
+                                        <label for="summary">Título Evento: </label>
+                                        <input  id="summary" type="text" name="summary" class="form-control" placeholder="Ej.: Reunión de planificación">
+                                        <label for="location">Lugar del Evento: </label>
+                                        <input  id="location" type="text" name="location" class="form-control" placeholder="Ej.: Oficina 14">
+                                        <label for="descripcion">Descripción del Evento: </label>
+                                        <input  id="descripcion" type="text" name="descripcion" class="form-control" placeholder="Ej.: Reunión de planificación con la línea para agendar entregas">
+                                        <br>
+                                      <div class="col-md-4">
+                                        <label for="fecha">Fecha del Evento </label>
+                                        <span class="glyphicon glyphicon-calendar">:</span><input  id="fecha" type="date" name="fecha" class="form-control" >
+                                      </div>
+                                      <div class="col-md-4">
+                                        <label for="start">Hora de Inicio </label>
+                                        <span class="glyphicon glyphicon-time">:</span><input  id="start" type="time" name="start" class="form-control" >
+                                      </div>
+                                      <div class="col-md-4">
+                                        <label for="end">Hora de Fin </label>
+                                        <span class="glyphicon glyphicon-time">:</span><input  id="end" type="time" name="end" class="form-control" >
+                                      </div> 
+                                     {{form|as_bootstrap}}
+                                        <br>
+                                         <button type="submit" class="btn btn-success"><strong>Guardar</strong></button>
+                                    </form>  
         </div>
       </div>
     </div>      

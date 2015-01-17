@@ -65,6 +65,7 @@
                         <tr>
                             <th>Estado</th>
                             <th>Fecha</th>
+                            <th>Encargado</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -72,6 +73,7 @@
                         <tr>
                             <td>{{p.state}}</td>
                             <td>{{p.fecha}}</td>
+                            <td>{{p.encargado.username}}</td>
                         </tr>
                         {%endfor%}
                     </tbody>

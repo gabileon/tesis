@@ -97,7 +97,9 @@
                     <thead>
                         <tr>
                             <th>Asignatura</th>
+
                             <th>Semestre</th>
+                            <th>Línea</th>
                             <th>Estado</th>
                             <th>Última Modificación</th>
                             <th>Drive</th>
@@ -110,6 +112,7 @@
                         <tr>
                             <td>{{p.asignatura.nombreAsig}}</td></a>
                             <td>{{p.semestre}}</td>
+                            <td>{{p.linea.nombreLinea}}</td>
                             <td>{{p.state.title}}</td>
                             <td>{{p.fechaUltimaModificacion}}</td></a>
                             <td><a href="{{p.url}}"><span class="glyphicon glyphicon-cloud"></span></a></td>
@@ -124,13 +127,14 @@
 
         <div class="panel panel-info">
   <!-- Default panel contents -->
-            <div class="panel-heading">Últimas Modificaciones de mi línea</div>
+            <div class="panel-heading">Otros Programas</div>
   <!-- Table -->
                 <table class="table">
                     <thead>
                         
                         <tr>
                             <th>Asignatura</th>
+                            <th>Línea</th>
                             <th>Profesor</th>
                             <th>Estado</th>
                             <th>Última Modificación</th>
@@ -139,7 +143,8 @@
                     <tbody>
                         {%for p in otros%}
                         <tr>
-                            <td>{{p.asignatura.nombreAsig}}</td>
+                            <td>{{p.asignatura.nombreAsig}} {{p.semestre}}</td>
+                            <td>{{p.linea.nombreLinea}}</td>
                             <td>{{p.profesorEncargado}}</td>
                             <td>{{p.state.title}}</td>
                             <td>{{p.fechaUltimaModificacion}}</td>

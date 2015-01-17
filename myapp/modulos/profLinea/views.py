@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 import datetime, random, sha
 from myapp.modulos.formulacion.forms import crearProgramaForm
 from myapp.modulos.presentacion.forms import ImageUploadForm
-from myapp.modulos.formulacion.models import Evaluacion, Evaluaciones, Recurso, Analisis, AnalisisM, Log, Asignatura, Programa, MyWorkflow,  ClaseClase, Completitud
+from myapp.modulos.formulacion.models import Linea, Evaluacion, Evaluaciones, Recurso, Analisis, AnalisisM, Log, Asignatura, Programa, MyWorkflow,  ClaseClase, Completitud
 from myapp.modulos.jefeCarrera.models import Evento
 from myapp.modulos.indicadores.models import ProgramasPorEstado
 from django.http import HttpResponse
@@ -22,6 +22,8 @@ import os
 from apiclient import errors
 from myapp.modulos.jefeCarrera.forms import changePasswordForm
 from django.db.models import Q
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 
 CLIENT_SECRETS = os.path.join(os.path.dirname(__file__), 'client_secrets.json')
@@ -110,8 +112,7 @@ def principalPLView(request):
 		# if len(finales) == 0:
 		# 	finales = programasEval
 
-		# evaluaciones = len(finales)
-
+		# evaluaciones = len(finale
 		programasEval = Programa.objects.filter(state='analisisEvaluacionesAsociadas').filter(~Q(profesorEncargado=request.user))
 		estado = 5
 		yo = User.objects.get(username = request.user.username)
@@ -137,7 +138,6 @@ def principalPLView(request):
 					if v==yo :
 						bandera = True
 				if bandera ==False:
-				
 					finales.append(p)
 
 
@@ -214,7 +214,9 @@ def principalPLView(request):
 				ano = form.cleaned_data['ano']
 					### se crea programa
 				asignaturaM = Asignatura.objects.get(id=asignatura)
+				print asignaturaM.linea.id
 				p.asignatura = asignaturaM
+				p.linea= p.asignatura.linea
 				p.semestre = semestre
 				p.ano = ano
 				p.fechaUltimaModificacion = datetime.now() - timedelta(hours=3)
@@ -244,24 +246,14 @@ def principalPLView(request):
 					url = file.get('alternateLink')
 			 		p.url = url
 			 		p.to_formulacion()
-			 		logEstado(p, p.state.title)
+			 		# logEstado(userTemp, p, p.state.title)
 			 		p.to_datosAsig()
-			 		logEstado(p, p.state.title)
+			 		# logEstado(userTemp, p, p.state.title)
 			 		p.id_file = file['id']
-			 		p.save()
-					try:
-			 			x = ProgramasPorEstado.objects.get(estado=p.state.title)
-			 		except ProgramasPorEstado.DoesNotExist:
-			 		 	x = None
-			 		if x is None:
-			 			newIndicador = ProgramasPorEstado.objects.create(estado=p.state.title, cantidad=1)
-			 		 	newIndicador.save()
-			 		else:
-			 			indicador = ProgramasPorEstado.objects.get(estado=p.state.title)
-			 		 	indicador.cantidad = indicador.cantidad + 1
-			 		 	indicador.save()		 		
+			 		p.save()	 		
 				except:
 		 			return redirect('/errorGoogle/')
+		 		logEstado(userTemp, p, p.state.title)
 		else:
 			form = crearProgramaForm()
 					#GEt
@@ -278,9 +270,10 @@ def misProgramasAprobadosView(request, id_user):
 		programas = []
 	return render(request, 'profLinea/misProgramas.html', {'username': request.user.username, 'programas': programas, 'yo':yo})
 
-def logEstado (programa, state):
+def logEstado (userTemp, programa, state):
 
 	l= Log()
+	l.encargado = userTemp
 	l.programa = programa
 	l.state = state
 	l.fecha = datetime.now() - timedelta(hours=3)
@@ -321,16 +314,26 @@ def eliminarProgramaView(request, id_programa):
 		return redirect('/errorLogin/')
 
 def repositorioView(request):
-	yo = User.objects.get(username=request.user.username)
-	userTemp = User.objects.get(username=request.user.username)
-	perfilTemp = UserProfile.objects.get(user=userTemp.id)
-	if perfilTemp.rol_actual == 'PL':
-		recursos = Recurso.objects.all()
-		username = request.user.username
-		ctx = {'recursos': recursos, 'username': username, 'yo':yo}
-		return render(request, 'profLinea/recursos.html', ctx)
-	else:
-		return redirect('/errorLogin/')
+    yo = User.objects.get(username=request.user.username)
+    userTemp = User.objects.get(username=request.user.username)
+    perfilTemp = UserProfile.objects.get(user=userTemp.id)
+    if perfilTemp.rol_actual == 'PL':
+        recursos = Recurso.objects.all()
+        paginator = Paginator(recursos, 12)
+        page = request.GET.get('page')
+        try:
+            contacts = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            contacts = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            contacts = paginator.page(paginator.num_pages)
+        username = request.user.username
+        ctx = {'contacts': contacts, 'username': username, 'yo':yo}
+        return render(request, 'profLinea/recursos.html', ctx)
+    else:
+        return redirect('/errorLogin/')
 
 def fechasView(request):
 	hoy = datetime.now()

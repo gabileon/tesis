@@ -61,6 +61,7 @@
                     <thead>
                         <tr>
                             <th>Asignatura</th>
+                            <th>Línea</th>
                             <th>Profesor Encargado</th>
                             <th>Documento</th>
                             <th>Votación</th>
@@ -70,6 +71,7 @@
                         {%for p in programas%}
                         <tr>
                             <td>{{p.asignatura.nombreAsig}}</td>
+                            <td>{{p.linea.nombreLinea}}</td>
                             <td>{{p.profesorEncargado}}</td>
                             <td><a class="glyphicon glyphicon-file" href="{{p.url}}"></a></td></span>
                             <td><button type="button" class="btn btn-success" data-toggle="modal" data-target="#myModal">

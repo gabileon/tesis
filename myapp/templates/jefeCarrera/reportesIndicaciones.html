@@ -67,6 +67,7 @@
             <thead>
               <tr>
                 <th>Programa</th>
+                <th>Línea</th>
                 <th>Programa Fecha Última Modificación</th>
                 <th>Url Programa</th>
                 <th>Url Reporte</th>
@@ -76,6 +77,7 @@
                         {%for r in reportes%}
                         <tr>
                             <td>{{r.programa.asignatura.nombreAsig}} {{r.programa.semestre}} {{r.programa.ano}}</td>
+                            <td>{{r.programa.linea.nombreLinea}}</td>
                             <td>{{r.programa.fechaUltimaModificacion}}</td>
                             <td><a class="glyphicon glyphicon-file" href="{{r.programa.url}}"></a></td></span></td>
                             <td><a class="glyphicon glyphicon-pencil" href="{{r.url}}"></a></td></span></td>  

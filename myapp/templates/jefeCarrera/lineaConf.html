@@ -63,12 +63,39 @@
                          <a href="/perfilLinea/{{l.id}}"><li class="perfil">{{l.nombreLinea}}</a>
                         </li>
                         {%endfor%}
-                                       <!-- Button trigger modal -->
-                        
-                     <!--    <button type="button" class="disabled" >
-                        Agregar Nueva Línea
-                        </button>
- -->
+                                       <button type="button" class="btn btn-info" data-toggle="modal" data-target="#myModal">
+                          Agregar Línea de Asignaturas
+                          </button>
+                          {%if statusCord%}
+                                        <div class="alert alert-danger" role="alert">Recuerda agregar un coordinador para crear eventos con Coordinadores en <a href="/lineas/">Línea Proyectos</a></div>
+                                        {%endif%}
+                          {%if status%}
+                          <br>
+                          <div class="alert alert-danger" role="alert">{{status}}</div>
+                        <!-- Modal -->
+                        {%endif%}
+                        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                          <div class="modal-dialog">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Cerrar</span></button>
+                                <h4 class="modal-title" id="myModalLabel">Agregar nueva línea</h4>
+                              </div>
+                              <div class="modal-body">
+                                    <form action="/lineas/" method="POST">
+                                        {%csrf_token%}
+                                        {{form|as_bootstrap}}
+                                         <button type="submit" class="btn btn-success"><strong>Guardar</strong></button>
+                                    </form> 
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                               
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
 
                     </div>
                 </div>  
